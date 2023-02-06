@@ -1,3 +1,5 @@
+using StatsBase
+
 # UniformPrior
 function generate_stimulus(s::UniformPrior)
     # Define Frequency Bin Indices 1 through self.n_bins

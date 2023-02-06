@@ -1,0 +1,70 @@
+<style media="screen">
+    /* @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400&display=swap"); */
+
+    * {
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #dff0f6;
+    }
+
+    button {
+        font-family: 'Open Sans', sans-serif;
+        font-size: 1.5rem;
+        color: #fff;
+        background: #034d85;
+        padding: 1.1rem 3.4rem;
+        border-radius: .2rem;
+        transition: opacity .2s;
+    }
+
+    button:hover {
+        cursor: pointer;
+        background: #053056;
+    }
+</style>
+
+<body>
+    <div>
+        <!-- Create and label each stim wav file (base64 encoded) -->
+        <% for_each(stimuli) do stimuli 
+            counter += 1
+        %> 
+            <audio id="$counter" src="data:audio/wav;base64,$(stimuli)" preload="auto"></audio>
+        <% end %>
+
+        <!-- Create a button for each stim and link it to the number -->
+        <% for_each(counter_vec) do counter_vec %>
+            <button onclick="document.getElementById('$counter_vec').play();">Play it $(counter_vec)</button>
+        <% end %>
+
+        <button id="yes" onclick="console.log(1)">Yes! (f)</button>
+        <button id="no" onclick="console.log(-1)">No! (j)</button>
+
+    </div>
+
+    <script type="text/javascript">
+        // f - 70, j - 74
+        document.addEventListener('keyup',function(e){
+        if(e.which == 70){
+            document.getElementById('yes').click();     
+        }
+        else if(e.which == 74){
+            document.getElementById('no').click();
+        }
+        });
+    </script>
+</body>
