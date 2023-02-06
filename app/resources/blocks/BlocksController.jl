@@ -104,8 +104,7 @@ function exptest()
     for (ind, stimulus) in enumerate(eachcol(scaled_stimuli))
         buf = Base.IOBuffer()
         wavwrite(stimulus, buf; Fs=Fs)
-        temp = base64encode(take!(buf))
-        stimuli[ind] = temp
+        stimuli[ind] = base64encode(take!(buf))
         close(buf)
     end
 
