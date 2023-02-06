@@ -100,12 +100,12 @@ function exptest()
     scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims=1)
 
     # Save base64 encoded wav files to stimuli vector of strings
-    stimuli = String[]
-    for stimulus in eachcol(scaled_stimuli)
+    stimuli = Vector{String}(undef, size(scaled_stimuli, 2))
+    for (ind, stimulus) in enumerate(eachcol(scaled_stimuli))
         buf = Base.IOBuffer()
         wavwrite(stimulus, buf; Fs=Fs)
         temp = base64encode(take!(buf))
-        push!(stimuli, temp)
+        stimuli[ind] = temp
         close(buf)
     end
 
