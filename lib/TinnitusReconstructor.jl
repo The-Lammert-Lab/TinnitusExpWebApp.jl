@@ -14,8 +14,9 @@ include("funcs.jl")
 include("StimGens.jl")
 include("generate_stimuli.jl")
 
-export UniformPrior
-export present_stimulus
+export Stimgen
+export UniformPrior, GaussianPrior
+export generate_stimuli_matrix
 
 function present_stimulus(s::Stimgen)
     stimuli_matrix, Fs, _, _ = generate_stimuli_matrix(s)

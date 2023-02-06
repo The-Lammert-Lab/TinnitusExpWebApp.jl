@@ -1,3 +1,12 @@
+using FFTW
+using LinearAlgebra
+using Statistics, StatsBase
+using PortAudio, SampledSignals
+using FileIO
+using LibSndFile
+using DSP
+using Memoize
+using FastBroadcast
 #############################
 
 ## Type definitions
@@ -12,6 +21,80 @@ abstract type Stimgen end
 Abstract supertype for all binned stimulus generation.
 """
 abstract type BinnedStimgen <: Stimgen end
+
+struct GaussianPrior <: BinnedStimgen
+    min_freq::Real
+    max_freq::Real
+    duration::Real
+    n_trials::Int
+    Fs::Real
+    n_bins::Int
+    min_bins::Int
+    max_bins::Int
+    n_bins_filled_mean::Integer
+    n_bins_filled_var::Real
+
+    # Inner constructor to validate inputs
+    function GaussianPrior(
+        min_freq::Real,
+        max_freq::Real,
+        duration::Real,
+        n_trials::Integer,
+        Fs::Real,
+        n_bins::Integer,
+        min_bins::Integer,
+        max_bins::Integer,
+        n_bins_filled_mean::Integer,
+        n_bins_filled_var::Real,
+    )
+        @assert any(
+            x -> x >= 0, [min_freq max_freq duration n_trials Fs 
+                n_bins min_bins max_bins n_bins_filled_mean n_bins_filled_var]
+        ) "All arguements must be greater than 0"
+        @assert min_freq <= max_freq "`min_freq` must be less than `max_freq`"
+        @assert min_bins < max_bins "`min_bins` cannot be greater than `max_bins`"
+        @assert max_bins < n_bins "`max_bins` cannot be greater than `n_bins`"
+        return new(min_freq, max_freq, duration, n_trials, Fs, 
+            n_bins, min_bins, max_bins, n_bins_filled_mean, n_bins_filled_var)
+    end
+end
+
+
+"""
+    GaussianPrior(; kwargs...) <: BinnedStimgen
+
+Outer constructor for stimulus generation type in which 
+    the total number of bins-to-be-filled is chosen from a Gaussian distribution.
+
+# Keywords
+
+- `min_freq::Real = 100`: The minimum frequency in range from which to sample.
+- `max_freq::Real = 22e3`: The maximum frequency in range from which to sample.
+- `duration::Real = 0.5`: The length of time for which stimuli are played in seconds.
+- `n_trials::Integer = 100`: The number of trials the subject will complete.
+- `Fs::Real = 44.1e3`: The frequency of the stimuli in Hz.
+- `n_bins::Integer = 100`: The number of bins into which to partition the frequency range.
+- `min_bins::Integer = 10`: The minimum number of bins that may be filled on any stimuli.
+- `max_bins::Integer = 50`: The maximum number of bins that may be filled on any stimuli.
+- `n_bins_filled_mean::Integer = 20`: The mean number of bins that may be filled on any stimuli.
+- `n_bins_filled_var::Integer = 1`: The variance of the number of bins that may be filled on any stimuli.
+"""
+function GaussianPrior(;
+    min_freq=100,
+    max_freq=22e3,
+    duration=0.5,
+    n_trials=100,
+    Fs=44.1e3,
+    n_bins=100,
+    min_bins=10,
+    max_bins=50,
+    n_bins_filled_mean=20, 
+    n_bins_filled_var=1,
+)
+    return GaussianPrior(
+        min_freq, max_freq, duration, n_trials, Fs, n_bins, min_bins, max_bins, n_bins_filled_mean, n_bins_filled_var
+    )
+end
 
 struct UniformPrior <: BinnedStimgen
     min_freq::Real
