@@ -2,13 +2,14 @@
 
 <body>
     <div>
-        <form method="GET" action="/exptest">
+        <form method="GET" action="/experiment">
             <label for="n-blocks">Number of blocks</label>
             <input type="number" class="btn btn-info form-field" name="n_blocks" min="1" max="20" required>
 
             <label for="n-trials-per-block">Number of trials per block</label>
             <input type="number" class="btn btn-info form-field" name="n_trials_per_block" min="1" max="100" required>
 
+            <input type="hidden" name="blocks_completed" value="0" />
             <input type="submit" value="Confirm" id="btnsubmit">
         </form>
     </div>

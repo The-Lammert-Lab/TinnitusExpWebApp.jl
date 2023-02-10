@@ -73,6 +73,32 @@ function scale_audio(x)
     return x
 end
 
+"""
+    gen_b64_stimuli(B::Block)
+
+Generate a vector of base64 encoded stimuli from Block settings.
+"""
+function gen_b64_stimuli(B::Block)
+    # Turn relevant block params into stimgen
+    s = block2stimgen(B)
+
+    stimuli_matrix, Fs, _, _ = generate_stimuli_matrix(s, B.n_trials_per_block)
+
+    # Scale all columns
+    scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims=1)
+
+    # Save base64 encoded wav files to stimuli vector of strings
+    stimuli = Vector{String}(undef, size(scaled_stimuli, 2))
+    for (ind, stimulus) in enumerate(eachcol(scaled_stimuli))
+        buf = Base.IOBuffer()
+        wavwrite(stimulus, buf; Fs=Fs)
+        stimuli[ind] = base64encode(take!(buf))
+        close(buf)
+    end
+
+    return stimuli
+end
+
 
 function index()
     # Errors even commented out inside index.jl.html so keeping here for reference
@@ -91,22 +117,7 @@ function exptest()
         n_trials_per_block=parse(Int, params(:n_trials_per_block))
     )
 
-    # Turn relevant block params into stimgen
-    s = block2stimgen(B)
-
-    stimuli_matrix, Fs, _, _ = generate_stimuli_matrix(s)
-
-    # Scale all columns
-    scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims=1)
-
-    # Save base64 encoded wav files to stimuli vector of strings
-    stimuli = Vector{String}(undef, size(scaled_stimuli, 2))
-    for (ind, stimulus) in enumerate(eachcol(scaled_stimuli))
-        buf = Base.IOBuffer()
-        wavwrite(stimulus, buf; Fs=Fs)
-        stimuli[ind] = base64encode(take!(buf))
-        close(buf)
-    end
+    stimuli = gen_b64_stimuli(B)
 
     # Vars for labelling audio and button elements
     counter_vec = collect(1:length(stimuli))
@@ -120,8 +131,47 @@ function expsetup()
 end
 
 function experiment()
-    B = Block(; n_blocks = params(:n_blocks), n_trials_per_block = params(:n_trials_per_block))
-    redirect("/exptest?Settings=$B")
+    # This might not be necessary. Redirect is doen in experiment.jl.html
+    if params(:blocks_completed) == params(:n_blocks)
+        redirect("/done")
+    end
+
+    if parse(Int, params(:blocks_completed)) > 0
+        # Flag for if page is loaded mid-experiment (coming from rest page)
+        from_rest = true
+        html(:blocks, :experiment; from_rest)
+    else
+        from_rest = false
+
+        # Create the block
+        B = Block(; n_blocks=parse(Int, params(:n_blocks)), 
+            n_trials_per_block=parse(Int, params(:n_trials_per_block))
+        )
+
+        # Get stimuli vector
+        stimuli = gen_b64_stimuli(B)
+
+        # Var for labelling audio elements
+        counter = 0
+
+        html(:blocks, :experiment; stimuli, counter, from_rest)
+    end
+end
+
+function done()
+    html(:blocks, :done)
+end
+
+function rest()
+    # Create a new Block struct for the new block section
+    B = Block(; n_blocks=parse(Int, params(:n_blocks)), 
+    n_trials_per_block=parse(Int, params(:n_trials_per_block))
+    )
+
+    stimuli = gen_b64_stimuli(B)
+    counter = 0
+
+    html(:blocks, :rest; stimuli, counter)
 end
 
 end
