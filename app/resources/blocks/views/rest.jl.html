@@ -1,7 +1,7 @@
 <body>
     <div>
         <strong>Rest!</strong>
-        <button id="continue" type="button" onclick="redirect()">Continue</button>
+        <button id="continue" type="button" onclick="restToExp()">Continue</button>
 
         <% for_each(stimuli) do stimuli 
         counter += 1
@@ -14,27 +14,6 @@
         <% end %>
     </div>
 
-    <script>
-        let stim_len = document.getElementsByName("stimulus").length;
-
-        var stims = new Array(stim_len);
-        for (let i = 0; i < stim_len; i++) {
-            // Ensures they're in order.
-            stims[i] = document.getElementById((i+1).toString()).src;
-        }
-        const stims_json = JSON.stringify(stims);
-        localStorage.setItem('stims', stims_json);
-
-        function redirect() {
-            let params = new Proxy(new URLSearchParams(window.location.search), {
-                    get: (searchParams, prop) => searchParams.get(prop),
-                });
-            window.location.href = "/experiment?" + "n_blocks=" + params.n_blocks + 
-                        "&n_trials_per_block=" + params.n_trials_per_block + 
-                        "&blocks_completed=" + params.blocks_completed;
-            return;
-        }
-
-    </script>
+    <script> addAudioToStorage(); </script>
 
 </body>
