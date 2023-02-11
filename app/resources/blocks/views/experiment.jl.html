@@ -53,31 +53,13 @@
                 </audio>
             <% end 
             else %>
-                <!-- Generate audio elements with JS -->
-                <script>
-                    // This block of stimuli is in local storage from /rest
-                    var stims = JSON.parse(localStorage.getItem('stims')); 
-                    for (let i = 0; i < stims.length; i++) {
-                        let audio = document.createElement('audio');
-                        audio.id = (i+1).toString();
-                        audio.src = stims[i];
-                        audio.preload = 'auto';
-                        audio.addEventListener("ended", function(){ 
-                            document.getElementById('yes').disabled=false; 
-                            document.getElementById('no').disabled=false; 
-                            this.remove();
-                        });
-                        document.body.appendChild(audio)
-                        // Unclear why, but audio.name does not actually add the name attribute.
-                        document.getElementById((i+1).toString()).setAttribute("name","stimulus");
-                    }
-                    localStorage.removeItem('stims');
-                </script>
+                <!-- Generate audio elements with JS (after first block)-->
+                <script> genAudioFromStorage(); </script>
             <% end %>
 
-        <button id="yes" onclick="recordAndPlay('yes')" disabled=true>Yes! (f)</button>
-        <button id="no" onclick="recordAndPlay('no')" disabled=true>No! (j)</button>
-        <button id="start" onclick="startFunc()">Start! (Enter)</button>
+        <button id="yes" onclick="recordAndPlay('yes');" disabled=true>Yes! (f)</button>
+        <button id="no" onclick="recordAndPlay('no');" disabled=true>No! (j)</button>
+        <button id="start" onclick="document.getElementById('1').play(); this.disabled=true;">Start! (Enter)</button>
     </div>
 
     <script type="text/javascript">
@@ -93,62 +75,5 @@
                 document.getElementById('start').click();
             }
         });
-
-        function startFunc(){
-            document.getElementById('1').play();
-            this.disabled=true;
-            document.getElementById('yes').disabled=false;
-            document.getElementById('no').disabled=false;
-        }
-
-        function recordAndPlay(ans) {
-            // Log ans
-            switch(ans) {
-                case 'yes':
-                    console.log(1);
-                    break;
-                case 'no':
-                    console.log(-1);
-                    break;
-            }
-
-            // Collect all stimulus audio elements
-            const stimuli = document.getElementsByName("stimulus");
-
-            if (stimuli.length === 0) {
-                // Get n_blocks and n_trials_per_block from search params
-                let params = new Proxy(new URLSearchParams(window.location.search), {
-                    get: (searchParams, prop) => searchParams.get(prop),
-                });
-                let n_blocks = params.n_blocks;
-                let n_trials_per_block = params.n_trials_per_block;
-
-                // Add one to blocks completed
-                let blocks_completed = (parseInt(params.blocks_completed) + 1).toString();
-
-                if (blocks_completed === n_blocks) {
-                    window.location.replace("/done");
-                    return;
-                } else {
-                    // Redirect to a rest page with params
-                    window.location.replace("/rest?" + "n_blocks=" + n_blocks + 
-                        "&n_trials_per_block=" + n_trials_per_block + 
-                        "&blocks_completed=" + blocks_completed
-                    );
-                    return;
-                }
-            }
-            
-            // Get the next audio element (prev. was deleted)
-            const curr_id = Math.min(parseInt(stimuli[0].id));
-
-            // 300ms delay then play sound
-            setTimeout(() => {document.getElementById(curr_id).play()}, 300);
-
-            // Disallow answer while the sound plays
-            document.getElementById('yes').disabled=true;
-            document.getElementById('no').disabled=true;
-        } // function
-
     </script>
 </body>

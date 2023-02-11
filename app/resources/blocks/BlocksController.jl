@@ -101,29 +101,7 @@ end
 
 
 function index()
-    # Errors even commented out inside index.jl.html so keeping here for reference
-    # <% for_each(stimgen_types) do stimgen %>
-    #     <option value="$(stimgen)">$(stimgen)</option>
-    # <% end %> 
-
     html(:blocks, :index)
-end
-
-function exptest()
-    # Assuming this is routed from expsetup
-
-    # Create the block
-    B = Block(; n_blocks=parse(Int, params(:n_blocks)), 
-        n_trials_per_block=parse(Int, params(:n_trials_per_block))
-    )
-
-    stimuli = gen_b64_stimuli(B)
-
-    # Vars for labelling audio and button elements
-    counter_vec = collect(1:length(stimuli))
-    counter = 0
-
-    html(:blocks, :exptest; stimuli, counter, counter_vec)
 end
 
 function expsetup()
@@ -131,7 +109,7 @@ function expsetup()
 end
 
 function experiment()
-    # This might not be necessary. Redirect is doen in experiment.jl.html
+    # This might not be necessary. Redirect is done in experiment.jl.html
     if params(:blocks_completed) == params(:n_blocks)
         redirect("/done")
     end
