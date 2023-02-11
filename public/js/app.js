@@ -3,15 +3,6 @@ function showOptions() {
     document.getElementById("stimgenDropdown").classList.toggle("show");
 }
 
-// Experiment start button function
-// TODO: Disallow clicking an ans during play (need to adjust timing of setting "disabled")
-function startFunc(){
-    document.getElementById('1').play();
-    document.getElementById('start').disabled=true;
-    document.getElementById('yes').disabled=false;
-    document.getElementById('no').disabled=false;
-}
-
 // Main protocol logic
 function recordAndPlay(ans) {
     // Log ans

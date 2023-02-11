@@ -57,9 +57,9 @@
                 <script> genAudioFromStorage(); </script>
             <% end %>
 
-        <button id="yes" onclick="recordAndPlay('yes')" disabled=true>Yes! (f)</button>
-        <button id="no" onclick="recordAndPlay('no')" disabled=true>No! (j)</button>
-        <button id="start" onclick="startFunc()">Start! (Enter)</button>
+        <button id="yes" onclick="recordAndPlay('yes');" disabled=true>Yes! (f)</button>
+        <button id="no" onclick="recordAndPlay('no');" disabled=true>No! (j)</button>
+        <button id="start" onclick="document.getElementById('1').play(); this.disabled=true;">Start! (Enter)</button>
     </div>
 
     <script type="text/javascript">
