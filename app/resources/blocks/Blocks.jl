@@ -13,11 +13,11 @@ mutable struct Block <: AbstractModel
     n_blocks::Integer
     n_trials_per_block::Integer
     stimgen::String
-    min_freq::Real
-    max_freq::Real
-    duration::Real
+    min_freq::AbstractFloat
+    max_freq::AbstractFloat
+    duration::AbstractFloat
     n_trials::Integer
-    Fs::Real
+    Fs::AbstractFloat
     n_bins::Integer
     min_bins::Integer
     max_bins::Integer
@@ -30,10 +30,10 @@ mutable struct Block <: AbstractModel
         n_blocks::Integer,
         n_trials_per_block::Integer,
         stimgen::String,
-        min_freq::Real,
-        max_freq::Real,
-        duration::Real,
-        Fs::Real,
+        min_freq::AbstractFloat,
+        max_freq::AbstractFloat,
+        duration::AbstractFloat,
+        Fs::AbstractFloat,
         n_bins::Integer,
         min_bins::Integer,
         max_bins::Integer,
