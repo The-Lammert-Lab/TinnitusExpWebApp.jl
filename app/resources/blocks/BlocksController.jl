@@ -15,14 +15,6 @@ using Base64
 Returns a stimgen type with settings from Block.
 """
 function block2stimgen(B::Block)
-    # TODO: Remove conditional if committed to not using n_trials in stimgen def
-    if B.n_blocks == 0 || B.n_trials_per_block == 0 
-        @warn "n_blocks and/or n_trials_per_block not set. Defaulting to n_trials."
-        n_trials = B.n_trials
-    else
-        n_trials = B.n_blocks*B.n_trials_per_block
-    end
-
     stimgen = eval(Meta.parse(B.stimgen))(;
         min_freq=B.min_freq,
         max_freq=B.max_freq,
@@ -123,7 +115,7 @@ function experiment()
         from_rest = false
 
         # Create the block
-        B = Block(; n_blocks=parse(Int, params(:n_blocks)), 
+        B = Block(UniformPrior(); n_blocks=parse(Int, params(:n_blocks)), 
             n_trials_per_block=parse(Int, params(:n_trials_per_block))
         )
 
@@ -143,7 +135,7 @@ end
 
 function rest()
     # Create a new Block struct for the new block section
-    B = Block(; n_blocks=parse(Int, params(:n_blocks)), 
+    B = Block(UniformPrior(); n_blocks=parse(Int, params(:n_blocks)), 
     n_trials_per_block=parse(Int, params(:n_trials_per_block))
     )
 
