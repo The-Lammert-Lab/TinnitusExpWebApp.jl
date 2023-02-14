@@ -1,18 +1,19 @@
 module TinnitusReconstructor
 
+using DSP
 using FFTW
-using LinearAlgebra
-using Statistics, StatsBase
-using PortAudio, SampledSignals
+using FastBroadcast
 using FileIO
 using LibSndFile
-using DSP
+using LinearAlgebra
 using Memoize
-using FastBroadcast
+using PortAudio
+using SampledSignals
+using Statistics
+using StatsBase
 
 include("funcs.jl")
 include("StimGens.jl")
-include("generate_stimuli.jl")
 
 export Stimgen
 export UniformPrior, GaussianPrior

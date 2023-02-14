@@ -1,25 +1,33 @@
 module Blocks
 
+using CharacterizeTinnitus.TinnitusReconstructor
 import SearchLight: AbstractModel, DbId
 import Base: @kwdef
 
 export Block
 
-@kwdef mutable struct Block{T,W} <: AbstractModel where {T<:Real,W<:Integer}
+# TODO: Figure out default values (should probably all be empty). 
+# Write stimgen2blocks method.
+@kwdef mutable struct Block <: AbstractModel
     id::DbId = DbId()
-    stim_matrix::AbstractArray{T} = [1.0 2.0 3.0; 4.0 5.0 6.0]
-    responses::AbstractVector{W} = [1, 2, 3, 4]
-    n_blocks::W = 0
-    n_trials_per_block::W = 0
+    stim_matrix::String = ""
+    responses::String = ""
+    n_blocks::Integer = 0
+    n_trials_per_block::Integer = 0
     stimgen::String = "UniformPrior"
-    min_freq::T = 100.0
-    max_freq::T = 13e3
-    duration::T = 0.5
-    n_trials::W = 2000
-    fs::T = 44100.0
-    n_bins::W = 100
-    min_bins::W = 20
-    max_bins::W = 30
+    min_freq::Real = 100.0
+    max_freq::Real = 13e3
+    duration::Real = 0.5
+    n_trials::Integer = 0
+    Fs::Real = 44100.0
+    n_bins::Integer = 100
+    min_bins::Integer = 20
+    max_bins::Integer = 30
 end
+
+# function Block(s::SG; kwargs...) where {SG<:Stimgen}
+
+
+# end
 
 end

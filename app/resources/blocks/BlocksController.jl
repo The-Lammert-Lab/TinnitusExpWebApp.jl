@@ -15,7 +15,9 @@ using Base64
 Returns a stimgen type with settings from Block.
 """
 function block2stimgen(B::Block)
+    # TODO: Remove conditional if committed to not using n_trials in stimgen def
     if B.n_blocks == 0 || B.n_trials_per_block == 0 
+        @warn "n_blocks and/or n_trials_per_block not set. Defaulting to n_trials."
         n_trials = B.n_trials
     else
         n_trials = B.n_blocks*B.n_trials_per_block
@@ -25,8 +27,7 @@ function block2stimgen(B::Block)
         min_freq=B.min_freq,
         max_freq=B.max_freq,
         duration=B.duration,
-        n_trials=n_trials,
-        Fs=B.fs,
+        Fs=B.Fs,
         n_bins=B.n_bins,
         min_bins=B.min_bins,
         max_bins=B.max_bins
