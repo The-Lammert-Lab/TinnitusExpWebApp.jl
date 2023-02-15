@@ -26,6 +26,7 @@ function recordAndPlay(ans) {
         });
         let n_blocks = params.n_blocks;
         let n_trials_per_block = params.n_trials_per_block;
+        let stimgen = params.stimgen;
 
         // Add one to blocks completed
         let blocks_completed = (parseInt(params.blocks_completed) + 1).toString();
@@ -37,7 +38,8 @@ function recordAndPlay(ans) {
             // Redirect to a rest page with params
             window.location.replace("/rest?" + "n_blocks=" + n_blocks + 
                 "&n_trials_per_block=" + n_trials_per_block + 
-                "&blocks_completed=" + blocks_completed
+                "&blocks_completed=" + blocks_completed +
+                "&stimgen=" + stimgen
             );
             return;
         }
@@ -101,7 +103,8 @@ function restToExp() {
             get: (searchParams, prop) => searchParams.get(prop),
         });
     window.location.href = "/experiment?" + "n_blocks=" + params.n_blocks + 
-                "&n_trials_per_block=" + params.n_trials_per_block + 
-                "&blocks_completed=" + params.blocks_completed;
+        "&n_trials_per_block=" + params.n_trials_per_block + 
+        "&blocks_completed=" + params.blocks_completed + 
+        "&stimgen=" + params.stimgen;
     return;
 }

@@ -9,8 +9,28 @@
             <label for="n-trials-per-block">Number of trials per block</label>
             <input type="number" class="btn btn-info form-field" name="n_trials_per_block" min="1" max="100" required>
 
+            <label for="stimgen">Choose a stimulus generation method</label>
+            <select name="stimgen" id="sg-dropdown" required>
+            <option value="" selected>Please select</option>
+            <% for_each(stimgen_types) do stimgen %>
+                <option value="$stimgen">$stimgen</option>
+            <% end %>
+            </select>
+
             <input type="hidden" name="blocks_completed" value="0" />
-            <input type="submit" value="Confirm" id="btnsubmit">
+            <input type="submit" value="Confirm" id="submit" disabled>
         </form>
     </div>
+
+    <script>
+        const select = document.getElementById('sg-dropdown');
+        const submitButton = document.getElementById('submit');
+        select.addEventListener('change', () => {
+            if (select.value === "") {
+                submitButton.disabled = true;
+            } else {
+                submitButton.disabled = false;
+            }
+        });
+    </script>
 </body>

@@ -98,7 +98,10 @@ function index()
 end
 
 function expsetup()
-    html(:blocks, :expsetup)
+    stimgen_types = _subtypes(Stimgen)
+    println(stimgen_types)
+
+    html(:blocks, :expsetup; stimgen_types)
 end
 
 function experiment()
@@ -114,8 +117,11 @@ function experiment()
     else
         from_rest = false
 
+        # Create the stimgen struct from settings
+        stimgen = eval(Meta.parse(params(:stimgen)))()
+
         # Create the block
-        B = Block(UniformPrior(); n_blocks=parse(Int, params(:n_blocks)), 
+        B = Block(stimgen; n_blocks=parse(Int, params(:n_blocks)), 
             n_trials_per_block=parse(Int, params(:n_trials_per_block))
         )
 
@@ -134,8 +140,10 @@ function done()
 end
 
 function rest()
+    stimgen = eval(Meta.parse(params(:stimgen)))()
+
     # Create a new Block struct for the new block section
-    B = Block(UniformPrior(); n_blocks=parse(Int, params(:n_blocks)), 
+    B = Block(stimgen; n_blocks=parse(Int, params(:n_blocks)), 
     n_trials_per_block=parse(Int, params(:n_trials_per_block))
     )
 
