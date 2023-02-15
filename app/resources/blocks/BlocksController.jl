@@ -99,8 +99,6 @@ end
 
 function expsetup()
     stimgen_types = _subtypes(Stimgen)
-    println(stimgen_types)
-
     html(:blocks, :expsetup; stimgen_types)
 end
 
