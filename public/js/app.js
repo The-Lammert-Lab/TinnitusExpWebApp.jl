@@ -8,9 +8,11 @@ function recordAndPlay(ans) {
     // Log ans
     switch(ans) {
         case 'yes':
+            addRespToStorage(1);
             console.log(1);
             break;
         case 'no':
+            addRespToStorage(-1);
             console.log(-1);
             break;
     }
@@ -32,10 +34,14 @@ function recordAndPlay(ans) {
         let blocks_completed = (parseInt(params.blocks_completed) + 1).toString();
 
         if (blocks_completed === n_blocks) {
+            // TODO: Send responses to server
+            sessionStorage.removeItem("responses");
             window.location.replace("/done");
             return;
         } else {
             // Redirect to a rest page with params
+            // TODO: Send responses to server
+            sessionStorage.removeItem("responses");
             window.location.replace("/rest?" + "n_blocks=" + n_blocks + 
                 "&n_trials_per_block=" + n_trials_per_block + 
                 "&blocks_completed=" + blocks_completed +
@@ -60,7 +66,7 @@ function recordAndPlay(ans) {
 function genAudioFromStorage() {
     // Get data from local storage
     // TODO: Add check clause to be sure the data is there(?)
-    var stims = JSON.parse(localStorage.getItem('stims'));
+    var stims = JSON.parse(sessionStorage.getItem('stims'));
     
     // Create the elements
     for (let i = 0; i < stims.length; i++) {
@@ -77,8 +83,8 @@ function genAudioFromStorage() {
         // Unclear why, but audio.name does not actually add the name attribute.
         document.getElementById((i + 1).toString()).setAttribute("name", "stimulus");
     }
-    // Remove the data from storage. No longer necessary.
-    localStorage.removeItem('stims');
+    // Remove audio data from storage.
+    sessionStorage.removeItem('stims');
 }
 
 // Collect and save audio src's to local storage
@@ -94,7 +100,7 @@ function addAudioToStorage() {
 
     // Create and add JSON file to local storage.
     const stims_json = JSON.stringify(stims);
-    localStorage.setItem('stims', stims_json);
+    sessionStorage.setItem('stims', stims_json);
 }
 
 // Redirect from rest page to experiment page
@@ -107,4 +113,11 @@ function restToExp() {
         "&blocks_completed=" + params.blocks_completed + 
         "&stimgen=" + params.stimgen;
     return;
+}
+
+function addRespToStorage(ans) {
+    var responses = JSON.parse(sessionStorage.getItem("responses"));
+    if(responses == null) responses = [];
+    responses.push(ans);
+    sessionStorage.setItem("responses", JSON.stringify(responses));
 }

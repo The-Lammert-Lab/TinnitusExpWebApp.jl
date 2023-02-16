@@ -82,6 +82,16 @@ function UniformPrior(;
     )
 end
 
+struct GaussianPrior <: BinnedStimgen
+    min_freq::Real
+    max_freq::Real
+    duration::Real
+    Fs::Real
+    n_bins::Int
+    min_bins::Int
+    max_bins::Int
+end
+
 #############################
 
 ## Stimgen functions  
