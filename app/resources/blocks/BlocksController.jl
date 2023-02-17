@@ -79,9 +79,62 @@ function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
     return stimuli, binned_repr_matrix
 end
 
+"""
+    stimgen_from_params(stimgen::S; kwargs...) where {S<:String}
+
+Returns a stimgen struct with keyword arguments from stringified name.
+"""
+function stimgen_from_params(stimgen::S; kwargs...) where {S<:String}
+    stimgen_args = "("
+    for key in keys(kwargs)
+        name = string(key)
+        value = string(kwargs[key])
+        if stimgen_args == "("
+            stimgen_args = string(stimgen_args, name, "=", value)
+        else
+            stimgen_args = string(stimgen_args, ",", name, "=", value)
+        end
+    end
+    stimgen_args = string(stimgen_args, ")")
+    f = eval(Meta.parse(string("x ->", stimgen, stimgen_args)))
+    return Base.invokelatest(f, ())
+end
+
+"""
+    gen_stim_and_block(parameters)
+
+Returns base64 encoded stimuli and Block struct based on `parameters`, which must come from `params()`.
+"""
+function gen_stim_and_block(parameters)
+    stimgen = stimgen_from_params(getindex(parameters, :stimgen); n_bins=50, min_freq=10.0)
+
+    # Collect from parameters
+    n_trials_per_block = parse(Int, getindex(parameters, :n_trials_per_block))
+
+    # Hash stimgen
+    stimgen_json = JSON3.write(stimgen)
+    stim_to_hash = string(string(getindex(parameters, :stimgen)), stimgen_json)
+    stimgen_hash = bytes2hex(sha256(stim_to_hash))
+
+    # Get stimuli vector
+    stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials_per_block)
+
+    # Create block
+    B = Block(; 
+        stim_matrix=JSON3.write(binned_repr_matrix),
+        stimgen=stimgen_json, 
+        stimgen_type=string(getindex(parameters, :stimgen)), 
+        stimgen_hash=stimgen_hash,
+        n_blocks=parse(Int, getindex(parameters, :n_blocks)), 
+        n_trials_per_block=n_trials_per_block
+    )
+
+    return stimuli, B
+end
+
 #########################
 
-## PAGE RENDERERS ##
+## PAGE FUNCTIONS ##
 
 #########################
 
@@ -113,65 +166,36 @@ function experiment()
         html(:blocks, :experiment; from_rest)
     else
         from_rest = false
-
-        # Collect from parameters
-        stimgen = eval(Meta.parse(params(:stimgen)))()
-        n_trials_per_block = parse(Int, params(:n_trials_per_block))
-
-        # Hash stimgen
-        stimgen_json = JSON3.write(stimgen)
-        stim_to_hash = string(string(params(:stimgen)), stimgen_json)
-        stimgen_hash = bytes2hex(sha256(stim_to_hash))
-
-        # Get stimuli vector
-        stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials_per_block)
-
-        B = Block(; 
-            stim_matrix=JSON3.write(binned_repr_matrix),
-            stimgen=stimgen_json, 
-            stimgen_type=string(params(:stimgen)), 
-            stimgen_hash=stimgen_hash,
-            n_blocks=parse(Int, params(:n_blocks)), 
-            n_trials_per_block=n_trials_per_block
-        )
-
-        save(B)
+        stimuli, B = gen_stim_and_block(params())
+        save!(B)
+        id = B.id
 
         # Var for labelling audio elements
         counter = 0
 
-        html(:blocks, :experiment; stimuli, counter, from_rest)
+        html(:blocks, :experiment; stimuli, counter, from_rest, id)
     end
 end
 
 function rest()
-
-    # Collect from parameters
-    stimgen = eval(Meta.parse(params(:stimgen)))()
-    n_trials_per_block = parse(Int, params(:n_trials_per_block))
-
-    # Hash stimgen
-    stimgen_json = JSON3.write(stimgen)
-    stim_to_hash = string(string(params(:stimgen)), stimgen_json)
-    stimgen_hash = bytes2hex(sha256(stim_to_hash))
-
-    # Get stimuli vector
-    stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials_per_block)
-
-    B = Block(; 
-        stim_matrix=JSON3.write(binned_repr_matrix),
-        stimgen=stimgen_json, 
-        stimgen_type=string(params(:stimgen)), 
-        stimgen_hash=stimgen_hash,
-        n_blocks=parse(Int, params(:n_blocks)), 
-        n_trials_per_block=n_trials_per_block
-    )
-
-    save(B)
+    stimuli, B = gen_stim_and_block(params())
+    save!(B)
+    id = B.id
 
     counter = 0
 
-    html(:blocks, :rest; stimuli, counter)
+    html(:blocks, :rest; stimuli, counter, id)
+end
+
+function save_responses()
+    B = findone(Block, id = params(:id))
+    if B === nothing
+        return Router.error(NOT_FOUND, "Block info with id
+          $(params(:id))", MIME"text/html")
+    end
+    
+    B.responses = replace(jsonpayload("responses"))
+    save(B)
 end
 
 function done()

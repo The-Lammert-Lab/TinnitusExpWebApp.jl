@@ -57,6 +57,7 @@
                 <script> genAudioFromStorage(); </script>
             <% end %>
 
+        <input type="hidden" id="db-id" value="$id">
         <button id="yes" onclick="recordAndPlay('yes');" disabled=true>Yes! (f)</button>
         <button id="no" onclick="recordAndPlay('no');" disabled=true>No! (j)</button>
         <button id="start" onclick="document.getElementById('1').play(); this.disabled=true;">Start! (Enter)</button>

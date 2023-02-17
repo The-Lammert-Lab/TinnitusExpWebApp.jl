@@ -9,11 +9,9 @@ function recordAndPlay(ans) {
     switch(ans) {
         case 'yes':
             addRespToStorage(1);
-            console.log(1);
             break;
         case 'no':
             addRespToStorage(-1);
-            console.log(-1);
             break;
     }
 
@@ -27,26 +25,43 @@ function recordAndPlay(ans) {
             get: (searchParams, prop) => searchParams.get(prop),
         });
         let n_blocks = params.n_blocks;
-        let n_trials_per_block = params.n_trials_per_block;
-        let stimgen = params.stimgen;
-
         // Add one to blocks completed
         let blocks_completed = (parseInt(params.blocks_completed) + 1).toString();
 
+        // Check if experiment ended
         if (blocks_completed === n_blocks) {
-            // TODO: Send responses to server
-            sessionStorage.removeItem("responses");
-            window.location.replace("/done");
+            let id = document.getElementById("db-id")
+
+            axios.post('/save/' + id.value, {
+                responses: sessionStorage.getItem("responses")
+            })
+                .then(() => {
+                    sessionStorage.removeItem("responses");
+                    window.location.replace("/done");
+                }, (error) => {
+                    console.log(error);
+                });
+            
             return;
         } else {
-            // Redirect to a rest page with params
-            // TODO: Send responses to server
-            sessionStorage.removeItem("responses");
-            window.location.replace("/rest?" + "n_blocks=" + n_blocks + 
-                "&n_trials_per_block=" + n_trials_per_block + 
-                "&blocks_completed=" + blocks_completed +
-                "&stimgen=" + stimgen
-            );
+            let n_trials_per_block = params.n_trials_per_block;
+            let stimgen = params.stimgen;
+            let id = document.getElementById("db-id")
+
+            axios.post('/save/' + id.value, {
+                responses: sessionStorage.getItem("responses")
+            })
+                .then(() => {
+                    sessionStorage.removeItem("responses");
+                    window.location.replace("/rest?" + "n_blocks=" + n_blocks +
+                        "&n_trials_per_block=" + n_trials_per_block +
+                        "&blocks_completed=" + blocks_completed +
+                        "&stimgen=" + stimgen
+                    );
+                }, (error) => {
+                    console.log(error);
+                });
+            
             return;
         }
     }
