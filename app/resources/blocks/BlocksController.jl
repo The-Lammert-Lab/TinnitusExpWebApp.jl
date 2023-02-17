@@ -106,7 +106,7 @@ end
 Returns base64 encoded stimuli and Block struct based on `parameters`, which must come from `params()`.
 """
 function gen_stim_and_block(parameters)
-    stimgen = stimgen_from_params(getindex(parameters, :stimgen); n_bins=50, min_freq=10.0)
+    stimgen = stimgen_from_params(getindex(parameters, :stimgen))
 
     # Collect from parameters
     n_trials_per_block = parse(Int, getindex(parameters, :n_trials_per_block))

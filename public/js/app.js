@@ -102,7 +102,7 @@ function genAudioFromStorage() {
     sessionStorage.removeItem('stims');
 }
 
-// Collect and save audio src's to local storage
+// Collect and save audio src's to session storage
 function addAudioToStorage() {
     let stim_len = document.getElementsByName("stimulus").length;
 
@@ -113,7 +113,7 @@ function addAudioToStorage() {
         stims[i] = document.getElementById((i + 1).toString()).src;
     }
 
-    // Create and add JSON file to local storage.
+    // Create and add JSON file to session storage.
     const stims_json = JSON.stringify(stims);
     sessionStorage.setItem('stims', stims_json);
 }
