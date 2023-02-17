@@ -39,7 +39,7 @@
     <div>
         <!-- Create and label each stim wav file (base64 encoded) -->
         <% if !from_rest
-            for_each(stimuli) do stimuli 
+            for_each(stimuli) do stimulus 
                 counter += 1 
         %> 
                 <audio 
@@ -48,7 +48,7 @@
                     onended="document.getElementById('yes').disabled=false; 
                         document.getElementById('no').disabled=false; 
                         this.remove();" 
-                    src="data:audio/wav;base64,$(stimuli)" 
+                    src="data:audio/wav;base64,$(stimulus)" 
                     preload="auto">
                 </audio>
             <% end 
@@ -57,6 +57,7 @@
                 <script> genAudioFromStorage(); </script>
             <% end %>
 
+        <input type="hidden" id="db-id" value="$id">
         <button id="yes" onclick="recordAndPlay('yes');" disabled=true>Yes! (f)</button>
         <button id="no" onclick="recordAndPlay('no');" disabled=true>No! (j)</button>
         <button id="start" onclick="document.getElementById('1').play(); this.disabled=true;">Start! (Enter)</button>

@@ -8,32 +8,9 @@ using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
 using InteractiveUtils
 using Base64
-
-"""
-  block2stimgen(B::Block)
-
-Returns a stimgen type with settings from Block.
-"""
-function block2stimgen(B::Block)
-    if B.n_blocks == 0 || B.n_trials_per_block == 0 
-        n_trials = B.n_trials
-    else
-        n_trials = B.n_blocks*B.n_trials_per_block
-    end
-
-    stimgen = eval(Meta.parse(B.stimgen))(;
-        min_freq=B.min_freq,
-        max_freq=B.max_freq,
-        duration=B.duration,
-        n_trials=n_trials,
-        Fs=B.fs,
-        n_bins=B.n_bins,
-        min_bins=B.min_bins,
-        max_bins=B.max_bins
-    )
-
-    return stimgen
-end
+using JSON3
+using SearchLight
+using SHA
 
 """
     _subtypes(type::Type)    
@@ -57,6 +34,12 @@ function _subtypes!(out, type::Type)
     return out
 end
 
+
+"""
+    scale_audio(x)
+
+Taken from MATLAB's `soundsc()`. Returns input scaled to between 1 and -1.
+"""
 function scale_audio(x)
     xmax = @. $maximum(abs, x[!isinf(x)])
 
@@ -74,15 +57,12 @@ function scale_audio(x)
 end
 
 """
-    gen_b64_stimuli(B::Block)
+    gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
 
-Generate a vector of base64 encoded stimuli from Block settings.
+Generate a vector of `n_trials` base64 encoded stimuli from stimgen settings.
 """
-function gen_b64_stimuli(B::Block)
-    # Turn relevant block params into stimgen
-    s = block2stimgen(B)
-
-    stimuli_matrix, Fs, _, _ = generate_stimuli_matrix(s, B.n_trials_per_block)
+function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
+    stimuli_matrix, Fs, _, binned_repr_matrix = generate_stimuli_matrix(s, n_trials)
 
     # Scale all columns
     scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims=1)
@@ -96,16 +76,82 @@ function gen_b64_stimuli(B::Block)
         close(buf)
     end
 
-    return stimuli
+    return stimuli, binned_repr_matrix
 end
 
+"""
+    stimgen_from_params(stimgen::S; kwargs...) where {S<:String}
+
+Returns a stimgen struct with keyword arguments from stringified name.
+"""
+function stimgen_from_params(stimgen::S; kwargs...) where {S<:String}
+    stimgen_args = "("
+    for key in keys(kwargs)
+        name = string(key)
+        value = string(kwargs[key])
+        if stimgen_args == "("
+            stimgen_args = string(stimgen_args, name, "=", value)
+        else
+            stimgen_args = string(stimgen_args, ",", name, "=", value)
+        end
+    end
+    stimgen_args = string(stimgen_args, ")")
+    f = eval(Meta.parse(string("x ->", stimgen, stimgen_args)))
+    return Base.invokelatest(f, ())
+end
+
+"""
+    gen_stim_and_block(parameters)
+
+Returns base64 encoded stimuli and Block struct based on `parameters`, which must come from `params()`.
+"""
+function gen_stim_and_block(parameters)
+    stimgen = stimgen_from_params(getindex(parameters, :stimgen))
+
+    # Collect from parameters
+    n_trials_per_block = parse(Int, getindex(parameters, :n_trials_per_block))
+
+    # Hash stimgen
+    stimgen_json = JSON3.write(stimgen)
+    stim_to_hash = string(string(getindex(parameters, :stimgen)), stimgen_json)
+    stimgen_hash = bytes2hex(sha256(stim_to_hash))
+
+    # Get stimuli vector
+    stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials_per_block)
+
+    # Create block
+    B = Block(; 
+        stim_matrix=JSON3.write(binned_repr_matrix),
+        stimgen=stimgen_json, 
+        stimgen_type=string(getindex(parameters, :stimgen)), 
+        stimgen_hash=stimgen_hash,
+        n_blocks=parse(Int, getindex(parameters, :n_blocks)), 
+        n_trials_per_block=n_trials_per_block
+    )
+
+    return stimuli, B
+end
+
+#########################
+
+## PAGE FUNCTIONS ##
+
+#########################
 
 function index()
     html(:blocks, :index)
 end
 
 function expsetup()
-    html(:blocks, :expsetup)
+    # full_types is CharacterizeTinnitus.TinnitusReconstructor.XXXXX (typeof = Vector{DataType})
+    full_types = _subtypes(Stimgen)
+
+    # Get just the stimgen name
+    # NOTE: This method can probably be considerably improved.
+    stimgen_types = Vector{String}(undef, length(full_types))
+    [stimgen_types[ind] = split.(type, '.')[end][end] for (ind, type) in enumerate(eachrow(string.(full_types)))]
+
+    html(:blocks, :expsetup; stimgen_types)
 end
 
 function experiment()
@@ -120,36 +166,40 @@ function experiment()
         html(:blocks, :experiment; from_rest)
     else
         from_rest = false
-
-        # Create the block
-        B = Block(; n_blocks=parse(Int, params(:n_blocks)), 
-            n_trials_per_block=parse(Int, params(:n_trials_per_block))
-        )
-
-        # Get stimuli vector
-        stimuli = gen_b64_stimuli(B)
+        stimuli, B = gen_stim_and_block(params())
+        save!(B)
+        id = B.id
 
         # Var for labelling audio elements
         counter = 0
 
-        html(:blocks, :experiment; stimuli, counter, from_rest)
+        html(:blocks, :experiment; stimuli, counter, from_rest, id)
     end
+end
+
+function rest()
+    stimuli, B = gen_stim_and_block(params())
+    save!(B)
+    id = B.id
+
+    counter = 0
+
+    html(:blocks, :rest; stimuli, counter, id)
+end
+
+function save_responses()
+    B = findone(Block, id = params(:id))
+    if B === nothing
+        return Router.error(NOT_FOUND, "Block info with id
+          $(params(:id))", MIME"text/html")
+    end
+    
+    B.responses = replace(jsonpayload("responses"))
+    save(B)
 end
 
 function done()
     html(:blocks, :done)
-end
-
-function rest()
-    # Create a new Block struct for the new block section
-    B = Block(; n_blocks=parse(Int, params(:n_blocks)), 
-    n_trials_per_block=parse(Int, params(:n_trials_per_block))
-    )
-
-    stimuli = gen_b64_stimuli(B)
-    counter = 0
-
-    html(:blocks, :rest; stimuli, counter)
 end
 
 end

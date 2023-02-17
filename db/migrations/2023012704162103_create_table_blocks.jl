@@ -7,25 +7,19 @@ function up()
         [
             pk()
             columns([
-                :stim_matrix => :float,
-                :responses => :int,
+                :stim_matrix => :string,
+                :responses => :string,
                 :n_blocks => :int,
                 :n_trials_per_block => :int,
+                :n_trials => :int,
                 :stimgen => :string,
-                :min_freq => :float,
-                :max_freq => :float,
-                :duration => :float,
-                :n_trials => :float,
-                :fs => :float,
-                :n_bins => :int,
-                :min_bins => :int,
-                :max_bins => :int,
+                :stimgen_type => :string,
+                :stimgen_hash => :string,
             ])
         ]
     end
 
-    add_indices(:blocks, :stimgen, :min_freq, :max_freq,
-        :duration, :n_trials, :fs, :n_bins, :min_bins, :max_bins)
+    add_indices(:blocks, :stimgen_hash, :n_trials)
 end
 
 function down()

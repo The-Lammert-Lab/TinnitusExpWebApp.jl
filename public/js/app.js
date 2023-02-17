@@ -8,10 +8,10 @@ function recordAndPlay(ans) {
     // Log ans
     switch(ans) {
         case 'yes':
-            console.log(1);
+            addRespToStorage(1);
             break;
         case 'no':
-            console.log(-1);
+            addRespToStorage(-1);
             break;
     }
 
@@ -25,20 +25,43 @@ function recordAndPlay(ans) {
             get: (searchParams, prop) => searchParams.get(prop),
         });
         let n_blocks = params.n_blocks;
-        let n_trials_per_block = params.n_trials_per_block;
-
         // Add one to blocks completed
         let blocks_completed = (parseInt(params.blocks_completed) + 1).toString();
 
+        // Check if experiment ended
         if (blocks_completed === n_blocks) {
-            window.location.replace("/done");
+            let id = document.getElementById("db-id")
+
+            axios.post('/save/' + id.value, {
+                responses: sessionStorage.getItem("responses")
+            })
+                .then(() => {
+                    sessionStorage.removeItem("responses");
+                    window.location.replace("/done");
+                }, (error) => {
+                    console.log(error);
+                });
+            
             return;
         } else {
-            // Redirect to a rest page with params
-            window.location.replace("/rest?" + "n_blocks=" + n_blocks + 
-                "&n_trials_per_block=" + n_trials_per_block + 
-                "&blocks_completed=" + blocks_completed
-            );
+            let n_trials_per_block = params.n_trials_per_block;
+            let stimgen = params.stimgen;
+            let id = document.getElementById("db-id")
+
+            axios.post('/save/' + id.value, {
+                responses: sessionStorage.getItem("responses")
+            })
+                .then(() => {
+                    sessionStorage.removeItem("responses");
+                    window.location.replace("/rest?" + "n_blocks=" + n_blocks +
+                        "&n_trials_per_block=" + n_trials_per_block +
+                        "&blocks_completed=" + blocks_completed +
+                        "&stimgen=" + stimgen
+                    );
+                }, (error) => {
+                    console.log(error);
+                });
+            
             return;
         }
     }
@@ -58,7 +81,7 @@ function recordAndPlay(ans) {
 function genAudioFromStorage() {
     // Get data from local storage
     // TODO: Add check clause to be sure the data is there(?)
-    var stims = JSON.parse(localStorage.getItem('stims'));
+    var stims = JSON.parse(sessionStorage.getItem('stims'));
     
     // Create the elements
     for (let i = 0; i < stims.length; i++) {
@@ -75,11 +98,11 @@ function genAudioFromStorage() {
         // Unclear why, but audio.name does not actually add the name attribute.
         document.getElementById((i + 1).toString()).setAttribute("name", "stimulus");
     }
-    // Remove the data from storage. No longer necessary.
-    localStorage.removeItem('stims');
+    // Remove audio data from storage.
+    sessionStorage.removeItem('stims');
 }
 
-// Collect and save audio src's to local storage
+// Collect and save audio src's to session storage
 function addAudioToStorage() {
     let stim_len = document.getElementsByName("stimulus").length;
 
@@ -90,9 +113,9 @@ function addAudioToStorage() {
         stims[i] = document.getElementById((i + 1).toString()).src;
     }
 
-    // Create and add JSON file to local storage.
+    // Create and add JSON file to session storage.
     const stims_json = JSON.stringify(stims);
-    localStorage.setItem('stims', stims_json);
+    sessionStorage.setItem('stims', stims_json);
 }
 
 // Redirect from rest page to experiment page
@@ -101,7 +124,15 @@ function restToExp() {
             get: (searchParams, prop) => searchParams.get(prop),
         });
     window.location.href = "/experiment?" + "n_blocks=" + params.n_blocks + 
-                "&n_trials_per_block=" + params.n_trials_per_block + 
-                "&blocks_completed=" + params.blocks_completed;
+        "&n_trials_per_block=" + params.n_trials_per_block + 
+        "&blocks_completed=" + params.blocks_completed + 
+        "&stimgen=" + params.stimgen;
     return;
+}
+
+function addRespToStorage(ans) {
+    var responses = JSON.parse(sessionStorage.getItem("responses"));
+    if(responses == null) responses = [];
+    responses.push(ans);
+    sessionStorage.setItem("responses", JSON.stringify(responses));
 }
