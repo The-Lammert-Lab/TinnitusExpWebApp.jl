@@ -1,14 +1,11 @@
 module Blocks
 
-using CharacterizeTinnitus.TinnitusReconstructor
-using NamedTupleTools: ntfromstruct
 import SearchLight: AbstractModel, DbId
 
 export Block
 
 """
     Block(; kwargs...)
-    Block(s::SG; kwargs...) where {SG<:Stimgen}
 
 Struct that holds information about the current experiment block.
 
@@ -20,7 +17,7 @@ Struct that holds information about the current experiment block.
 - `n_blocks::Integer = 0`: **REQUIRED** Number of blocks the subject will complete.
 - `n_trials_per_block::Integer = 0`: **REQUIRED** Number of trials per block that the subject will complete.
 - `n_trials::Integer = n_blocks * n_trials_per_block`: Total number of trials to be completed.
-        Not a valid input. The value will be inferred from `n_blocks` and `n_trials_per_block`. 
+        **Not a valid input.** The value will be inferred from `n_blocks` and `n_trials_per_block`. 
 - `stimgen::String = ""`: JSON string containing stimgen struct.
 - `stimgen_type::String = ""`: Name of the stimgen type.
 """
