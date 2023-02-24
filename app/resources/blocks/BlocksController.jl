@@ -80,11 +80,11 @@ function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
 end
 
 """
-    stimgen_from_params(stimgen::S; kwargs...) where {S<:String}
+    stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
 
 Returns a stimgen struct with keyword arguments from stringified name.
 """
-function stimgen_from_params(stimgen::S; kwargs...) where {S<:String}
+function stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
     stimgen_args = "("
     for key in keys(kwargs)
         name = string(key)

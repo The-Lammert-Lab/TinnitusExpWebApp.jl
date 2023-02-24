@@ -43,7 +43,7 @@ mutable struct Block <: AbstractModel
         stimgen::S = "",
         stimgen_type::S = "",
         stimgen_hash::S = "",
-    ) where {I<:Integer,S<:String}
+    ) where {I<:Integer,S<:AbstractString}
         @assert n_blocks > 0 "`n_blocks` must be greater than 0"
         @assert n_trials_per_block > 0 "`n_trials_per_block` must be greater than 0"
         n_trials = n_blocks * n_trials_per_block
