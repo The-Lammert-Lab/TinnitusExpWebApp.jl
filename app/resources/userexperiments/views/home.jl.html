@@ -1,0 +1,45 @@
+<body>
+    <% partial("app/layouts/_logout.jl.html") %>
+    <div>
+        <h1>Home page!</h1>
+    </div>
+    <div>
+        <table class="styled-table">
+            <tr>
+                <th>Name</th>
+                <th>Instance</th>
+                <th>Percent complete</th>
+                <th>Action</th>
+            </tr>
+            <% for_each(added_experiments) do e %>
+                <tr>
+                    <td>$(e.experiment_name)</td>
+                    <td>$(e.instance)</td>
+                    <td>$(round(Int, e.percent_complete))&percnt;</td>
+                    <%  if e.percent_complete >= 100  %>
+                            <td>None</td>
+                    <%  elseif e.percent_complete > 0  %>
+                            <td> 
+                                <button type="button" value="$(e.experiment_name)" name="continue">Continue</button> 
+                                <button type="button" value="$(e.experiment_name)" name="restart">Restart</button> 
+                            </td>
+                    <%  else  %>
+                            <td> <button type="button" value="$(e.experiment_name)" name="start">Start</button> </td>
+                    <%  end  %>
+                </tr>
+            <% end %>
+        </table>
+    </div>
+
+    <div>
+        <form action="/add_experiment">
+            <label>Add experiment:</label>
+            <select id="add-experiment">
+                <% for_each(visible_experiments) do e %>
+                    <option value="$(e.name)">$(e.name)</option>
+                <% end %>
+            </select>
+            <input type="submit" value="Add">
+        </form>
+    </div>
+</body>

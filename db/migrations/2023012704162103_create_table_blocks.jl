@@ -9,17 +9,10 @@ function up()
             columns([
                 :stim_matrix => :string,
                 :responses => :string,
-                :n_blocks => :int,
-                :n_trials_per_block => :int,
-                :n_trials => :int,
-                :stimgen => :string,
-                :stimgen_type => :string,
-                :stimgen_hash => :string,
+                :number => :int
             ])
         ]
     end
-
-    add_indices(:blocks, :stimgen_hash, :n_trials)
 end
 
 function down()

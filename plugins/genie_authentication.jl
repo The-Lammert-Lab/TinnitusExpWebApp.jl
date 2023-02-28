@@ -18,5 +18,5 @@ route("/logout", AuthenticationController.logout, named = :logout)
 
 #===#
 
-route("/register", AuthenticationController.show_register, named = :show_register)
-route("/register", AuthenticationController.register, method = POST, named = :register)
+# route("/register", AuthenticationController.show_register, named = :show_register)
+# route("/register", AuthenticationController.register, method = POST, named = :register)
