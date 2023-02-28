@@ -5,7 +5,10 @@ Small example functions to do various operations.
 
 using SearchLight
 using CharacterizeTinnitus.Blocks
+using CharacterizeTinnitus.Experiments
+using CharacterizeTinnitus.TinnitusReconstructor
 using JSON3
+using SHA
 
 function get_stim_mat(id::I) where {I<:Integer}
     B = findone(Block, id=id)
@@ -19,3 +22,7 @@ function get_stimgen_struct(id::I) where {I<:Integer}
     stimgen = JSON3.read(block.stimgen, eval(Meta.parse(block.stimgen_type)))
     return stimgen
 end
+
+const STIMGEN_MAPPINGS = Dict{String,DataType}(
+    "UniformPrior" => UniformPrior
+)

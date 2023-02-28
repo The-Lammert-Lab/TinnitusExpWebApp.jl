@@ -25,41 +25,43 @@ mutable struct Block <: AbstractModel
     id::DbId
     stim_matrix::String
     responses::String
+    number::Integer
+    user_id::DbId
     n_blocks::Integer
     n_trials_per_block::Integer
-    n_trials::Integer
-    stimgen::String
-    stimgen_type::String
-    stimgen_hash::String
+    experiment_name::String
+    instance::Integer
 
-    # Inner constructor for argument validation, n_trials definition, and defaults.
-    # TODO: Complete assertions.
+    # Inner constructor for argument validation
     function Block(;
         id::DbId = DbId(),
         stim_matrix::S = "",
         responses::S = "",
+        number::I = 1,
         n_blocks::I = 1,
         n_trials_per_block::I = 1,
-        stimgen::S = "",
-        stimgen_type::S = "",
-        stimgen_hash::S = "",
+        experiment_name::S = "",
+        user_id::DbId = DbId(),
+        instance::I = 1,
     ) where {I<:Integer,S<:AbstractString}
         @assert n_blocks > 0 "`n_blocks` must be greater than 0"
         @assert n_trials_per_block > 0 "`n_trials_per_block` must be greater than 0"
-        n_trials = n_blocks * n_trials_per_block
+        @assert instance > 0 "`instance` must be greater than 0"
 
         return new(
             id,
             stim_matrix,
             responses,
+            number,
             n_blocks,
             n_trials_per_block,
-            n_trials,
-            stimgen,
-            stimgen_type,
-            stimgen_hash
+            experiment_name,
+            user_id,
+            instance
         )
     end
 end
+
+# TODO: Add n_blocks validation
 
 end

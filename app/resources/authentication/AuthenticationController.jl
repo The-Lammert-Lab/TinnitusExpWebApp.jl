@@ -22,7 +22,7 @@ function login()
     user = findone(User, username = params(:username), password = Users.hash_password(params(:password)))
     authenticate(user.id, GenieSession.session(params()))
 
-    redirect(:success)
+    redirect("/home")
   catch ex
     flash("Authentication failed! ")
 
