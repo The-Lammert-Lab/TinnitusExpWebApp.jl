@@ -20,11 +20,27 @@
                             <td>None</td>
                     <%  elseif e.percent_complete > 0  %>
                             <td> 
-                                <button type="button" value="$(e.experiment_name)" name="continue">Continue</button> 
-                                <button type="button" value="$(e.experiment_name)" name="restart">Restart</button> 
+                                <form style="float:left;" action="/experiment">
+                                    <input type="hidden" name="name" value="$(e.experiment_name)">
+                                    <input type="hidden" name="instance" value="$(e.instance)">
+                                    <input type="hidden" name="from" value="continue">
+                                    <input type="submit" value="Continue"></input>
+                                </form>
+                                <form style="float:right;margin-left:2px;" action="/">
+                                    <input type="hidden" name="name" value="$(e.experiment_name)">
+                                    <input type="hidden" name="instance" value="$(e.instance)">
+                                    <input type="submit" value="Restart"></input>
+                                </form>
                             </td>
                     <%  else  %>
-                            <td> <button type="button" value="$(e.experiment_name)" name="start">Start</button> </td>
+                            <td>
+                                <form action="/experiment">
+                                    <input type="hidden" name="name" value="$(e.experiment_name)">
+                                    <input type="hidden" name="instance" value="$(e.instance)">
+                                    <input type="hidden" name="from" value="start">
+                                    <input type="submit" value="Start"></input>
+                                </form>
+                            </td>
                     <%  end  %>
                 </tr>
             <% end %>

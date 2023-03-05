@@ -6,7 +6,7 @@ function showOptions() {
 // Main protocol logic
 function recordAndPlay(ans) {
     // Log ans
-    switch(ans) {
+    switch (ans) {
         case 'yes':
             addRespToStorage(1);
             break;
@@ -20,81 +20,67 @@ function recordAndPlay(ans) {
 
     // Finished this block
     if (stimuli.length === 0) {
-        // Get n_blocks and n_trials_per_block from search params
-        let params = new Proxy(new URLSearchParams(window.location.search), {
-            get: (searchParams, prop) => searchParams.get(prop),
-        });
-        let n_blocks = params.n_blocks;
-        // Add one to blocks completed
-        let blocks_completed = (parseInt(params.blocks_completed) + 1).toString();
+        // Get params (name, instance, from)
+        const params = new URLSearchParams(window.location.search);
 
-        // Check if experiment ended
-        if (blocks_completed === n_blocks) {
-            let id = document.getElementById("db-id")
-
-            axios.post('/save/' + id.value, {
-                responses: sessionStorage.getItem("responses")
-            })
-                .then(() => {
-                    sessionStorage.removeItem("responses");
+        axios.post('/save', {
+            resps: sessionStorage.getItem("responses")
+        })
+            .then(function (block) {
+                sessionStorage.removeItem("responses");
+                if (parseInt(block.data.number.value) >= parseInt(block.data.n_blocks.value)) {
                     window.location.replace("/done");
-                }, (error) => {
-                    console.log(error);
-                });
-            
-            return;
-        } else {
-            let n_trials_per_block = params.n_trials_per_block;
-            let stimgen = params.stimgen;
-            let id = document.getElementById("db-id")
-
-            axios.post('/save/' + id.value, {
-                responses: sessionStorage.getItem("responses")
-            })
-                .then(() => {
-                    sessionStorage.removeItem("responses");
-                    window.location.replace("/rest?" + "n_blocks=" + n_blocks +
-                        "&n_trials_per_block=" + n_trials_per_block +
-                        "&blocks_completed=" + blocks_completed +
-                        "&stimgen=" + stimgen
+                } else {
+                    window.location.replace("/rest?" + "name=" + params.get('name') +
+                        "&instance=" + params.get('instance') + "&from=continue"
                     );
-                }, (error) => {
-                    console.log(error);
-                });
-            
-            return;
-        }
+                }
+            })
+            .catch(function (error) {
+                if (error.response) {
+                    // Request made and server responded
+                    console.log(error.response.data);
+                    console.log(error.response.status);
+                    console.log(error.response.headers);
+                } else if (error.request) {
+                    // The request was made but no response was received
+                    console.log(error.request);
+                } else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.log('Error', error.message);
+                }
+            });
+        return;
     }
-    
     // Get the next audio element (prev. was deleted)
     const curr_id = Math.min(parseInt(stimuli[0].id));
 
     // 300ms delay then play sound
-    setTimeout(() => {document.getElementById(curr_id).play()}, 300);
+    setTimeout(() => { document.getElementById(curr_id).play() }, 300);
 
     // Disallow answer while the sound plays
-    document.getElementById('yes').disabled=true;
-    document.getElementById('no').disabled=true;
+    document.getElementById('yes').disabled = true;
+    document.getElementById('no').disabled = true;
 } // function
 
 // Load html audio elements from local storage
-function genAudioFromStorage() {
+function getAudioFromStorage() {
     // Get data from local storage
     // TODO: Add check clause to be sure the data is there(?)
-    var stims = JSON.parse(sessionStorage.getItem('stims'));
-    
+    const stims = JSON.parse(sessionStorage.getItem('stims'));
+
     // Create the elements
     for (let i = 0; i < stims.length; i++) {
         let audio = document.createElement('audio');
         audio.id = (i + 1).toString();
-        audio.src = stims[i];
+        audio.src = "data:audio/wav;base64," + stims[i];
         audio.preload = 'auto';
         audio.addEventListener("ended", function () {
             document.getElementById('yes').disabled = false;
             document.getElementById('no').disabled = false;
             this.remove();
         });
-        document.body.appendChild(audio)
+        document.body.appendChild(audio);
         // Unclear why, but audio.name does not actually add the name attribute.
         document.getElementById((i + 1).toString()).setAttribute("name", "stimulus");
     }
@@ -102,37 +88,47 @@ function genAudioFromStorage() {
     sessionStorage.removeItem('stims');
 }
 
-// Collect and save audio src's to session storage
-function addAudioToStorage() {
-    let stim_len = document.getElementsByName("stimulus").length;
-
-    // Collect src's. 
-    var stims = new Array(stim_len);
-    for (let i = 0; i < stim_len; i++) {
-        // Ensures they're in order.
-        stims[i] = document.getElementById((i + 1).toString()).src;
-    }
-
-    // Create and add JSON file to session storage.
-    const stims_json = JSON.stringify(stims);
-    sessionStorage.setItem('stims', stims_json);
-}
-
 // Redirect from rest page to experiment page
 function restToExp() {
-    let params = new Proxy(new URLSearchParams(window.location.search), {
-            get: (searchParams, prop) => searchParams.get(prop),
-        });
-    window.location.href = "/experiment?" + "n_blocks=" + params.n_blocks + 
-        "&n_trials_per_block=" + params.n_trials_per_block + 
-        "&blocks_completed=" + params.blocks_completed + 
-        "&stimgen=" + params.stimgen;
-    return;
+    const params = new URLSearchParams(window.location.search);
+    window.location.href = "/experiment?" + "name=" + params.get('name') +
+        "&instance=" + params.get('instance') + "&from=rest";
 }
 
 function addRespToStorage(ans) {
-    var responses = JSON.parse(sessionStorage.getItem("responses"));
-    if(responses == null) responses = [];
+    let responses = JSON.parse(sessionStorage.getItem("responses"));
+    if (responses == null) responses = [];
     responses.push(ans);
     sessionStorage.setItem("responses", JSON.stringify(responses));
+}
+
+function getAndStoreAudio() {
+    const params = new URLSearchParams(window.location.search);
+    axios.get('/generate?' +
+        'name=' + params.get('name') +
+        '&instance=' + params.get('instance') +
+        '&from=rest', {
+    })
+        .then(function (stimuli) {
+            sessionStorage.setItem('stims', JSON.stringify(stimuli.data));
+        })
+        .then(function () {
+            // Only allow continuing once stimuli have been stored. 
+            document.getElementById('continue').disabled = false;
+        })
+        .catch(function (error) {
+            if (error.response) {
+                // Request made and server responded
+                console.log(error.response.data);
+                console.log(error.response.status);
+                console.log(error.response.headers);
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.log(error.request);
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log('Error', error.message);
+            }
+            return;
+        });
 }

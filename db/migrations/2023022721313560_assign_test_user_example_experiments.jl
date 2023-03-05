@@ -14,20 +14,27 @@ function up()
     if nothing in exps
         println("Check migration status and make sure `create example experiments` is up")
     else
-        foreach(exps) do exp
+        foreach(exps) do ex
             UserExperiment(;
                 user_id = usr.id,
-                experiment_name = exp.name,
+                experiment_name = ex.name,
                 instance = 1,
                 percent_complete = 0.0
             ) |> save!
         end
+        UserExperiment(;
+            user_id = usr.id,
+            experiment_name = exps[2].name,
+            instance = 2,
+            percent_complete = 25.0
+        ) |> save!
     end
 end
 
 function down()
     findone(UserExperiment, experiment_name = "TestExperiment_1") |> delete
-    findone(UserExperiment, experiment_name = "TestExperiment_2") |> delete
+    findone(UserExperiment, experiment_name = "TestExperiment_2", instance = 1) |> delete
+    findone(UserExperiment, experiment_name = "TestExperiment_2", instance = 2) |> delete
 end
 
 end

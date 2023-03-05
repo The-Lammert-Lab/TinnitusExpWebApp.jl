@@ -1,16 +1,25 @@
 module BlocksController
 
-# using Blocks
+using CharacterizeTinnitus
 using CharacterizeTinnitus.Blocks
 using CharacterizeTinnitus.TinnitusReconstructor
+using CharacterizeTinnitus.Experiments
+using CharacterizeTinnitus.UserExperiments
 using WAV: wavwrite
 using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
-using InteractiveUtils
+using Genie.Renderers.Json
+using GenieSession
+using GenieAuthentication
+using InteractiveUtils: subtypes
 using Base64
 using JSON3
 using SearchLight
 using SHA
+
+const STIMGEN_MAPPINGS = Dict{String,DataType}(
+    "UniformPrior" => UniformPrior
+)
 
 """
     _subtypes(type::Type)    
@@ -104,32 +113,47 @@ end
     gen_stim_and_block(parameters)
 
 Returns base64 encoded stimuli and Block struct based on `parameters`, which must come from `params()`.
+    Assumes `parameters` has: `:name`, `:instance`, and `:from`.
 """
 function gen_stim_and_block(parameters)
-    stimgen = stimgen_from_params(getindex(parameters, :stimgen))
+    instance = parse(Int, getindex(parameters, :instance))
 
-    # Collect from parameters
-    n_trials_per_block = parse(Int, getindex(parameters, :n_trials_per_block))
+    # Get experiment info from Experiments table
+    e = findone(Experiment; name = getindex(parameters, :name))
+    stimgen = JSON3.read(e.stimgen_settings, STIMGEN_MAPPINGS[e.stimgen_type])
 
-    # Hash stimgen
-    stimgen_json = JSON3.write(stimgen)
-    stim_to_hash = string(string(getindex(parameters, :stimgen)), stimgen_json)
-    stimgen_hash = bytes2hex(sha256(stim_to_hash))
+    # No blocks have been done, get n_blocks and n_trials_per_block from e
+    if getindex(parameters, :from) == "start"
+        n_blocks = e.n_blocks
+        n_trials_per_block = e.n_trials_per_block
+        curr_block_num = 1
+    else
+        # Get all existing blocks for this user's experiment and instance
+        existing_blocks = find( Block; 
+                                experiment_name = e.name, 
+                                instance = instance,
+                                user_id = current_user_id()
+                            )
+        curr_block_num = maximum(getproperty.(existing_blocks, :number)) + 1
+        # Take from first in case there's only one. All should be the same.
+        n_blocks = existing_blocks[1].n_blocks
+        n_trials_per_block = existing_blocks[1].n_trials_per_block
+    end
 
     # Get stimuli vector
     stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials_per_block)
-
-    # Create block
-    B = Block(; 
-        stim_matrix=JSON3.write(binned_repr_matrix),
-        stimgen=stimgen_json, 
-        stimgen_type=string(getindex(parameters, :stimgen)), 
-        stimgen_hash=stimgen_hash,
-        n_blocks=parse(Int, getindex(parameters, :n_blocks)), 
-        n_trials_per_block=n_trials_per_block
-    )
-
-    return stimuli, B
+    new_block = Block(;
+                    stim_matrix = JSON3.write(binned_repr_matrix),
+                    responses = "",
+                    number = curr_block_num,
+                    n_blocks = n_blocks,
+                    n_trials_per_block = n_trials_per_block,
+                    experiment_name = e.name,
+                    user_id = current_user_id(),
+                    instance = instance     
+                )
+                    
+    return stimuli, new_block
 end
 
 #########################
@@ -155,50 +179,56 @@ function expsetup()
 end
 
 function experiment()
-    # This might not be necessary. Redirect is done in experiment.jl.html
-    if params(:blocks_completed) == params(:n_blocks)
-        redirect("/done")
-    end
-
-    if parse(Int, params(:blocks_completed)) > 0
-        # Flag for if page is loaded mid-experiment (coming from rest page)
+    authenticated!()
+    # Params = :name, :instance, :from
+    if params(:from) == "rest"
         from_rest = true
         html(:blocks, :experiment; from_rest)
     else
         from_rest = false
-        stimuli, B = gen_stim_and_block(params())
-        save!(B)
-        id = B.id
-
+        stimuli, curr_block = gen_stim_and_block(params())
         # Var for labelling audio elements
         counter = 0
-
-        html(:blocks, :experiment; stimuli, counter, from_rest, id)
+        GenieSession.set!(:current_block, curr_block)
+        html(:blocks, :experiment; stimuli, counter, from_rest)
     end
 end
 
 function rest()
-    stimuli, B = gen_stim_and_block(params())
-    save!(B)
-    id = B.id
-
-    counter = 0
-
-    html(:blocks, :rest; stimuli, counter, id)
+    authenticated!()
+    html(:blocks, :rest)
 end
 
 function save_responses()
-    B = findone(Block, id = params(:id))
-    if B === nothing
-        return Router.error(NOT_FOUND, "Block info with id
-          $(params(:id))", MIME"text/html")
+    authenticated!()
+    curr_block = GenieSession.get(:current_block, nothing)
+    curr_exp = findone(UserExperiment; 
+                        experiment_name = curr_block.experiment_name,
+                        instance = curr_block.instance, 
+                        user_id = current_user_id()
+                    )
+    if curr_block === nothing
+        return Router.error(NOT_FOUND, "Block data not found", MIME"text/html")
     end
-    
-    B.responses = replace(jsonpayload("responses"))
-    save(B)
+    # Update
+    curr_block.responses = replace(jsonpayload("resps"))
+    curr_exp.percent_complete = 100 * curr_block.number / curr_block.n_blocks
+
+    # Save and send response
+    save(curr_block) && save(curr_exp) && Dict( :number => (:value => curr_block.number), 
+                                                :n_blocks => (:value => curr_block.n_blocks)
+                                            ) |> json
+end
+
+function gen_stim_rest()
+    authenticated!()
+    stimuli, curr_block = gen_stim_and_block(params())
+    GenieSession.set!(:current_block, curr_block)
+    json(stimuli)
 end
 
 function done()
+    authenticated!()
     html(:blocks, :done)
 end
 

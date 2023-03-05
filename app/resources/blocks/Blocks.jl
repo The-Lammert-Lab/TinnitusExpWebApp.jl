@@ -38,10 +38,10 @@ mutable struct Block <: AbstractModel
         stim_matrix::S = "",
         responses::S = "",
         number::I = 1,
+        user_id::DbId = DbId(),
         n_blocks::I = 1,
         n_trials_per_block::I = 1,
         experiment_name::S = "",
-        user_id::DbId = DbId(),
         instance::I = 1,
     ) where {I<:Integer,S<:AbstractString}
         @assert n_blocks > 0 "`n_blocks` must be greater than 0"
@@ -53,10 +53,10 @@ mutable struct Block <: AbstractModel
             stim_matrix,
             responses,
             number,
+            user_id,
             n_blocks,
             n_trials_per_block,
             experiment_name,
-            user_id,
             instance
         )
     end
