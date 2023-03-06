@@ -4,6 +4,7 @@
         <h1>Home page!</h1>
     </div>
     <div>
+        <!-- TODO: Add sort feature -->
         <table class="styled-table">
             <tr>
                 <th>Name</th>
@@ -40,7 +41,7 @@
                                     <input type="hidden" name="from" value="start">
                                     <input type="submit" value="Start"></input>
                                 </form>
-                                <form style="float:right" name="remove-form" method="post">
+                                <form style="float:right;margin-left:2px" name="remove-form" method="post">
                                     <input type="hidden" name="name" value="$(e.experiment_name)">
                                     <input type="hidden" name="instance" value="$(e.instance)">
                                     <input type="submit" value="Remove"></input>
