@@ -26,7 +26,7 @@
                                     <input type="hidden" name="from" value="continue">
                                     <input type="submit" value="Continue"></input>
                                 </form>
-                                <form style="float:right;margin-left:2px;" action="/">
+                                <form style="float:right;margin-left:2px;" id="reset-form" method="post">
                                     <input type="hidden" name="name" value="$(e.experiment_name)">
                                     <input type="hidden" name="instance" value="$(e.instance)">
                                     <input type="submit" value="Restart"></input>
@@ -58,4 +58,15 @@
             <input type="submit" value="Add">
         </form>
     </div>
+    
+    <script>
+        document.getElementById("reset-form").addEventListener("submit", function(e){
+            e.preventDefault();
+            const ans = confirm("Are you sure you want to restart this experiment? " +
+                                "All current data will be lost.");
+            if (ans) {
+                resetExperiment(e.target);
+            }
+        });
+    </script>
 </body>

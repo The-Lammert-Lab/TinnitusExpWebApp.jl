@@ -36,6 +36,8 @@ function recordAndPlay(ans) {
                     );
                 }
             })
+            // Debugging purposes.
+            // TODO: Do something meaningful on error
             .catch(function (error) {
                 if (error.response) {
                     // Request made and server responded
@@ -86,28 +88,28 @@ function getAudioFromStorage() {
     }
     // Remove audio data from storage.
     sessionStorage.removeItem('stims');
-}
+} // function
 
 // Redirect from rest page to experiment page
 function restToExp() {
     const params = new URLSearchParams(window.location.search);
     window.location.href = "/experiment?" + "name=" + params.get('name') +
         "&instance=" + params.get('instance') + "&from=rest";
-}
+} // function
 
 function addRespToStorage(ans) {
     let responses = JSON.parse(sessionStorage.getItem("responses"));
     if (responses == null) responses = [];
     responses.push(ans);
     sessionStorage.setItem("responses", JSON.stringify(responses));
-}
+} // function
 
+// Request server to generate audio elements then save to session storage
 function getAndStoreAudio() {
     const params = new URLSearchParams(window.location.search);
-    axios.get('/generate?' +
-        'name=' + params.get('name') +
-        '&instance=' + params.get('instance') +
-        '&from=rest', {
+    axios.post('/generate', {
+        name: params.get('name'),
+        instance: params.get('instance')
     })
         .then(function (stimuli) {
             sessionStorage.setItem('stims', JSON.stringify(stimuli.data));
@@ -116,6 +118,8 @@ function getAndStoreAudio() {
             // Only allow continuing once stimuli have been stored. 
             document.getElementById('continue').disabled = false;
         })
+        // Debugging purposes.
+        // TODO: Do something meaningful on error
         .catch(function (error) {
             if (error.response) {
                 // Request made and server responded
@@ -129,6 +133,17 @@ function getAndStoreAudio() {
                 // Something happened in setting up the request that triggered an Error
                 console.log('Error', error.message);
             }
-            return;
         });
-}
+} // function
+
+// Post data from experiment to reset to server and refresh page.
+function resetExperiment(form) {
+    const formData = new FormData(form);
+    axios.post('/reset', {
+        name: formData.get('name'),
+        instance: formData.get('instance')
+    })
+        .then(function () {
+            window.location.reload();
+        });
+} // function

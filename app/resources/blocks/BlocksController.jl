@@ -110,12 +110,13 @@ function stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
 end
 
 """
-    gen_stim_and_block(parameters)
+    gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
+    gen_stim_and_block(parameters::Dict{S, W}) where {S<:AbstractString, W}
 
 Returns base64 encoded stimuli and Block struct based on `parameters`, which must come from `params()`.
     Assumes `parameters` has: `:name`, `:instance`, and `:from`.
 """
-function gen_stim_and_block(parameters)
+function gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
     instance = parse(Int, getindex(parameters, :instance))
 
     # Get experiment info from Experiments table
@@ -123,7 +124,48 @@ function gen_stim_and_block(parameters)
     stimgen = JSON3.read(e.stimgen_settings, STIMGEN_MAPPINGS[e.stimgen_type])
 
     # No blocks have been done, get n_blocks and n_trials_per_block from e
-    if getindex(parameters, :from) == "start"
+    if haskey(parameters, :from) && getindex(parameters, :from) == "start"
+        n_blocks = e.n_blocks
+        n_trials_per_block = e.n_trials_per_block
+        curr_block_num = 1
+    else
+        # Get all existing blocks for this user's experiment and instance
+        existing_blocks = find( Block; 
+                                experiment_name = e.name, 
+                                instance = instance,
+                                user_id = current_user_id()
+                            )
+        curr_block_num = maximum(getproperty.(existing_blocks, :number)) + 1
+        # Take from first in case there's only one. All should be the same.
+        n_blocks = existing_blocks[1].n_blocks
+        n_trials_per_block = existing_blocks[1].n_trials_per_block
+    end
+
+    # Get stimuli vector
+    stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials_per_block)
+    new_block = Block(;
+                    stim_matrix = JSON3.write(binned_repr_matrix),
+                    responses = "",
+                    number = curr_block_num,
+                    n_blocks = n_blocks,
+                    n_trials_per_block = n_trials_per_block,
+                    experiment_name = e.name,
+                    user_id = current_user_id(),
+                    instance = instance     
+                )
+                    
+    return stimuli, new_block
+end
+
+function gen_stim_and_block(parameters::Dict{S, W}) where {S<:AbstractString, W}
+    instance = parse(Int, getindex(parameters, "instance"))
+
+    # Get experiment info from Experiments table
+    e = findone(Experiment; name = getindex(parameters, "name"))
+    stimgen = JSON3.read(e.stimgen_settings, STIMGEN_MAPPINGS[e.stimgen_type])
+
+    # No blocks have been done, get n_blocks and n_trials_per_block from e
+    if haskey(parameters, "from") && getindex(parameters, :from) == "start"
         n_blocks = e.n_blocks
         n_trials_per_block = e.n_trials_per_block
         curr_block_num = 1
@@ -222,7 +264,7 @@ end
 
 function gen_stim_rest()
     authenticated!()
-    stimuli, curr_block = gen_stim_and_block(params())
+    stimuli, curr_block = gen_stim_and_block(jsonpayload())
     GenieSession.set!(:current_block, curr_block)
     json(stimuli)
 end

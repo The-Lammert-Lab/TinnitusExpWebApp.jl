@@ -6,6 +6,8 @@ Small example functions to do various operations.
 using SearchLight
 using CharacterizeTinnitus.Blocks
 using CharacterizeTinnitus.Experiments
+using CharacterizeTinnitus.UserExperiments
+using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.TinnitusReconstructor
 using JSON3
 using SHA
@@ -26,3 +28,12 @@ end
 const STIMGEN_MAPPINGS = Dict{String,DataType}(
     "UniformPrior" => UniformPrior
 )
+
+function reset_exp(name::S) where {S<:AbstractString}
+    user = findone(User; username = "testuser")
+    ue = findone(UserExperiment; experiment_name = name, user_id = user.id)
+    ue.percent_complete = 0
+    save(ue)
+    blocks = find(Block; experiment_name = name, user_id = user.id)
+    delete.(blocks)
+end
