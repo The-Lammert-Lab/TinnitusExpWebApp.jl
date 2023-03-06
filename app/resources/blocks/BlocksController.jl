@@ -89,27 +89,6 @@ function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
 end
 
 """
-    stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
-
-Returns a stimgen struct with keyword arguments from stringified name.
-"""
-function stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
-    stimgen_args = "("
-    for key in keys(kwargs)
-        name = string(key)
-        value = string(kwargs[key])
-        if stimgen_args == "("
-            stimgen_args = string(stimgen_args, name, "=", value)
-        else
-            stimgen_args = string(stimgen_args, ",", name, "=", value)
-        end
-    end
-    stimgen_args = string(stimgen_args, ")")
-    f = eval(Meta.parse(string("x ->", stimgen, stimgen_args)))
-    return Base.invokelatest(f, ())
-end
-
-"""
     gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
     gen_stim_and_block(parameters::Dict{S, W}) where {S<:AbstractString, W}
 
@@ -257,9 +236,9 @@ function save_responses()
     curr_exp.percent_complete = 100 * curr_block.number / curr_block.n_blocks
 
     # Save and send response
-    save(curr_block) && save(curr_exp) && Dict( :number => (:value => curr_block.number), 
-                                                :n_blocks => (:value => curr_block.n_blocks)
-                                            ) |> json
+    save(curr_block) && save(curr_exp) && json(Dict(:number => (:value => curr_block.number), 
+                                                    :n_blocks => (:value => curr_block.n_blocks)
+                                            ))
 end
 
 function gen_stim_rest()

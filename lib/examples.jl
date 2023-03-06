@@ -29,6 +29,27 @@ const STIMGEN_MAPPINGS = Dict{String,DataType}(
     "UniformPrior" => UniformPrior
 )
 
+"""
+    stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
+
+Returns a stimgen struct with keyword arguments from stringified name.
+"""
+function stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
+    stimgen_args = "("
+    for key in keys(kwargs)
+        name = string(key)
+        value = string(kwargs[key])
+        if stimgen_args == "("
+            stimgen_args = string(stimgen_args, name, "=", value)
+        else
+            stimgen_args = string(stimgen_args, ",", name, "=", value)
+        end
+    end
+    stimgen_args = string(stimgen_args, ")")
+    f = eval(Meta.parse(string("x ->", stimgen, stimgen_args)))
+    return Base.invokelatest(f, ())
+end
+
 function reset_exp(name::S) where {S<:AbstractString}
     user = findone(User; username = "testuser")
     ue = findone(UserExperiment; experiment_name = name, user_id = user.id)
