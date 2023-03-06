@@ -26,7 +26,7 @@
                                     <input type="hidden" name="from" value="continue">
                                     <input type="submit" value="Continue"></input>
                                 </form>
-                                <form style="float:right;margin-left:2px;" id="reset-form" method="post">
+                                <form style="float:right;margin-left:2px;" id="restart-form" method="post">
                                     <input type="hidden" name="name" value="$(e.experiment_name)">
                                     <input type="hidden" name="instance" value="$(e.instance)">
                                     <input type="submit" value="Restart"></input>
@@ -34,11 +34,16 @@
                             </td>
                     <%  else  %>
                             <td>
-                                <form action="/experiment">
+                                <form style="float:left;" action="/experiment">
                                     <input type="hidden" name="name" value="$(e.experiment_name)">
                                     <input type="hidden" name="instance" value="$(e.instance)">
                                     <input type="hidden" name="from" value="start">
                                     <input type="submit" value="Start"></input>
+                                </form>
+                                <form style="float:right" id="remove-form" method="post">
+                                    <input type="hidden" name="name" value="$(e.experiment_name)">
+                                    <input type="hidden" name="instance" value="$(e.instance)">
+                                    <input type="submit" value="Remove"></input>
                                 </form>
                             </td>
                     <%  end  %>
@@ -48,7 +53,7 @@
     </div>
 
     <div>
-        <form action="/add_experiment">
+        <form action="/add">
             <label>Add experiment:</label>
             <select id="add-experiment">
                 <% for_each(visible_experiments) do e %>
@@ -60,13 +65,26 @@
     </div>
     
     <script>
-        document.getElementById("reset-form").addEventListener("submit", function(e){
-            e.preventDefault();
-            const ans = confirm("Are you sure you want to restart this experiment? " +
-                                "All current data will be lost.");
-            if (ans) {
-                resetExperiment(e.target);
-            }
-        });
+        const restart_form = document.getElementById("restart-form");
+        if (restart_form != null) {
+            restart_form.addEventListener("submit", function(e){
+                e.preventDefault();
+                const ans = confirm("Are you sure you want to restart this experiment? " +
+                                    "All current data will be lost.");
+                if (ans) {
+                    restartExperiment(e.target);
+                }
+            });
+        }
+        const remove_form = document.getElementById("remove-form")
+        if (remove_form != null) {
+            remove_form.addEventListener("submit", function(e){
+                e.preventDefault();
+                const ans = confirm("Are you sure you want to remove this experiment?");
+                if (ans) {
+                    removeExperiment(e.target);
+                }
+            });
+        }
     </script>
 </body>

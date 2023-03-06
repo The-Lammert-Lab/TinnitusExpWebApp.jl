@@ -147,3 +147,16 @@ function resetExperiment(form) {
             window.location.reload();
         });
 } // function
+
+// Post data from experiment to remove to server and refresh page.
+function removeExperiment(form) {
+    const formData = new FormData(form);
+    axios.post('/remove', {
+        name: formData.get('name'),
+        instance: formData.get('instance')
+    })
+        .then(function (response) {
+            window.alert(response.data.msg.value);
+            window.location.reload();
+        });
+} // function

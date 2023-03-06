@@ -4,11 +4,11 @@ Small example functions to do various operations.
 """
 
 using SearchLight
-using CharacterizeTinnitus.Blocks
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.TinnitusReconstructor
+using CharacterizeTinnitus.Blocks
 using JSON3
 using SHA
 
