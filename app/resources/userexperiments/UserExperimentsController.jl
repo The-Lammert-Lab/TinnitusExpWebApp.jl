@@ -77,7 +77,8 @@ function home()
     authenticated!()
     added_experiments = find(UserExperiment; user_id = current_user_id())
     visible_experiments = find(Experiment; visible = true)
-    html(:userexperiments, :home; added_experiments, visible_experiments)
+    ongoing_experiments = [ex for ex in added_experiments if ex.percent_complete < 100]
+    html(:userexperiments, :home; added_experiments, visible_experiments, ongoing_experiments)
 end
 
 end

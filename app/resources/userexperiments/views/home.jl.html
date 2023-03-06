@@ -57,8 +57,14 @@
         <form name="add-form" action="/add" method="post">
             <label>Add experiment:</label>
             <select name="name" id="add-experiment">
-                <% for_each(visible_experiments) do e %>
-                    <option value="$(e.name)">$(e.name)</option>
+                <option selected disabled hidden>Choose here</option>
+                <%  for_each(visible_experiments) do e 
+                        if e.name in getproperty.(ongoing_experiments, :experiment_name)
+                %>
+                            <option value="$(e.name)" disabled>$(e.name)</option>
+                        <% else %>
+                            <option value="$(e.name)">$(e.name)</option>
+                        <% end %>
                 <% end %>
             </select>
             <input type="submit" value="Add">
@@ -84,6 +90,6 @@
                     removeExperiment(e.target);
                 }
             }
-        })
+        });
     </script>
 </body>
