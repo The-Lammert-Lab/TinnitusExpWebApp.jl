@@ -11,5 +11,6 @@ route("/done", BlocksController.done)
 route("/save", BlocksController.save_responses; method = POST)
 
 route("/home", UserExperimentsController.home)
+route("add", UserExperimentsController.add_exp; method = POST)
 route("/restart", UserExperimentsController.restart_exp; method = POST)
 route("/remove", UserExperimentsController.remove_exp; method = POST)

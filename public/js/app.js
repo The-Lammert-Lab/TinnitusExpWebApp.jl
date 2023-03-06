@@ -136,10 +136,20 @@ function getAndStoreAudio() {
         });
 } // function
 
-// Post data from experiment to reset to server and refresh page.
-function resetExperiment(form) {
+function addExperiment(form) {
     const formData = new FormData(form);
-    axios.post('/reset', {
+    axios.post('/add', {
+        name: formData.get('name'),
+    })
+        .then(function () {
+            window.location.reload();
+        });
+}
+
+// Post data from experiment to restart to server and refresh page.
+function restartExperiment(form) {
+    const formData = new FormData(form);
+    axios.post('/restart', {
         name: formData.get('name'),
         instance: formData.get('instance')
     })
@@ -156,7 +166,9 @@ function removeExperiment(form) {
         instance: formData.get('instance')
     })
         .then(function (response) {
-            window.alert(response.data.msg.value);
+            if (response.data.status.value == "error") {
+                window.alert(response.data.msg.value);
+            }
             window.location.reload();
         });
 } // function
