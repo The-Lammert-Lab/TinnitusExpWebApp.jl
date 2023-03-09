@@ -5,64 +5,63 @@ function showOptions() {
 
 // Main protocol logic
 function recordAndPlay(ans) {
-    // Log ans
+    // Interpret response
     switch (ans) {
-        case 'yes':
-            addRespToStorage(1);
+        case 'yes': 
+            var val = 1;
             break;
         case 'no':
-            addRespToStorage(-1);
+            var val = -1;
             break;
     }
+    
+    // Save response
+    axios.post('/save', {
+        resp: val
+    })
+        .then(function (response) {
+            // Collect all stimulus audio elements
+            const stimuli = document.getElementsByName("stimulus");
 
-    // Collect all stimulus audio elements
-    const stimuli = document.getElementsByName("stimulus");
-
-    // Finished this block
-    if (stimuli.length === 0) {
-        // Get params (name, instance, from)
-        const params = new URLSearchParams(window.location.search);
-
-        axios.post('/save', {
-            resps: sessionStorage.getItem("responses")
+            // Get params (name, instance, from)
+            if (parseFloat(response.data.frac_complete.value) >= 1) {
+                window.location.replace("/done");
+                return;
+            } else if (stimuli.length === 0) {
+                const params = new URLSearchParams(window.location.search);
+                window.location.replace("/rest?" + "name=" + params.get('name') +
+                    "&instance=" + params.get('instance')
+                );
+                return;
+            } else {
+                // Get the next audio element (prev. was deleted)
+                const curr_id = Math.min(parseInt(stimuli[0].id));
+                // 300ms delay then play sound
+                setTimeout(() => { document.getElementById(curr_id).play() }, 300);
+                // Disallow answer while the sound plays
+                document.getElementById('yes').disabled = true;
+                document.getElementById('no').disabled = true;
+            }
         })
-            .then(function (block) {
-                sessionStorage.removeItem("responses");
-                if (parseInt(block.data.number.value) >= parseInt(block.data.n_blocks.value)) {
-                    window.location.replace("/done");
-                } else {
-                    window.location.replace("/rest?" + "name=" + params.get('name') +
-                        "&instance=" + params.get('instance') + "&from=continue"
-                    );
-                }
-            })
-            // Debugging purposes.
-            // TODO: Do something meaningful on error
-            .catch(function (error) {
-                if (error.response) {
-                    // Request made and server responded
-                    console.log(error.response.data);
-                    console.log(error.response.status);
-                    console.log(error.response.headers);
-                } else if (error.request) {
-                    // The request was made but no response was received
-                    console.log(error.request);
-                } else {
-                    // Something happened in setting up the request that triggered an Error
-                    console.log('Error', error.message);
-                }
-            });
-        return;
-    }
-    // Get the next audio element (prev. was deleted)
-    const curr_id = Math.min(parseInt(stimuli[0].id));
-
-    // 300ms delay then play sound
-    setTimeout(() => { document.getElementById(curr_id).play() }, 300);
-
-    // Disallow answer while the sound plays
-    document.getElementById('yes').disabled = true;
-    document.getElementById('no').disabled = true;
+        .catch(function (error) {
+            if (error.response) {
+                // Request made and server responded
+                console.log(error.response.data);
+                console.log(error.response.status);
+                console.log(error.response.headers);
+                window.alert(error.response.data.error);
+                window.location.replace("/home");
+                return;
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.log(error.request);
+                return;
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log('Error', error.message);
+                return;
+            }
+        });
 } // function
 
 // Load html audio elements from local storage
@@ -97,12 +96,12 @@ function restToExp() {
         "&instance=" + params.get('instance') + "&from=rest";
 } // function
 
-function addRespToStorage(ans) {
-    let responses = JSON.parse(sessionStorage.getItem("responses"));
-    if (responses == null) responses = [];
-    responses.push(ans);
-    sessionStorage.setItem("responses", JSON.stringify(responses));
-} // function
+// function addRespToStorage(ans) {
+//     let responses = JSON.parse(sessionStorage.getItem("responses"));
+//     if (responses == null) responses = [];
+//     responses.push(ans);
+//     sessionStorage.setItem("responses", JSON.stringify(responses));
+// } // function
 
 // Request server to generate audio elements then save to session storage
 function getAndStoreAudio() {
@@ -165,10 +164,20 @@ function removeExperiment(form) {
         name: formData.get('name'),
         instance: formData.get('instance')
     })
-        .then(function (response) {
-            if (response.data.status.value == "error") {
-                window.alert(response.data.msg.value);
-            }
+        .then(function () {
             window.location.reload();
+        })
+        .catch(function (error) { 
+            if (error.response) {
+                // Request made and server responded
+                window.alert(error.response.data);
+                window.location.reload();
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.log(error.request);
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log('Error', error.message);
+            }
         });
 } // function

@@ -3,15 +3,6 @@ Small example functions to do various operations.
     Mostly a reference file. 
 """
 
-using SearchLight
-using ..Main.UserApp.Experiments
-using ..Main.UserApp.UserExperiments
-using ..Main.UserApp.Users
-using ..Main.UserApp.TinnitusReconstructor
-using ..Main.UserApp.Blocks
-using JSON3
-using SHA
-
 function get_stim_mat(id::I) where {I<:Integer}
     B = findone(Block, id=id)
     stim_mat = reshape(JSON3.read(B.stim_matrix), JSON3.read(B.stimgen).n_bins, B.n_trials_per_block)
@@ -53,8 +44,27 @@ end
 function reset_exp(name::S) where {S<:AbstractString}
     user = findone(User; username = "testuser")
     ue = findone(UserExperiment; experiment_name = name, user_id = user.id)
-    ue.percent_complete = 0
+    ue.frac_complete = 0
     save(ue)
-    blocks = find(Block; experiment_name = name, user_id = user.id)
+    blocks = find(Trial; experiment_name = name, user_id = user.id)
     delete.(blocks)
+end
+
+
+"""
+    choose_n_trials(x::I) where {I<:Integer}
+
+Find the number closest to IDEAL_BLOCK_SIZE that is a factor of x.
+"""
+function choose_n_trials(x::I) where {I<:Integer}
+    if x <= MAX_BLOCK_SIZE
+        return x
+    elseif isprime(x)
+        x += 1
+    end
+
+    all_prod = prod.(combinations(factor(Vector, x)))
+    n_trials = argmin(ai -> abs(ai - IDEAL_BLOCK_SIZE), all_prod) 
+
+    return n_trials
 end

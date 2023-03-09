@@ -16,21 +16,16 @@
                 <tr>
                     <td>$(e.experiment_name)</td>
                     <td>$(e.instance)</td>
-                    <td>$(round(Int, e.percent_complete))&percnt;</td>
-                    <%  if e.percent_complete >= 100  %>
+                    <td>$(round(Int, 100*e.frac_complete))&percnt;</td>
+                    <%  if e.frac_complete >= 1  %>
                             <td>None</td>
-                    <%  elseif e.percent_complete > 0  %>
+                    <%  elseif e.frac_complete > 0  %>
                             <td> 
                                 <form style="float:left;" action="/experiment">
                                     <input type="hidden" name="name" value="$(e.experiment_name)">
                                     <input type="hidden" name="instance" value="$(e.instance)">
                                     <input type="hidden" name="from" value="continue">
                                     <input type="submit" value="Continue"></input>
-                                </form>
-                                <form style="float:right;margin-left:2px;" name="restart-form" method="post">
-                                    <input type="hidden" name="name" value="$(e.experiment_name)">
-                                    <input type="hidden" name="instance" value="$(e.instance)">
-                                    <input type="submit" value="Restart"></input>
                                 </form>
                             </td>
                     <%  else  %>
@@ -54,12 +49,12 @@
     </div>
 
     <div>
-        <form name="add-form" action="/add" method="post">
+        <form id="add-form" action="/add" method="post">
             <label>Add experiment:</label>
             <select name="name" id="add-experiment">
-                <option selected disabled hidden>Choose here</option>
+                <option value="default" selected>Choose here</option>
                 <%  for_each(visible_experiments) do e 
-                        if e.name in getproperty.(ongoing_experiments, :experiment_name)
+                        if e.name in getproperty.(unstarted_experiments, :experiment_name)
                 %>
                             <option value="$(e.name)" disabled>$(e.name)</option>
                         <% else %>
@@ -67,23 +62,20 @@
                         <% end %>
                 <% end %>
             </select>
-            <input type="submit" value="Add">
+            <input id="add-submit" type="submit" value="Add" disabled>
         </form>
     </div>
     
     <script>
+        const select = document.getElementById('add-experiment');
+        const submitButton = document.getElementById('add-submit');
+
+        // Post add or remove request
         document.addEventListener("submit", function(e) {
-            if (e.target.getAttribute('name') == 'add-form') {
+            if (e.target.getAttribute('id') == 'add-form') { // using id because only ever one
                 e.preventDefault();
                 addExperiment(e.target);
-            } else if (e.target.getAttribute('name') == 'restart-form') {
-                e.preventDefault();
-                const ans = confirm("Are you sure you want to restart this experiment? " +
-                                    "All current data will be lost.");
-                if (ans) {
-                    restartExperiment(e.target);
-                }
-            } else if (e.target.getAttribute('name') == 'remove-form') {
+            } else if (e.target.getAttribute('name') == 'remove-form') { // using name because could be multiple (rows)
                 e.preventDefault();
                 const ans = confirm("Are you sure you want to remove this experiment?");
                 if (ans) {
@@ -91,5 +83,15 @@
                 }
             }
         });
+
+        // Disable add button if default is selected
+        select.addEventListener('change', () => {
+            if (select.value === 'default') {
+                submitButton.disabled = true;
+            } else {
+                submitButton.disabled = false;
+            }
+        });
+
     </script>
 </body>

@@ -10,15 +10,13 @@ function up()
         :stimgen_settings => :string,
         :stimgen_type => :string,
         :n_trials => :int,
-        :n_blocks => :int,
-        :n_trials_per_block => :int,
         :name => :string,
         :visible => :bool
       ])
     ]
   end
 
-  add_index(:experiments, :name)
+  add_indices(:experiments, :name, :visible)
 end
 
 function down()

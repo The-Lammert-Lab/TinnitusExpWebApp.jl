@@ -1,16 +1,17 @@
 module UserExperimentsController
 
 using CharacterizeTinnitus
-using CharacterizeTinnitus.Blocks
+using CharacterizeTinnitus.Trials
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
 using SearchLight
+using SearchLight.Validation
 using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using GenieAuthentication
 
-# TODO: Add error handling (no experiment or no blocks)
+# TODO: Add error handling (no experiment or no trials)
 function restart_exp()
     authenticated!()
     name = jsonpayload("name")
@@ -22,14 +23,14 @@ function restart_exp()
                          user_id = current_user_id()
                         )
                         
-    blocks = find(Block; 
+    trials = find(Trial; 
                     experiment_name = name,
                     instance = instance,
                     user_id = current_user_id()
                 )
 
-    experiment.percent_complete = 0
-    save(experiment) && delete.(blocks)
+    experiment.frac_complete = 0.
+    save(experiment) && delete.(trials)
 end
 
 function remove_exp()
@@ -37,15 +38,15 @@ function remove_exp()
     name = jsonpayload("name")
     instance = jsonpayload("instance")
 
-    blocks = find(Block; 
+    trials = find(Trial; 
                     experiment_name = name,
                     instance = instance,
                     user_id = current_user_id()
                 )
 
-    if !isempty(blocks)
-        json(Dict(:msg => (:value => "Data has been collected already. Cannot remove this experiment."),
-                  :status => (:value => "error")))
+    if !isempty(trials)
+        return Router.error("Could not remove this experiment. Data has already been collected.", 
+                            MIME"application/json", INTERNAL_ERROR)
     else
         findone(UserExperiment; 
                 experiment_name = name,
@@ -65,20 +66,27 @@ function add_exp()
     else
         new_instance = 1
     end
-    UserExperiment(; 
+    ue = UserExperiment(; 
                     user_id = current_user_id(), 
                     experiment_name = name, 
                     instance = new_instance,
-                    percent_complete = 0.0
-                ) |> save
+                    frac_complete = 0.
+                )
+
+    validator = validate(ue)
+    if haserrors(validator)
+        return redirect("/?error=$(errors_to_string(validator))")
+    end
+
+    save(ue)
 end
 
 function home()
     authenticated!()
     added_experiments = find(UserExperiment; user_id = current_user_id())
     visible_experiments = find(Experiment; visible = true)
-    ongoing_experiments = [ex for ex in added_experiments if ex.percent_complete < 100]
-    html(:userexperiments, :home; added_experiments, visible_experiments, ongoing_experiments)
+    unstarted_experiments = [ex for ex in added_experiments if ex.frac_complete == 0]
+    html(:userexperiments, :home; added_experiments, visible_experiments, unstarted_experiments)
 end
 
 end
