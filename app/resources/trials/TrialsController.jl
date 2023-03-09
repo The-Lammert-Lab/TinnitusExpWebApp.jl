@@ -237,8 +237,6 @@ function save_response()
     end 
 
     curr_trial = pop!(curr_block)
-    println("EXPERIMENT_NAME = ", curr_trial.experiment_name, "TYPEOF: ", typeof(curr_trial.experiment_name))
-    println("INSTANCE = ", curr_trial.instance, "TYPEOF: ", typeof(curr_trial.instance))
 
     curr_usr_exp = findone(UserExperiment; 
                             experiment_name = curr_trial.experiment_name,
