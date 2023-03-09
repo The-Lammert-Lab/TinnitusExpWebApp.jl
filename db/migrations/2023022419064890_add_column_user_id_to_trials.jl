@@ -1,18 +1,18 @@
-module AddColumnUserIdToBlocks
+module AddColumnUserIdToTrials
 
 import SearchLight.Migrations: add_columns, remove_columns, add_index, remove_index
 
 function up()
-    add_columns(:blocks, [
+    add_columns(:trials, [
         :user_id => :int
     ])
-    add_index(:blocks, :user_id)
+    add_index(:trials, :user_id)
 end
 
 function down()
-    remove_index(:blocks, :user_id)
+    remove_index(:trials, :user_id)
 
-    remove_columns(:blocks, [
+    remove_columns(:trials, [
       :user_id
     ])
 end

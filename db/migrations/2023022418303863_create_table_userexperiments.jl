@@ -7,9 +7,11 @@ function up()
     [
       pk()
       column(:instance, :int)
-      column(:percent_complete, :float)
+      column(:frac_complete, :float)
     ]
   end
+
+  add_index(:userexperiments, :instance)
 end
 
 function down()
