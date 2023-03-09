@@ -97,19 +97,21 @@ end
 """
     choose_n_trials(x::I) where {I<:Integer}
 
-Return the number of trials to use for this "block".
+Returns number of trials to use for this "block" based on IDEAL_BLOCK_SIZE and MAX_BLOCK_SIZE.
 """
 function choose_n_trials(x::I) where {I<:Integer}
     if x <= MAX_BLOCK_SIZE
         return x
-    elseif isprime(x)
-        x += 1
+    elseif (x ÷ IDEAL_BLOCK_SIZE < 2) # Potential last block 
+        n_trials = IDEAL_BLOCK_SIZE + (x % IDEAL_BLOCK_SIZE)
+        if n_trials > MAX_BLOCK_SIZE # Large remainder, do in next block
+            return IDEAL_BLOCK_SIZE
+        else
+            return n_trials
+        end
+    else
+        return IDEAL_BLOCK_SIZE
     end
-
-    all_prod = prod.(combinations(factor(Vector, x)))
-    n_trials = argmin(ai -> abs(ai - IDEAL_BLOCK_SIZE), all_prod) 
-
-    return n_trials
 end
 
 
@@ -117,7 +119,7 @@ end
     gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
     gen_stim_and_block(parameters::Dict{S, W}) where {S<:AbstractString, W}
 
-Returns base64 encoded stimuli and vector of `Trail` structs (a "block") based on `parameters`.
+Returns base64 encoded stimuli and vector of `Trial` structs (a "block") based on `parameters`.
     Assumes `parameters` has: `:name`, and `:instance`.
 """
 function gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
@@ -134,7 +136,6 @@ function gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
                             user_id = current_user_id()
                         )
 
-    # Use ideal block size each time (?)
     remaining_trials = e.n_trials - length(current_trials)
     n_trials = choose_n_trials(remaining_trials)
 
