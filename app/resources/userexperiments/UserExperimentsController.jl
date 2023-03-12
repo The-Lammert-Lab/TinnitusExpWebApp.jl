@@ -13,20 +13,23 @@ using GenieAuthentication
 
 # TODO: Add error handling (no experiment or no trials)
 function restart_exp()
-    authenticated!()
+    authenticated!() 
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+
     name = jsonpayload("name")
     instance = jsonpayload("instance")
+    user_id = jsonpayload("user_id")
 
     experiment = findone(UserExperiment; 
                          experiment_name = name,
                          instance = instance,
-                         user_id = current_user_id()
+                         user_id = user_id
                         )
                         
     trials = find(Trial; 
                     experiment_name = name,
                     instance = instance,
-                    user_id = current_user_id()
+                    user_id = user_id
                 )
 
     experiment.frac_complete = 0.
@@ -34,14 +37,17 @@ function restart_exp()
 end
 
 function remove_exp()
-    authenticated!()
+    authenticated!() 
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+
     name = jsonpayload("name")
     instance = jsonpayload("instance")
+    user_id = jsonpayload("user_id")
 
     trials = find(Trial; 
                     experiment_name = name,
                     instance = instance,
-                    user_id = current_user_id()
+                    user_id = user_id
                 )
 
     if !isempty(trials)
@@ -51,23 +57,26 @@ function remove_exp()
         findone(UserExperiment; 
                 experiment_name = name,
                 instance = instance,
-                user_id = current_user_id()
+                user_id = user_id
                 ) |> delete
-        json(Dict(:status => (:value => "sucess")))
-    end                        
+    end
 end
 
 function add_exp()
-    authenticated!()
-    name = jsonpayload("name")
-    curr_user_exps = find(UserExperiment; experiment_name = name, user_id = current_user_id())
+    authenticated!() 
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    
+    name = jsonpayload("experiment")
+    user_id = jsonpayload("user_id")
+
+    curr_user_exps = find(UserExperiment; experiment_name = name, user_id = user_id)
     if !isempty(curr_user_exps)
         new_instance = maximum(getproperty.(curr_user_exps, :instance)) + 1
     else
         new_instance = 1
     end
     ue = UserExperiment(; 
-                    user_id = current_user_id(), 
+                    user_id = user_id, 
                     experiment_name = name, 
                     instance = new_instance,
                     frac_complete = 0.

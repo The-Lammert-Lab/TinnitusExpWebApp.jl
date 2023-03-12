@@ -1,0 +1,150 @@
+<style>
+     /* The switch - the box around the slider */
+    .switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    }
+
+    /* Hide default HTML checkbox */
+    .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    }
+
+    /* The slider */
+    .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+    }
+
+    .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    }
+
+    input:checked + .slider {
+    background-color: #2196F3;
+    }
+
+    input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+    border-radius: 34px;
+    }
+
+    .slider.round:before {
+    border-radius: 50%;
+    } 
+</style>
+
+
+<h1>Admin</h1>
+<% partial("app/layouts/_logout.jl.html") %>
+
+<div>
+    <form id="experiment-form">
+        <label>View Experiment:</label>
+        <select name="experiment" id="experiment-ddl">
+            <option value="default">Experiment</option>
+            <% for_each(experiments) do e %>
+                <option value="$(e.name)">$(e.name)</option>
+            <% end %>
+        </select>
+    </form>
+</div>
+
+<div>
+    <form>
+        <label for="vis">Toggle visibility</label>
+        <label class="switch" id="vis">
+            <input type="checkbox">
+            <span class="slider round"></span>
+        </label>
+        <input type="submit" value="Save">
+    </form>
+</div>
+
+<div>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="experiment-settings">
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Users</th>
+                <th>Instance</th>
+                <th>Percent Complete</th>
+            </tr>
+        </thead>
+        <tbody id="user-experiment-data">
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="user-experiment-data">
+            <% for_each(users) do user %>
+                <tr>
+                    <td>$(user.username)</td>
+                    <td>
+                        <form action="/manage/$(user.username)">
+                            <input type="submit" value="Manage"></input>
+                        </form>
+                    </td>
+                </tr>
+            <% end %>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const ddl = document.getElementById('experiment-ddl');
+    ddl.addEventListener('change', () => {
+        if (ddl.value != 'default') {
+            viewExperiment();
+        }
+    });
+</script>
