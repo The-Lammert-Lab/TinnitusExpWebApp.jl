@@ -11,6 +11,7 @@ Base.@kwdef mutable struct User <: AbstractModel
     id::DbId = DbId()
     username::String = ""
     password::String = ""
+    is_admin::Bool = false
 end
 
 Validation.validator(u::Type{User}) = ModelValidator([

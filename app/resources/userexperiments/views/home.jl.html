@@ -6,12 +6,15 @@
     <div>
         <!-- TODO: Add sort feature -->
         <table class="styled-table">
-            <tr>
-                <th>Name</th>
-                <th>Instance</th>
-                <th>Percent complete</th>
-                <th>Action</th>
-            </tr>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Instance</th>
+                    <th>Percent complete</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
             <% for_each(added_experiments) do e %>
                 <tr>
                     <td>$(e.experiment_name)</td>
@@ -36,62 +39,11 @@
                                     <input type="hidden" name="from" value="start">
                                     <input type="submit" value="Start"></input>
                                 </form>
-                                <form style="float:right;margin-left:2px" name="remove-form" method="post">
-                                    <input type="hidden" name="name" value="$(e.experiment_name)">
-                                    <input type="hidden" name="instance" value="$(e.instance)">
-                                    <input type="submit" value="Remove"></input>
-                                </form>
                             </td>
                     <%  end  %>
                 </tr>
             <% end %>
+            </tbody>
         </table>
     </div>
-
-    <div>
-        <form id="add-form" action="/add" method="post">
-            <label>Add experiment:</label>
-            <select name="name" id="add-experiment">
-                <option value="default" selected>Choose here</option>
-                <%  for_each(visible_experiments) do e 
-                        if e.name in getproperty.(unstarted_experiments, :experiment_name)
-                %>
-                            <option value="$(e.name)" disabled>$(e.name)</option>
-                        <% else %>
-                            <option value="$(e.name)">$(e.name)</option>
-                        <% end %>
-                <% end %>
-            </select>
-            <input id="add-submit" type="submit" value="Add" disabled>
-        </form>
-    </div>
-    
-    <script>
-        const select = document.getElementById('add-experiment');
-        const submitButton = document.getElementById('add-submit');
-
-        // Post add or remove request
-        document.addEventListener("submit", function(e) {
-            if (e.target.getAttribute('id') == 'add-form') { // using id because only ever one
-                e.preventDefault();
-                addExperiment(e.target);
-            } else if (e.target.getAttribute('name') == 'remove-form') { // using name because could be multiple (rows)
-                e.preventDefault();
-                const ans = confirm("Are you sure you want to remove this experiment?");
-                if (ans) {
-                    removeExperiment(e.target);
-                }
-            }
-        });
-
-        // Disable add button if default is selected
-        select.addEventListener('change', () => {
-            if (select.value === 'default') {
-                submitButton.disabled = true;
-            } else {
-                submitButton.disabled = false;
-            }
-        });
-
-    </script>
 </body>

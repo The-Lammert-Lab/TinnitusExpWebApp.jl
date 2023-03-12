@@ -7,14 +7,14 @@ function showOptions() {
 function recordAndPlay(ans) {
     // Interpret response
     switch (ans) {
-        case 'yes': 
+        case 'yes':
             var val = 1;
             break;
         case 'no':
             var val = -1;
             break;
     }
-    
+
     // Save response
     axios.post('/save', {
         resp: val
@@ -46,9 +46,6 @@ function recordAndPlay(ans) {
         .catch(function (error) {
             if (error.response) {
                 // Request made and server responded
-                console.log(error.response.data);
-                console.log(error.response.status);
-                console.log(error.response.headers);
                 window.alert(error.response.data.error);
                 window.location.replace("/home");
                 return;
@@ -138,7 +135,8 @@ function getAndStoreAudio() {
 function addExperiment(form) {
     const formData = new FormData(form);
     axios.post('/add', {
-        name: formData.get('name'),
+        experiment: formData.get('experiment'),
+        user_id: formData.get('user_id')
     })
         .then(function () {
             window.location.reload();
@@ -150,7 +148,8 @@ function restartExperiment(form) {
     const formData = new FormData(form);
     axios.post('/restart', {
         name: formData.get('name'),
-        instance: formData.get('instance')
+        instance: formData.get('instance'),
+        user_id: formData.get('user_id')
     })
         .then(function () {
             window.location.reload();
@@ -162,15 +161,17 @@ function removeExperiment(form) {
     const formData = new FormData(form);
     axios.post('/remove', {
         name: formData.get('name'),
-        instance: formData.get('instance')
+        instance: formData.get('instance'),
+        user_id: formData.get('user_id')
     })
         .then(function () {
+            console.log("here")
             window.location.reload();
         })
-        .catch(function (error) { 
+        .catch(function (error) {
             if (error.response) {
                 // Request made and server responded
-                window.alert(error.response.data);
+                window.alert(error.response.data.error);
                 window.location.reload();
             } else if (error.request) {
                 // The request was made but no response was received
@@ -181,3 +182,59 @@ function removeExperiment(form) {
             }
         });
 } // function
+
+function viewExperiment() {
+    const formData = new FormData(document.getElementById("experiment-form"));
+    const experiment = formData.get('experiment');
+    axios.get('/admin/view/' + experiment, {
+        name: experiment,
+    })
+        .then(function (response) {
+            // Make table for experimental settings
+            const ex_table = document.getElementById('experiment-settings')
+            ex_table.innerHTML = ''; // Delete old table rows
+            const ex_data = response.data.experiment_data.value;
+            // Build new table
+            for (element in ex_data) {
+                let row = ex_table.insertRow();
+                let cell1 = row.insertCell();
+                let cell2 = row.insertCell();
+                let field = document.createTextNode(element);
+                let val = document.createTextNode(ex_data[element]);
+                cell1.appendChild(field);
+                cell2.appendChild(val);
+            }
+            // TODO: Sort table
+            // NOTE: use innerHTML to get row value
+
+            // Make table with user information for this experiment
+            const user_table = document.getElementById('user-experiment-data')
+            user_table.innerHTML = ''; // Delete old table rows
+            const user_data = response.data.user_data.value;
+            for (element in user_data) {
+                let row = user_table.insertRow();
+                let cell1 = row.insertCell();
+                let cell2 = row.insertCell();
+                let cell3 = row.insertCell();
+                let username = document.createTextNode(user_data[element].username);
+                let instance = document.createTextNode(user_data[element].instance);
+                let perc_complete = document.createTextNode((100 * user_data[element].frac_complete) + "%");
+                cell1.appendChild(username);
+                cell2.appendChild(instance);
+                cell3.appendChild(perc_complete);
+            }
+        })
+        .catch(function (error) {
+            if (error.response) {
+                // Request made and server responded
+                window.alert(error.response.data.error);
+                window.location.reload();
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.log(error.request);
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log('Error', error.message);
+            }
+        });
+}
