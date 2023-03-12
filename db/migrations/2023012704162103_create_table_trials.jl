@@ -1,22 +1,21 @@
-module CreateTableBlocks
+module CreateTableTrials
 
 import SearchLight.Migrations: create_table, column, columns, pk, add_index, drop_table, add_indices
 
 function up()
-    create_table(:blocks) do
+    create_table(:trials) do
         [
             pk()
             columns([
-                :stim_matrix => :string,
-                :responses => :string,
-                :number => :int
+                :stimulus => :string,
+                :response => :int,
             ])
         ]
     end
 end
 
 function down()
-    drop_table(:blocks)
+    drop_table(:trials)
 end
 
 end

@@ -3,6 +3,10 @@ module UserExperiments
 import SearchLight: AbstractModel, DbId
 import Base: @kwdef
 
+using SearchLight
+using CharacterizeTinnitus.UserExperimentsValidator
+import SearchLight.Validation: ModelValidator, ValidationRule
+
 export UserExperiment
 
 @kwdef mutable struct UserExperiment <: AbstractModel
@@ -10,9 +14,17 @@ export UserExperiment
   user_id::DbId = DbId()
   experiment_name::String = ""
   instance::Integer = 1
-  percent_complete::AbstractFloat = 0.0
+  frac_complete::AbstractFloat = 0.
 end
 
-# TODO: Add instance is unique validation
+# TODO: test to see if this can be condensed
+SearchLight.Validation.validator(::Type{UserExperiment}) = ModelValidator([
+    ValidationRule(:user_id, UserExperimentsValidator.dbid_is_not_nothing),
+    ValidationRule(:experiment_name, UserExperimentsValidator.is_experiment),
+    ValidationRule(:instance, UserExperimentsValidator.is_positive),
+    ValidationRule(:instance, UserExperimentsValidator.is_int),
+    ValidationRule(:instance, UserExperimentsValidator.unique_for_usr_and_exp),
+    ValidationRule(:frac_complete, UserExperimentsValidator.is_nonnegative),
+])
 
 end

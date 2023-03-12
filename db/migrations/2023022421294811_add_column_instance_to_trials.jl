@@ -1,18 +1,18 @@
-module AddInstanceColumnToBlocks
+module AddInstanceColumnToTrials
 
 import SearchLight.Migrations: add_columns, remove_columns, add_index, remove_index
 
 function up()
-    add_columns(:blocks, [
+    add_columns(:trials, [
         :instance => :int
     ])
-    add_index(:blocks, :instance)
+    add_index(:trials, :instance)
 end
 
 function down()
-    remove_index(:blocks, :instance)
+    remove_index(:trials, :instance)
 
-    remove_columns(:blocks, [
+    remove_columns(:trials, [
       :instance
     ])
 end

@@ -3,13 +3,6 @@ Small example functions to do various operations.
     Mostly a reference file. 
 """
 
-using SearchLight
-using CharacterizeTinnitus.Blocks
-using CharacterizeTinnitus.Experiments
-using CharacterizeTinnitus.TinnitusReconstructor
-using JSON3
-using SHA
-
 function get_stim_mat(id::I) where {I<:Integer}
     B = findone(Block, id=id)
     stim_mat = reshape(JSON3.read(B.stim_matrix), JSON3.read(B.stimgen).n_bins, B.n_trials_per_block)
@@ -26,3 +19,52 @@ end
 const STIMGEN_MAPPINGS = Dict{String,DataType}(
     "UniformPrior" => UniformPrior
 )
+
+"""
+    stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
+
+Returns a stimgen struct with keyword arguments from stringified name.
+"""
+function stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
+    stimgen_args = "("
+    for key in keys(kwargs)
+        name = string(key)
+        value = string(kwargs[key])
+        if stimgen_args == "("
+            stimgen_args = string(stimgen_args, name, "=", value)
+        else
+            stimgen_args = string(stimgen_args, ",", name, "=", value)
+        end
+    end
+    stimgen_args = string(stimgen_args, ")")
+    f = eval(Meta.parse(string("x ->", stimgen, stimgen_args)))
+    return Base.invokelatest(f, ())
+end
+
+function reset_exp(name::S) where {S<:AbstractString}
+    user = findone(User; username = "testuser")
+    ue = findone(UserExperiment; experiment_name = name, user_id = user.id)
+    ue.frac_complete = 0
+    save(ue)
+    blocks = find(Trial; experiment_name = name, user_id = user.id)
+    delete.(blocks)
+end
+
+
+"""
+    choose_n_trials(x::I) where {I<:Integer}
+
+Find the number closest to IDEAL_BLOCK_SIZE that is a factor of x.
+"""
+function choose_n_trials(x::I) where {I<:Integer}
+    if x <= MAX_BLOCK_SIZE
+        return x
+    elseif isprime(x)
+        x += 1
+    end
+
+    all_prod = prod.(combinations(factor(Vector, x)))
+    n_trials = argmin(ai -> abs(ai - IDEAL_BLOCK_SIZE), all_prod) 
+
+    return n_trials
+end
