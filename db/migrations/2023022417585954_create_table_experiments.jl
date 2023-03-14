@@ -11,11 +11,12 @@ function up()
         :stimgen_type => :string,
         :n_trials => :int,
         :name => :string,
+        :settings_hash => :string,
       ])
     ]
   end
 
-  add_indices(:experiments, :name)
+  add_indices(:experiments, :name, :settings_hash)
 end
 
 function down()

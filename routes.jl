@@ -16,7 +16,7 @@ route("/admin/view/:name", ExperimentsController.view_exp)
 route("/manage/:username", ExperimentsController.manage)
 route("/create", ExperimentsController.create)
 route("/create/get/:type", ExperimentsController.get_stimgen)
-# route("/create/save", ExperimentsController.save; method = POST)
+route("/create/save", ExperimentsController.save; method = POST)
 # route("/create/:template", ExperimentsController.create_from_template)
 
 route("/home", UserExperimentsController.home)
