@@ -68,3 +68,14 @@ function choose_n_trials(x::I) where {I<:Integer}
 
     return n_trials
 end
+
+
+"""
+Get stimgen type as string
+"""
+function sg_name()
+    # Get just the stimgen name
+    # NOTE: This method can probably be considerably improved.
+    stimgen_types = Vector{String}(undef, length(full_types))
+    [stimgen_types[ind] = split.(type, '.')[end][end] for (ind, type) in enumerate(eachrow(string.(full_types)))]
+end

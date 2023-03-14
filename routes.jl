@@ -4,7 +4,7 @@ using CharacterizeTinnitus.ExperimentsController
 using CharacterizeTinnitus.UserExperimentsController
 
 route("/", TrialsController.index)
-route("/expsetup", TrialsController.expsetup)
+# route("/expsetup", TrialsController.expsetup)
 route("/experiment", TrialsController.experiment)
 route("/rest", TrialsController.rest)
 route("/generate", TrialsController.gen_stim_rest; method = POST)
@@ -14,6 +14,10 @@ route("/save", TrialsController.save_response; method = POST)
 route("/admin", ExperimentsController.admin)
 route("/admin/view/:name", ExperimentsController.view_exp)
 route("/manage/:username", ExperimentsController.manage)
+route("/create", ExperimentsController.create)
+route("/create/get/:type", ExperimentsController.get_stimgen)
+# route("/create/save", ExperimentsController.save; method = POST)
+# route("/create/:template", ExperimentsController.create_from_template)
 
 route("/home", UserExperimentsController.home)
 route("/add", UserExperimentsController.add_exp; method = POST)

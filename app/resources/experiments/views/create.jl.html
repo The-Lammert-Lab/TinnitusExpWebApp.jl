@@ -1,0 +1,60 @@
+<h1>Create an experiment!</h1>
+<% partial("app/layouts/_logout.jl.html") %>
+
+<div>
+    <form id="exptype-form">
+        <label>Experiment Type:</label>
+        <select name="type" id="type-ddl">
+            <option value="default">Select a type</option>
+            <% for_each(stimgen_types) do s %>
+                <option value="$(s)">$(s)</option>
+            <% end %>
+        </select>
+        <input id="exptype-submit" type="submit" value="Choose" disabled>
+    </form>
+</div>
+
+<div>
+    <form action="$(linkto(:save_exp))" method="POST">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody id="experiment-settings">
+                <% for_each(exp_fields) do f %>
+                    <tr>
+                        <td>$(f.label)</td>
+                        <td> <input type="$(f.type)" name="$(f.name)" value="$(f.value)" required> </td>
+                    </tr>
+                <% end %>
+            </tbody>
+            <tbody id="stimgen-settings">
+            </tbody>
+        </table>
+        <input type="submit" value="Save">
+    </form>
+</div>
+
+<script>
+    // window.onload = getAndStoreAudio;
+
+    document.addEventListener("submit", function(e) {
+        if (e.target.getAttribute('id') == 'exptype-form') { // using id because only ever one
+            e.preventDefault();
+            viewStimgen(e.target);
+        }
+    });
+
+    const select = document.getElementById('type-ddl')
+    const submitButton = document.getElementById('exptype-submit');
+    select.addEventListener('change', () => {
+        if (select.value === 'default') {
+            submitButton.disabled = true;
+        } else {
+            submitButton.disabled = false;
+        }
+    });
+</script>

@@ -10,6 +10,9 @@ using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using Genie.Exceptions
 using GenieAuthentication
+using GenieSession
+using InteractiveUtils: subtypes
+using NamedTupleTools
 using SearchLight
 using JSON3
 
@@ -27,14 +30,31 @@ const EXPERIMENT_FIELDS = Dict{Symbol,String}(
     :visible => "Visible"
 )
 
-function admin()
-    authenticated!() 
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+const STIMGEN_MAPPINGS = Dict{String,DataType}(
+    "UniformPrior" => UniformPrior,
+    "GaussianPrior" => GaussianPrior,
+)
 
-    experiments = all(Experiment)
-    users = find(User; is_admin = false)
-    
-    html(:experiments, :admin; users, experiments)
+"""
+    _subtypes(type::Type)    
+
+Collect all concrete subtypes. 
+
+# References
+- https://gist.github.com/Datseris/1b1aa1287041cab1b2dff306ddc4f899
+"""
+function _subtypes(type::Type)
+    out = Any[]
+    _subtypes!(out, type)
+end
+
+function _subtypes!(out, type::Type)
+    if !isabstracttype(type)
+        push!(out, type)
+    else
+        foreach(T->_subtypes!(out, T), subtypes(type))
+    end
+    return out
 end
 
 function view_exp()
@@ -89,6 +109,126 @@ function view_exp()
     json(Dict(:experiment_data => (:value => exp_data), :user_data => (:value => user_data)))
 end
 
+"""
+    get_exp_fields()
+    get_exp_fields(ex::E) where {E<:Experiment}
+
+Returns Vector{NamedTuple} corresponding to each non-stimgen field in a generic or specific experiment.
+    Each NamedTuple has `name`, `label`, `type`, and `value`.
+"""
+function get_exp_fields()
+    authenticated!() 
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+
+    ex = Experiment()
+    fnames = fieldnames(typeof(ex))
+    exclude = [:id, :stimgen_settings, :stimgen_type]
+    exp_fields = Vector{NamedTuple}(undef, length(fnames)-length(exclude))
+    ind = 0
+    for field in fnames
+        if !(field in exclude)
+            ind += 1
+            if typeof(getproperty(ex,field)) == Bool # Bool is a subtype of Real
+                input_type = "checkbox"
+            elseif typeof(getproperty(ex,field)) <: Real
+                input_type = "number"
+            elseif typeof(getproperty(ex,field)) <: AbstractString
+                input_type = "text"
+            end
+
+            if !(field in keys(EXPERIMENT_FIELDS))
+                lab = field
+            else
+                lab = EXPERIMENT_FIELDS[field]
+            end
+
+            exp_fields[ind] = (name = field, label = lab, type = input_type, value = "")
+        end
+    end
+    return exp_fields
+end
+
+function get_exp_fields(ex::E) where {E<:Experiment}
+    authenticated!() 
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+
+    fnames = fieldnames(typeof(ex))
+
+    exclude = [:id, :stimgen_settings, :stimgen_type]
+    exp_fields = Vector{NamedTuple}(undef, length(fnames)-length(exclude))
+    ind = 0
+    for field in fnames
+        if !(field in exclude)
+            ind += 1
+            if typeof(getproperty(ex,field)) == Bool # Bool is a subtype of Real
+                input_type = "checkbox"
+            elseif typeof(getproperty(ex,field)) <: Real
+                input_type = "number"
+            elseif typeof(getproperty(ex,field)) <: AbstractString
+                input_type = "text"
+            end
+
+            if !(field in keys(EXPERIMENT_FIELDS))
+                lab = field
+            else
+                lab = EXPERIMENT_FIELDS[field]
+            end
+
+            exp_fields[ind] = (name = field, label = lab, type = input_type, value = getproperty(ex, field))
+        end
+    end
+    return exp_fields
+end
+
+"""
+    get_stimgen_fields(s::SG) where {SG<:Stimgen}
+
+Returns Vector{NamedTuple} corresponding to each field in the stimgen struct `s`.
+    Each NamedTuple has `name`, `label`, `type`, and `value`.
+"""
+function get_stimgen_fields(s::SG) where {SG<:Stimgen}
+    authenticated!() 
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+
+    fnames = fieldnames(typeof(s))
+
+    sg_fields = Vector{NamedTuple}(undef, length(fnames))
+    for (ind, field) in enumerate(fnames)
+        if typeof(getproperty(s,field)) == Bool # Bool is a subtype of Real
+            input_type = "checkbox"
+        elseif typeof(getproperty(s,field)) <: Real
+            input_type = "number"
+        elseif typeof(getproperty(s,field)) <: AbstractString
+            input_type = "text"
+        end
+
+        if !(field in keys(EXPERIMENT_FIELDS))
+            lab = field
+        else
+            lab = EXPERIMENT_FIELDS[field]
+        end
+
+        sg_fields[ind] = (name = field, label = lab, type = input_type, value = getproperty(s, field))
+    end
+    return sg_fields
+end
+
+#########################
+
+## PAGE FUNCTIONS ##
+
+#########################
+
+function admin()
+    authenticated!() 
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+
+    experiments = all(Experiment)
+    users = find(User; is_admin = false)
+    
+    html(:experiments, :admin; users, experiments)
+end
+
 function manage()
     authenticated!() 
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
@@ -99,6 +239,29 @@ function manage()
     visible_experiments = find(Experiment; visible = true)
     unstarted_experiments = [ex for ex in added_experiments if ex.frac_complete == 0]
     html(:experiments, :manage; added_experiments, visible_experiments, unstarted_experiments, user_id)
+end
+
+function create()
+    authenticated!() 
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    
+    full_types = _subtypes(Stimgen)
+    stimgen_types = Vector{String}(undef, length(full_types))
+    [stimgen_types[ind] = split.(type, '.')[end][end] for (ind, type) in enumerate(eachrow(string.(full_types)))]
+
+    # Non-stimgen experiment fields
+    exp_fields = get_exp_fields()
+    stimgen_fields = nothing
+
+    # html(:experiments, :create; default_stimgens, exp_fields)
+    html(:experiments, :create; stimgen_types, exp_fields, stimgen_fields)
+end
+
+function get_stimgen()
+    s = STIMGEN_MAPPINGS[params(:type)]()
+    stimgen_fields = get_stimgen_fields(s);
+
+    json(stimgen_fields)
 end
 
 end

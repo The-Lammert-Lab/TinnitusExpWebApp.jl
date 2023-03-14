@@ -186,9 +186,7 @@ function removeExperiment(form) {
 function viewExperiment() {
     const formData = new FormData(document.getElementById("experiment-form"));
     const experiment = formData.get('experiment');
-    axios.get('/admin/view/' + experiment, {
-        name: experiment,
-    })
+    axios.get('/admin/view/' + experiment, {})
         .then(function (response) {
             // Make table for experimental settings
             const ex_table = document.getElementById('experiment-settings')
@@ -235,6 +233,33 @@ function viewExperiment() {
             } else {
                 // Something happened in setting up the request that triggered an Error
                 console.log('Error', error.message);
+            }
+        });
+}
+
+function viewStimgen(form) {
+    const formData = new FormData(form);
+    const type = formData.get('type');
+    axios.get('/create/get/' + type, {})
+        .then(function (response) {
+            const sg_table = document.getElementById('stimgen-settings')
+            sg_table.innerHTML = ''; // Delete old table rows
+            const sg_data = response.data;
+            // Build new table
+            for (element in sg_data) {
+                let row = sg_table.insertRow();
+                let cell1 = row.insertCell();
+                let cell2 = row.insertCell();
+                let field = document.createTextNode(sg_data[element].label);
+
+                let input = document.createElement("INPUT");
+                input.setAttribute("type", sg_data[element].type);
+                input.setAttribute("name", sg_data[element].name);
+                input.setAttribute("value", sg_data[element].value);
+                input.required = true;
+
+                cell1.appendChild(field);
+                cell2.appendChild(input);
             }
         });
 }

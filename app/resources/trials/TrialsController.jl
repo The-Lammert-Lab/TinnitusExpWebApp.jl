@@ -21,33 +21,34 @@ using SearchLight.Validation
 using SHA
 
 const STIMGEN_MAPPINGS = Dict{String,DataType}(
-    "UniformPrior" => UniformPrior
+    "UniformPrior" => UniformPrior,
+    "GaussianPrior" => GaussianPrior,
 )
 
 const IDEAL_BLOCK_SIZE = 80
 const MAX_BLOCK_SIZE = 120
 
-"""
-    _subtypes(type::Type)    
+# """
+#     _subtypes(type::Type)    
 
-Collect all concrete subtypes. 
+# Collect all concrete subtypes. 
 
-# References
-- https://gist.github.com/Datseris/1b1aa1287041cab1b2dff306ddc4f899
-"""
-function _subtypes(type::Type)
-    out = Any[]
-    _subtypes!(out, type)
-end
+# # References
+# - https://gist.github.com/Datseris/1b1aa1287041cab1b2dff306ddc4f899
+# """
+# function _subtypes(type::Type)
+#     out = Any[]
+#     _subtypes!(out, type)
+# end
 
-function _subtypes!(out, type::Type)
-    if !isabstracttype(type)
-        push!(out, type)
-    else
-        foreach(T->_subtypes!(out, T), subtypes(type))
-    end
-    return out
-end
+# function _subtypes!(out, type::Type)
+#     if !isabstracttype(type)
+#         push!(out, type)
+#     else
+#         foreach(T->_subtypes!(out, T), subtypes(type))
+#     end
+#     return out
+# end
 
 
 """
@@ -192,17 +193,17 @@ function index()
     html(:trials, :index)
 end
 
-function expsetup()
-    # full_types is CharacterizeTinnitus.TinnitusReconstructor.XXXXX (typeof = Vector{DataType})
-    full_types = _subtypes(Stimgen)
+# function expsetup()
+#     # full_types is CharacterizeTinnitus.TinnitusReconstructor.XXXXX (typeof = Vector{DataType})
+#     full_types = _subtypes(Stimgen)
 
-    # Get just the stimgen name
-    # NOTE: This method can probably be considerably improved.
-    stimgen_types = Vector{String}(undef, length(full_types))
-    [stimgen_types[ind] = split.(type, '.')[end][end] for (ind, type) in enumerate(eachrow(string.(full_types)))]
+#     # Get just the stimgen name
+#     # NOTE: This method can probably be considerably improved.
+#     stimgen_types = Vector{String}(undef, length(full_types))
+#     [stimgen_types[ind] = split.(type, '.')[end][end] for (ind, type) in enumerate(eachrow(string.(full_types)))]
 
-    html(:trials, :expsetup; stimgen_types)
-end
+#     html(:trials, :expsetup; stimgen_types)
+# end
 
 function experiment()
     authenticated!()

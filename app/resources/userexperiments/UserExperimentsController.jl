@@ -90,6 +90,12 @@ function add_exp()
     save(ue)
 end
 
+#########################
+
+## PAGE FUNCTIONS ##
+
+#########################
+
 function home()
     authenticated!()
     added_experiments = find(UserExperiment; user_id = current_user_id())
