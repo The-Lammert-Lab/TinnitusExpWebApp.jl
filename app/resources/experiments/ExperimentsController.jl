@@ -128,9 +128,7 @@ function get_exp_fields()
     for field in fnames
         if !(field in exclude)
             ind += 1
-            if typeof(getproperty(ex,field)) == Bool # Bool is a subtype of Real
-                input_type = "checkbox"
-            elseif typeof(getproperty(ex,field)) <: Real
+            if typeof(getproperty(ex,field)) <: Real
                 input_type = "number"
             elseif typeof(getproperty(ex,field)) <: AbstractString
                 input_type = "text"
@@ -160,9 +158,7 @@ function get_exp_fields(ex::E) where {E<:Experiment}
     for field in fnames
         if !(field in exclude)
             ind += 1
-            if typeof(getproperty(ex,field)) == Bool # Bool is a subtype of Real
-                input_type = "checkbox"
-            elseif typeof(getproperty(ex,field)) <: Real
+            if typeof(getproperty(ex,field)) <: Real
                 input_type = "number"
             elseif typeof(getproperty(ex,field)) <: AbstractString
                 input_type = "text"
@@ -194,9 +190,7 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
 
     sg_fields = Vector{NamedTuple}(undef, length(fnames))
     for (ind, field) in enumerate(fnames)
-        if typeof(getproperty(s,field)) == Bool # Bool is a subtype of Real
-            input_type = "checkbox"
-        elseif typeof(getproperty(s,field)) <: Real
+        if typeof(getproperty(s,field)) <: Real
             input_type = "number"
         elseif typeof(getproperty(s,field)) <: AbstractString
             input_type = "text"
@@ -236,7 +230,7 @@ function manage()
     user_id = findone(User; username = params(:username)).id
 
     added_experiments = find(UserExperiment; user_id = user_id)
-    visible_experiments = find(Experiment; visible = true)
+    experiments = all(Experiment)
     unstarted_experiments = [ex for ex in added_experiments if ex.frac_complete == 0]
     html(:experiments, :manage; added_experiments, visible_experiments, unstarted_experiments, user_id)
 end

@@ -16,7 +16,6 @@ function up()
         stimgen_type = stimgen_type,
         n_trials = 10,
         name = "TestExperiment_1",
-        visible = true,
     ) |> save!
 
     Experiment(; 
@@ -24,7 +23,6 @@ function up()
         stimgen_type = stimgen_type,
         n_trials = 50,
         name = "TestExperiment_2",
-        visible = true,
     ) |> save!
 
 end

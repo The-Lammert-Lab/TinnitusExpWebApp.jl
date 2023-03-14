@@ -53,7 +53,7 @@
             <label>Add experiment:</label>
             <select name="experiment" id="add-experiment">
                 <option value="default" selected>Choose here</option>
-                <%  for_each(visible_experiments) do e 
+                <%  for_each(experiments) do e 
                         if e.name in getproperty.(unstarted_experiments, :experiment_name)
                 %>
                             <option value="$(e.name)" disabled>$(e.name)</option>

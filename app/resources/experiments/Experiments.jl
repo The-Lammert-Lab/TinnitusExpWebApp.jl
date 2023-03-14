@@ -15,7 +15,6 @@ export Experiment
   stimgen_type::String = ""
   n_trials::Int = 0
   name::String = ""
-  visible::Bool = true
 end
 
 SearchLight.Validation.validator(::Type{Experiment}) = ModelValidator([
