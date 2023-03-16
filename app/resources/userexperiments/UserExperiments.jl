@@ -10,11 +10,11 @@ import SearchLight.Validation: ModelValidator, ValidationRule
 export UserExperiment
 
 @kwdef mutable struct UserExperiment <: AbstractModel
-  id::DbId = DbId()
-  user_id::DbId = DbId()
-  experiment_name::String = ""
-  instance::Integer = 1
-  frac_complete::AbstractFloat = 0.
+    id::DbId = DbId()
+    user_id::DbId = DbId()
+    experiment_name::String = ""
+    instance::Integer = 1
+    frac_complete::AbstractFloat = 0.0
 end
 
 # TODO: test to see if this can be condensed

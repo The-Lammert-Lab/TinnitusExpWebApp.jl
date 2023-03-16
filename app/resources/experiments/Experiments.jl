@@ -15,7 +15,7 @@ mutable struct Experiment <: AbstractModel
     stimgen_type::String
     n_trials::Int
     name::String
-    settings_hash::String 
+    settings_hash::String
 
     # Inner constructor to force consistency in settings_hash
     function Experiment(;

@@ -23,5 +23,5 @@ using Main.CharacterizeTinnitus, Test, TestSetExtensions, Logging
 Logging.global_logger(NullLogger())
 
 @testset ExtendedTestSet "CharacterizeTinnitus tests" begin
-  @includetests ARGS
+    @includetests ARGS
 end

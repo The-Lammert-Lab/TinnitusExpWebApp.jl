@@ -4,9 +4,7 @@ using SearchLight
 using ..Main.UserApp.Users
 
 function up()
-    Users.User( username  = "testuser",
-                password  = "testpass" |>
-                Users.hash_password) |> save!
+    Users.User(username = "testuser", password = "testpass" |> Users.hash_password) |> save!
 end
 
 function down()

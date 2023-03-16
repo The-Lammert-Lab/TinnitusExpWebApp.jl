@@ -4,21 +4,23 @@ Small example functions to do various operations.
 """
 
 function get_stim_mat(id::I) where {I<:Integer}
-    B = findone(Block, id=id)
-    stim_mat = reshape(JSON3.read(B.stim_matrix), JSON3.read(B.stimgen).n_bins, B.n_trials_per_block)
+    B = findone(Block, id = id)
+    stim_mat = reshape(
+        JSON3.read(B.stim_matrix),
+        JSON3.read(B.stimgen).n_bins,
+        B.n_trials_per_block,
+    )
     return stim_mat
 end
 
 # TODO: Find a way to avoid eval. 
 function get_stimgen_struct(id::I) where {I<:Integer}
-    block = findone(Block, id=id)
+    block = findone(Block, id = id)
     stimgen = JSON3.read(block.stimgen, eval(Meta.parse(block.stimgen_type)))
     return stimgen
 end
 
-const STIMGEN_MAPPINGS = Dict{String,DataType}(
-    "UniformPrior" => UniformPrior
-)
+const STIMGEN_MAPPINGS = Dict{String,DataType}("UniformPrior" => UniformPrior)
 
 """
     stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
@@ -64,7 +66,7 @@ function choose_n_trials(x::I) where {I<:Integer}
     end
 
     all_prod = prod.(combinations(factor(Vector, x)))
-    n_trials = argmin(ai -> abs(ai - IDEAL_BLOCK_SIZE), all_prod) 
+    n_trials = argmin(ai -> abs(ai - IDEAL_BLOCK_SIZE), all_prod)
 
     return n_trials
 end
@@ -77,5 +79,8 @@ function sg_name()
     # Get just the stimgen name
     # NOTE: This method can probably be considerably improved.
     stimgen_types = Vector{String}(undef, length(full_types))
-    [stimgen_types[ind] = split.(type, '.')[end][end] for (ind, type) in enumerate(eachrow(string.(full_types)))]
+    [
+        stimgen_types[ind] = split.(type, '.')[end][end] for
+        (ind, type) in enumerate(eachrow(string.(full_types)))
+    ]
 end

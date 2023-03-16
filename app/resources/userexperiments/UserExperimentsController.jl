@@ -13,59 +13,56 @@ using GenieAuthentication
 
 # TODO: Add error handling (no experiment or no trials)
 function restart_exp()
-    authenticated!() 
+    authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
     user_id = jsonpayload("user_id")
 
-    experiment = findone(UserExperiment; 
-                         experiment_name = name,
-                         instance = instance,
-                         user_id = user_id
-                        )
-                        
-    trials = find(Trial; 
-                    experiment_name = name,
-                    instance = instance,
-                    user_id = user_id
-                )
+    experiment = findone(
+        UserExperiment;
+        experiment_name = name,
+        instance = instance,
+        user_id = user_id,
+    )
 
-    experiment.frac_complete = 0.
+    trials = find(Trial; experiment_name = name, instance = instance, user_id = user_id)
+
+    experiment.frac_complete = 0.0
     save(experiment) && delete.(trials)
 end
 
 function remove_exp()
-    authenticated!() 
+    authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
     user_id = jsonpayload("user_id")
 
-    trials = find(Trial; 
-                    experiment_name = name,
-                    instance = instance,
-                    user_id = user_id
-                )
+    trials = find(Trial; experiment_name = name, instance = instance, user_id = user_id)
 
     if !isempty(trials)
-        return Router.error("Could not remove this experiment. Data has already been collected.", 
-                            MIME"application/json", INTERNAL_ERROR)
+        return Router.error(
+            "Could not remove this experiment. Data has already been collected.",
+            MIME"application/json",
+            INTERNAL_ERROR,
+        )
     else
-        findone(UserExperiment; 
-                experiment_name = name,
-                instance = instance,
-                user_id = user_id
-                ) |> delete
+        findone(
+            UserExperiment;
+            experiment_name = name,
+            instance = instance,
+            user_id = user_id,
+        ) |> delete
     end
 end
 
 function add_exp()
-    authenticated!() 
+    authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
-    
+
     name = jsonpayload("experiment")
     user_id = jsonpayload("user_id")
 
@@ -75,12 +72,12 @@ function add_exp()
     else
         new_instance = 1
     end
-    ue = UserExperiment(; 
-                    user_id = user_id, 
-                    experiment_name = name, 
-                    instance = new_instance,
-                    frac_complete = 0.
-                )
+    ue = UserExperiment(;
+        user_id = user_id,
+        experiment_name = name,
+        instance = new_instance,
+        frac_complete = 0.0,
+    )
 
     validator = validate(ue)
     if haserrors(validator)
