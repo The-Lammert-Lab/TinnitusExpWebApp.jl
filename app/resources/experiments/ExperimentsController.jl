@@ -5,16 +5,20 @@ using CharacterizeTinnitus.TinnitusReconstructor
 using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Experiments
+using CharacterizeTinnitus.GenieAuthenticationViewHelper
 using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using Genie.Exceptions
 using GenieAuthentication
 using GenieSession
+using GenieSession.Flash
 using InteractiveUtils: subtypes
 using NamedTupleTools
 using SearchLight
+using SearchLight.Validation
 using JSON3
+using StructTypes
 
 const EXPERIMENT_FIELDS = Dict{Symbol,String}(
     :min_freq => "Minimum frequency (Hz)",
@@ -34,6 +38,9 @@ const STIMGEN_MAPPINGS = Dict{String,DataType}(
     "UniformPrior" => UniformPrior,
     "GaussianPrior" => GaussianPrior,
 )
+
+StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
 
 """
     _subtypes(type::Type)    
@@ -85,8 +92,9 @@ function view_exp()
 
     # Pre-process experiment fields
     exp_data = Dict()
+    skip_fields = [:id, :settings_hash]
     for field in fieldnames(typeof(ex))
-        if field == :id
+        if field in skip_fields
             continue
         elseif field == :stimgen_settings
             settings = JSON3.read(getproperty(ex, field))
@@ -122,7 +130,7 @@ function get_exp_fields()
 
     ex = Experiment()
     fnames = fieldnames(typeof(ex))
-    exclude = [:id, :stimgen_settings, :stimgen_type]
+    exclude = [:id, :stimgen_settings, :stimgen_type, :settings_hash]
     exp_fields = Vector{NamedTuple}(undef, length(fnames)-length(exclude))
     ind = 0
     for field in fnames
@@ -152,7 +160,7 @@ function get_exp_fields(ex::E) where {E<:Experiment}
 
     fnames = fieldnames(typeof(ex))
 
-    exclude = [:id, :stimgen_settings, :stimgen_type]
+    exclude = [:id, :stimgen_settings, :stimgen_type, :settings_hash]
     exp_fields = Vector{NamedTuple}(undef, length(fnames)-length(exclude))
     ind = 0
     for field in fnames
@@ -232,7 +240,7 @@ function manage()
     added_experiments = find(UserExperiment; user_id = user_id)
     experiments = all(Experiment)
     unstarted_experiments = [ex for ex in added_experiments if ex.frac_complete == 0]
-    html(:experiments, :manage; added_experiments, visible_experiments, unstarted_experiments, user_id)
+    html(:experiments, :manage; added_experiments, experiments, unstarted_experiments, user_id)
 end
 
 function create()
@@ -247,7 +255,6 @@ function create()
     exp_fields = get_exp_fields()
     stimgen_fields = nothing
 
-    # html(:experiments, :create; default_stimgens, exp_fields)
     html(:experiments, :create; stimgen_types, exp_fields, stimgen_fields)
 end
 
@@ -256,6 +263,48 @@ function get_stimgen()
     stimgen_fields = get_stimgen_fields(s);
 
     json(stimgen_fields)
+end
+
+# TODO: Get flash() (and output_flash) to work.
+function save_exp()
+    exp_data = JSON3.read(jsonpayload("experiment"))
+    sg_data = jsonpayload("stimgen")
+    sg_type = jsonpayload("stimgen_type")
+
+    # Ensures hash and order consistency
+    stimgen = JSON3.read(sg_data, STIMGEN_MAPPINGS[sg_type]; parsequoted = true)
+    ex = Experiment(; stimgen_settings = JSON3.write(stimgen), stimgen_type = sg_type)
+
+    # Add fields to experiment.
+    for field in eachindex(exp_data)
+        val = tryparse(Float64, exp_data[field])
+        if val === nothing
+            val = exp_data[field]
+        end
+        setproperty!(ex, Symbol(field), val)
+    end
+
+    # TODO: Implement some bounds on acceptable new n_trials value
+    # Maybe: must be at least 100 different from all others.
+    same_sg_exp = findone(Experiment; 
+                        settings_hash = ex.settings_hash, 
+                        stimgen_type = sg_type, 
+                        n_trials = ex.n_trials
+                    )
+
+    if same_sg_exp !== nothing
+        return Router.error(INTERNAL_ERROR, """An experiment with these settings already exists named: "$(same_sg_exp.name)".""", MIME"application/json")
+        # return flash("Experiment already exists as $(same_sg_exp.name)")
+    end
+
+    validator = validate(ex)
+    if haserrors(validator)
+        return Router.error(INTERNAL_ERROR, """Invalid settings: "$(errors_to_string(validator))".""", MIME"application/json")
+        # return flash(errors_to_string(validator))
+    end
+
+    # save(ex) && flash("Experiment $(ex.name) successfully saved!")
+    save(ex)
 end
 
 end

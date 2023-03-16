@@ -254,12 +254,55 @@ function viewStimgen(form) {
 
                 let input = document.createElement("INPUT");
                 input.setAttribute("type", sg_data[element].type);
-                input.setAttribute("name", sg_data[element].name);
+                input.setAttribute("name", "stimgen." + sg_data[element].name);
                 input.setAttribute("value", sg_data[element].value);
                 input.required = true;
 
                 cell1.appendChild(field);
                 cell2.appendChild(input);
+            }
+            let input = document.createElement("INPUT");
+            input.setAttribute("type", "hidden");
+            input.setAttribute("name", "_stimgen-type");
+            input.setAttribute("value", type)
+            document.getElementById('create-form').appendChild(input);
+        });
+}
+
+function saveExperiment(form) {
+    const formData = new FormData(form);
+    const formObj = Object.fromEntries(formData);
+
+    let exp_data = new FormData;
+    let sg_data = new FormData;
+    for (const [key, value] of Object.entries(formObj)) {
+        if (key.startsWith('experiment')) {
+            exp_data.append(key.split(".")[1], value);
+        } else if (key.startsWith('stimgen')) {
+            sg_data.append(key.split(".")[1], value);
+        }
+    }
+
+    axios.post('/create/save', {
+        experiment: JSON.stringify(Object.fromEntries(exp_data)),
+        stimgen: JSON.stringify(Object.fromEntries(sg_data)),
+        stimgen_type: formData.get('_stimgen-type')
+    })
+        .then(function () {
+            window.alert("Experiment saved!");
+            window.location.reload();
+        })
+        .catch(function (error) {
+            if (error.response) {
+                // Request made and server responded
+                window.alert(error.response.data.error);
+                window.location.reload();
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.log(error.request);
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log('Error', error.message);
             }
         });
 }

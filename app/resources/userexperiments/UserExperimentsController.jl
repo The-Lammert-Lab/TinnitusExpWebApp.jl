@@ -99,9 +99,7 @@ end
 function home()
     authenticated!()
     added_experiments = find(UserExperiment; user_id = current_user_id())
-    visible_experiments = find(Experiment; visible = true)
-    unstarted_experiments = [ex for ex in added_experiments if ex.frac_complete == 0]
-    html(:userexperiments, :home; added_experiments, visible_experiments, unstarted_experiments)
+    html(:userexperiments, :home; added_experiments)
 end
 
 end

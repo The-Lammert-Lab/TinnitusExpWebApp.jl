@@ -19,37 +19,18 @@ using Primes
 using SearchLight
 using SearchLight.Validation
 using SHA
+using StructTypes
 
 const STIMGEN_MAPPINGS = Dict{String,DataType}(
     "UniformPrior" => UniformPrior,
     "GaussianPrior" => GaussianPrior,
 )
 
+StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
+
 const IDEAL_BLOCK_SIZE = 80
 const MAX_BLOCK_SIZE = 120
-
-# """
-#     _subtypes(type::Type)    
-
-# Collect all concrete subtypes. 
-
-# # References
-# - https://gist.github.com/Datseris/1b1aa1287041cab1b2dff306ddc4f899
-# """
-# function _subtypes(type::Type)
-#     out = Any[]
-#     _subtypes!(out, type)
-# end
-
-# function _subtypes!(out, type::Type)
-#     if !isabstracttype(type)
-#         push!(out, type)
-#     else
-#         foreach(T->_subtypes!(out, T), subtypes(type))
-#     end
-#     return out
-# end
-
 
 """
     scale_audio(x)
