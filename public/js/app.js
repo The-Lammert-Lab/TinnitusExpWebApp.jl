@@ -240,7 +240,7 @@ function viewStimgen(form) {
             sg_tbody.innerHTML = ""; 
 
             // Clear input values in experiment rows b/c all else stays same.
-            const exp_tbody = document.getElementById('experiment-settings')
+            const exp_tbody = document.getElementById("experiment-settings")
             for (let input of exp_tbody.getElementsByTagName("input")) {
                 input.value = "";
             }

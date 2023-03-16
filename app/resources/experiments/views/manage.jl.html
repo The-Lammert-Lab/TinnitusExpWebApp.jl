@@ -76,16 +76,16 @@
     <script>
         // Post add or remove request
         document.addEventListener("submit", function(e) {
-            if (e.target.getAttribute('id') == 'add-form') { // using id because only ever one
+            if (e.target.getAttribute("id") == "add-form") { // using id because only ever one
                 e.preventDefault();
                 addExperiment(e.target);
-            } else if (e.target.getAttribute('name') == 'restart-form') { // using name because could be multiple (rows)
+            } else if (e.target.getAttribute("name") == "restart-form") { // using name because could be multiple (rows)
                 e.preventDefault();
                 const ans = confirm("Are you sure you want to restart this experiment? This action cannot be undone.");
                 if (ans) {
                     restartExperiment(e.target);
                 }
-            } else if (e.target.getAttribute('name') == 'remove-form') { // using name because could be multiple (rows)
+            } else if (e.target.getAttribute("name") == "remove-form") { // using name because could be multiple (rows)
                 e.preventDefault();
                 const ans = confirm("Are you sure you want to remove this experiment?");
                 if (ans) {
@@ -94,11 +94,11 @@
             }
         });
 
-        const select = document.getElementById('add-experiment');
-        const submitButton = document.getElementById('add-submit');
+        const select = document.getElementById("add-experiment");
+        const submitButton = document.getElementById("add-submit");
         // Disable add button if default is selected
-        select.addEventListener('change', () => {
-            if (select.value === 'default') {
+        select.addEventListener("change", () => {
+            if (select.value === "default") {
                 submitButton.disabled = true;
             } else {
                 submitButton.disabled = false;
