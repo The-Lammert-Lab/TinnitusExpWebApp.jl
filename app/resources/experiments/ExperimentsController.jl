@@ -177,6 +177,8 @@ function get_exp_fields()
             input_type = "number"
         elseif typeof(getproperty(ex, field)) <: AbstractString
             input_type = "text"
+        else
+            input_type = "text"
         end
 
         if field in keys(EXPERIMENT_FIELDS)
@@ -206,6 +208,8 @@ function get_exp_fields(ex::E) where {E<:Experiment}
             input_type = "number"
         elseif typeof(getproperty(ex, field)) <: AbstractString
             input_type = "text"
+        else
+            input_type = "text"
         end
 
         if field in keys(EXPERIMENT_FIELDS)
@@ -214,7 +218,8 @@ function get_exp_fields(ex::E) where {E<:Experiment}
             lab = field
         end
 
-        exp_fields[ind] = (name = field, label = lab, type = input_type, value = "")
+        exp_fields[ind] = 
+            (name = field, label = lab, type = input_type, value = getproperty(ex, field))
     end
 
     return exp_fields
@@ -237,6 +242,8 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
         if typeof(getproperty(s, field)) <: Real
             input_type = "number"
         elseif typeof(getproperty(s, field)) <: AbstractString
+            input_type = "text"
+        else
             input_type = "text"
         end
 
@@ -298,11 +305,20 @@ function create()
         (ind, type) in enumerate(eachrow(string.(full_types)))
     ]
 
-    # Non-stimgen experiment fields
-    exp_fields = get_exp_fields()
-    stimgen_fields = nothing
+    # From template experiment or not
+    if haskey(params(), :template) && !isempty(params(:template))
+        ex = findone(Experiment; name = params(:template))
+        type = ex.stimgen_type
+        stimgen = JSON3.read(ex.stimgen_settings, STIMGEN_MAPPINGS[type])
+        exp_fields = get_exp_fields(ex)
+        stimgen_fields = get_stimgen_fields(stimgen)
+    else
+        exp_fields = get_exp_fields()
+        stimgen_fields = nothing
+        type = nothing
+    end
 
-    html(:experiments, :create; stimgen_types, exp_fields, stimgen_fields)
+    html(:experiments, :create; stimgen_types, exp_fields, stimgen_fields, type)
 end
 
 function get_stimgen()

@@ -3,12 +3,16 @@
 
 <div>
     <form id="exptype-form">
-        <label>Experiment Type:</label>
+        <label>Stimulus Type:</label>
         <select name="type" id="type-ddl">
             <option value="default">Select a type</option>
-            <% for_each(stimgen_types) do s %>
-                <option value="$(s)">$(s)</option>
-            <% end %>
+            <% for_each(stimgen_types) do s 
+                if s == type %>
+                    <option value="$(s)" selected>$(s)</option>
+                <% else %>
+                    <option value="$(s)">$(s)</option>
+                <% end
+            end %>
         </select>
         <input id="exptype-submit" type="submit" value="Choose" disabled>
     </form>
@@ -27,35 +31,55 @@
                 <% for_each(exp_fields) do f %>
                     <tr>
                         <td>$(f.label)</td>
-                        <td> <input type="$(f.type)" name="experiment.$(f.name)" value="$(f.value)" required> </td>
+                        <td> 
+                            <input type="$(f.type)" name="experiment.$(f.name)" value="$(f.value)" required> 
+                        </td>
                     </tr>
                 <% end %>
             </tbody>
             <tbody id="stimgen-settings">
+                <% if stimgen_fields !== nothing 
+                    for_each(stimgen_fields) do s %>
+                        <tr>
+                            <td>$(s.label)</td>
+                            <td> 
+                                <input type="$(s.type)" name="stimgen.$(s.name)" value="$(s.value)" required> 
+                            </td>
+                        </tr>
+                    <% end 
+                end %>
             </tbody>
         </table>
-        <input type="submit" value="Save">
+        <% if type !== nothing %>
+            <input id="_type" type="hidden" name="_stimgen-type" value="$(type)">
+            <input id="saveButton" type="submit" value="Save">
+        <% else %>
+            <input id="saveButton" type="submit" value="Save" disabled>
+        <% end %>
+    </form>
+</div>
+
+<div>
+    <form action="/admin">
+        <input style="margin-top:2px;" type="submit" value="Back to main page"></input>
     </form>
 </div>
 
 <script>
     document.addEventListener("submit", function(e) {
-        if (e.target.getAttribute('id') == 'exptype-form') {
+        if (e.target.getAttribute("id") == "exptype-form") {
             e.preventDefault();
             viewStimgen(e.target);
-        } else if (e.target.getAttribute('id') == 'create-form') {
+        } else if (e.target.getAttribute("id") == "create-form") {
             e.preventDefault();
-            console.log(e)
-            console.log(e.target)
-            console.log(e.target[0]);
             saveExperiment(e.target);
         }
     });
 
-    const select = document.getElementById('type-ddl')
-    const submitButton = document.getElementById('exptype-submit');
-    select.addEventListener('change', () => {
-        if (select.value === 'default') {
+    const select = document.getElementById("type-ddl")
+    const submitButton = document.getElementById("exptype-submit");
+    select.addEventListener("change", () => {
+        if (select.value === "default") {
             submitButton.disabled = true;
         } else {
             submitButton.disabled = false;

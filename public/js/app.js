@@ -175,9 +175,7 @@ function removeExperiment(form) {
 // Send experiment name to server and build  
 // table with settings and table with 
 // status of this experiment for all users from response data.
-function viewExperiment(form) {
-    const formData = new FormData(form);
-    const experiment = formData.get("experiment");
+function viewExperiment(experiment) {
     // TODO: is this get format better than sending experiment in query params?
     axios.get("/admin/view/" + experiment, {})
         .then(function (response) {
@@ -237,12 +235,19 @@ function viewStimgen(form) {
     // TODO: is this get format better than sending experiment in query params?
     axios.get("/create/get/" + type, {})
         .then(function (response) {
-            const sg_table = document.getElementById("stimgen-settings")
-            sg_table.innerHTML = ""; // Delete old table rows
-            const sg_data = response.data;
+            const sg_tbody = document.getElementById("stimgen-settings")
+            // Fully delete stimgen rows (do not know what new ones will be added)
+            sg_tbody.innerHTML = ""; 
+
+            // Clear input values in experiment rows b/c all else stays same.
+            const exp_tbody = document.getElementById('experiment-settings')
+            for (let input of exp_tbody.getElementsByTagName("input")) {
+                input.value = "";
+            }
             // Build new table
+            const sg_data = response.data;
             for (element in sg_data) {
-                let row = sg_table.insertRow();
+                let row = sg_tbody.insertRow();
                 let cell1 = row.insertCell();
                 let cell2 = row.insertCell();
                 let field = document.createTextNode(sg_data[element].label);
@@ -257,11 +262,16 @@ function viewStimgen(form) {
                 cell2.appendChild(input);
             }
             // Include stimgen type in form (shown in dropdown on page)
-            let input = document.createElement("INPUT");
+            const _type_input = document.getElementById("_type");
+            let input = (_type_input === null) ? document.createElement("INPUT") : _type_input;
+            input.setAttribute("id", "_type");
             input.setAttribute("type", "hidden");
             input.setAttribute("name", "_stimgen-type");
             input.setAttribute("value", type)
             document.getElementById("create-form").appendChild(input);
+
+            // Enable the save button
+            document.getElementById("saveButton").disabled = false;
         });
 }
 
@@ -294,7 +304,6 @@ function saveExperiment(form) {
             if (error.response) {
                 // Request made and server responded
                 window.alert(error.response.data.error);
-                window.location.reload();
             } else if (error.request) {
                 // The request was made but no response was received
                 console.log(error.request);
