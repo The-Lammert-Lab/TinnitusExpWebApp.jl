@@ -1,14 +1,8 @@
 // Main protocol logic
 function recordAndPlay(ans) {
     // Interpret response
-    switch (ans) {
-        case "yes":
-            var val = 1;
-            break;
-        case "no":
-            var val = -1;
-            break;
-    }
+    // TODO: Make more robust (?)
+    const val = (ans === "yes") ? 1 : -1;
 
     // Save response
     axios.post("/save", {
@@ -154,7 +148,6 @@ function removeExperiment(form) {
         user_id: formData.get("user_id")
     })
         .then(function () {
-            console.log("here")
             window.location.reload();
         })
         .catch(function (error) {
@@ -184,7 +177,7 @@ function viewExperiment(experiment) {
             ex_table.innerHTML = ""; // Delete old table rows
             const ex_data = response.data.experiment_data.value;
             // Build new table
-            for (element in ex_data) {
+            for (const element in ex_data) {
                 let row = ex_table.insertRow();
                 let cell1 = row.insertCell();
                 let cell2 = row.insertCell();
@@ -197,10 +190,10 @@ function viewExperiment(experiment) {
             // NOTE: use innerHTML to get row value
 
             // Make table with user information for this experiment
-            const user_table = document.getElementById("user-experiment-data")
+            const user_table = document.getElementById("user-experiment-data");
             user_table.innerHTML = ""; // Delete old table rows
             const user_data = response.data.user_data.value;
-            for (element in user_data) {
+            for (const element in user_data) {
                 let row = user_table.insertRow();
                 let cell1 = row.insertCell();
                 let cell2 = row.insertCell();
@@ -235,18 +228,18 @@ function viewStimgen(form) {
     // TODO: is this get format better than sending experiment in query params?
     axios.get("/create/get/" + type, {})
         .then(function (response) {
-            const sg_tbody = document.getElementById("stimgen-settings")
+            const sg_tbody = document.getElementById("stimgen-settings");
             // Fully delete stimgen rows (do not know what new ones will be added)
             sg_tbody.innerHTML = ""; 
 
             // Clear input values in experiment rows b/c all else stays same.
-            const exp_tbody = document.getElementById("experiment-settings")
+            const exp_tbody = document.getElementById("experiment-settings");
             for (let input of exp_tbody.getElementsByTagName("input")) {
                 input.value = "";
             }
             // Build new table
             const sg_data = response.data;
-            for (element in sg_data) {
+            for (const element in sg_data) {
                 let row = sg_tbody.insertRow();
                 let cell1 = row.insertCell();
                 let cell2 = row.insertCell();
@@ -267,13 +260,13 @@ function viewStimgen(form) {
             input.setAttribute("id", "_type");
             input.setAttribute("type", "hidden");
             input.setAttribute("name", "_stimgen-type");
-            input.setAttribute("value", type)
+            input.setAttribute("value", type);
             document.getElementById("create-form").appendChild(input);
 
             // Enable the save button
             document.getElementById("saveButton").disabled = false;
         });
-}
+} // function
 
 // Post new experiment parameters to server to save.
 function saveExperiment(form) {
@@ -312,4 +305,4 @@ function saveExperiment(form) {
                 console.log("Error", error.message);
             }
         });
-}
+} // function
