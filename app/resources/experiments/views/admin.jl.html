@@ -80,13 +80,13 @@
 </div>
 
 <div>
-    <form>
-        <label for="vis">Toggle visibility</label>
-        <label class="switch" id="vis">
-            <input type="checkbox">
-            <span class="slider round"></span>
-        </label>
-        <input type="submit" value="Save">
+    <form style="margin-top:2px" action="/create">
+        <input type="submit" value="Create new experiment"></input>
+    </form>
+
+    <form id="" style="margin-top:2px" action="/create">
+        <input id="template-input" type="hidden" name="template" value="">
+        <input id="template-submit" type="submit" value="Create experiment from this template" disabled></input>
     </form>
 </div>
 
@@ -141,10 +141,16 @@
 </div>
 
 <script>
-    const ddl = document.getElementById('experiment-ddl');
-    ddl.addEventListener('change', () => {
-        if (ddl.value != 'default') {
-            viewExperiment();
+    const ddl = document.getElementById("experiment-ddl");
+    const templateSubmit = document.getElementById("template-submit");
+    ddl.addEventListener("change", () => {
+        if (ddl.value != "default") {
+            let template_input = document.getElementById("template-input");
+            template_input.setAttribute("value", ddl.value);
+            viewExperiment(ddl.value);
+            templateSubmit.disabled = false;
+        } else {
+            templateSubmit.disabled = true;
         }
     });
 </script>

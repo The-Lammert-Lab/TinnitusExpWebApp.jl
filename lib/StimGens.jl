@@ -41,9 +41,7 @@ struct UniformPrior <: BinnedStimgen
         min_bins::Integer,
         max_bins::Integer,
     )
-        @assert any(
-            x -> x >= 0, [min_freq max_freq duration Fs n_bins min_bins max_bins]
-        ) "All arguements must be greater than 0"
+        @assert any(x -> x >= 0, [min_freq max_freq duration Fs n_bins min_bins max_bins]) "All arguements must be greater than 0"
         @assert min_freq <= max_freq "`min_freq` cannot be greater than `max_freq`"
         @assert min_bins <= max_bins "`min_bins` cannot be greater than `max_bins`"
         @assert max_bins <= n_bins "`max_bins` cannot be greater than `n_bins`"
@@ -69,17 +67,15 @@ Outer constructor for stimulus generation type in which
 - `max_bins::Integer = 50`: The maximum number of bins that may be filled on any stimuli.
 """
 function UniformPrior(;
-    min_freq=100.0,
-    max_freq=22e3,
-    duration=0.5,
-    Fs=44.1e3,
-    n_bins=100,
-    min_bins=10,
-    max_bins=50,
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+    min_bins = 10,
+    max_bins = 50,
 )
-    return UniformPrior(
-        min_freq, max_freq, duration, Fs, n_bins, min_bins, max_bins
-    )
+    return UniformPrior(min_freq, max_freq, duration, Fs, n_bins, min_bins, max_bins)
 end
 
 struct GaussianPrior <: BinnedStimgen
@@ -104,18 +100,22 @@ get_nfft(s::SG) where {SG<:Stimgen} = convert(Int, get_fs(s) * s.duration)
 
 # Universal functions
 function subject_selection_process(
-    s::SG, target_signal::AbstractVector{T}, n_trials::I
+    s::SG,
+    target_signal::AbstractVector{T},
+    n_trials::I,
 ) where {SG<:Stimgen,T<:Real,I<:Integer}
     _, _, spect, binned_repr = generate_stimuli_matrix(s, n_trials)
     e = spect'target_signal
     y = -ones(Int, size(e))
-    y[e .>= quantile(e, 0.5; alpha=0.5, beta=0.5)] .= 1
+    y[e.>=quantile(e, 0.5; alpha = 0.5, beta = 0.5)] .= 1
     return y, spect, binned_repr
 end
 
 # Convert target_signal to Vector if passed as an Array.
 function subject_selection_process(
-    s::SG, target_signal::AbstractMatrix{T}, n_trials::I
+    s::SG,
+    target_signal::AbstractMatrix{T},
+    n_trials::I,
 ) where {SG<:Stimgen,T<:Real,I<:Integer}
     @assert size(target_signal, 2) == 1 "Target signal must be a Vector or single-column Matrix."
     return subject_selection_process(s, vec(target_signal), n_trials)
@@ -141,7 +141,7 @@ function generate_stimuli_matrix(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integ
     spect_matrix = zeros(Int, length(spect), n_trials)
     stimuli_matrix[:, 1] = stim
     spect_matrix[:, 1] = spect
-    for ii in 2:n_trials
+    for ii = 2:n_trials
         stimuli_matrix[:, ii], _, spect_matrix[:, ii], _ = generate_stimulus(s)
     end
     binned_repr_matrix = nothing
@@ -161,10 +161,9 @@ function generate_stimuli_matrix(s::BS, n_trials::I) where {BS<:BinnedStimgen,I<
     spect_matrix = zeros(Int, length(spect), n_trials)
     stimuli_matrix[:, 1] = stim
     spect_matrix[:, 1] = spect
-    for ii in 2:n_trials
-        stimuli_matrix[:, ii], _, spect_matrix[:, ii], binned_repr_matrix[:, ii] = generate_stimulus(
-            s
-        )
+    for ii = 2:n_trials
+        stimuli_matrix[:, ii], _, spect_matrix[:, ii], binned_repr_matrix[:, ii] =
+            generate_stimulus(s)
     end
 
     return stimuli_matrix, Fs, spect_matrix, binned_repr_matrix
@@ -193,14 +192,14 @@ Generates a vector indicating which frequencies belong to the same bin,
                 collect(range(hz2mels.(s.min_freq), hz2mels.(s.max_freq), s.n_bins + 1))
             )
         )
-    binst = bintops[1:(end - 1)]
+    binst = bintops[1:(end-1)]
     binnd = bintops[2:end]
     binnum = zeros(Int, nfft ÷ 2)
     frequency_vector = collect(range(0, Fs ÷ 2, nfft ÷ 2))
 
     # This is a slow point
-    for i in 1:(s.n_bins)
-        @.. binnum[(frequency_vector <= binnd[i]) & (frequency_vector >= binst[i])] = i
+    for i = 1:(s.n_bins)
+        @.. binnum[(frequency_vector<=binnd[i])&(frequency_vector>=binst[i])] = i
     end
 
     return binnum, Fs, nfft, frequency_vector
@@ -227,8 +226,8 @@ function spect2binnedrepr(s::BS, spect::AbstractArray{T}) where {BS<:BinnedStimg
 
     @assert length(spect) == length(B)
 
-    for bin_num in 1:(s.n_bins)
-        a = spect[B .== bin_num, :]
+    for bin_num = 1:(s.n_bins)
+        a = spect[B.==bin_num, :]
         binned_repr[bin_num, :] .= a[1, :]
     end
 
@@ -246,8 +245,8 @@ function binnedrepr2spect(s::BS, binned_repr::AbstractArray{T}) where {BS<:Binne
     B, = freq_bins(s)
     spect = -100 * ones(length(B), size(binned_repr, 2))
 
-    for bin_num in 1:(s.n_bins)
-        spect[B .== bin_num, :] .= repeat(binned_repr[[bin_num], :], sum(B .== bin_num), 1)
+    for bin_num = 1:(s.n_bins)
+        spect[B.==bin_num, :] .= repeat(binned_repr[[bin_num], :], sum(B .== bin_num), 1)
     end
 
     return spect
@@ -274,10 +273,10 @@ function generate_stimulus(s::UniformPrior)
 
     # sample from uniform distribution to get the number of bins to fill
     n_bins_to_fill = rand((s.min_bins):(s.max_bins))
-    bins_to_fill = sample(1:(s.n_bins), n_bins_to_fill; replace=false)
+    bins_to_fill = sample(1:(s.n_bins), n_bins_to_fill; replace = false)
 
     # Set spectrum ranges corresponding to bins to 0dB.
-    [spect[binnum .== bins_to_fill[i]] .= 0 for i in 1:n_bins_to_fill]
+    [spect[binnum.==bins_to_fill[i]] .= 0 for i = 1:n_bins_to_fill]
 
     # Synthesize Audio
     stim = synthesize_audio(spect, nfft)

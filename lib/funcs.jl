@@ -27,7 +27,7 @@ function play_scaled_audio(x, Fs)
     end
 
     # This is using PortAudio, SampledSignals
-    PortAudioStream(0, 2; samplerate=Fs) do stream
+    PortAudioStream(0, 2; samplerate = Fs) do stream
         write(stream, x)
     end
 
@@ -75,8 +75,8 @@ function zhangpassivegamma(Φ::AbstractArray{T}, y, Γ::Integer) where {T<:Real}
 
     α = (1 / m) * (Φ'y)
 
-    val = sort(abs.(α); rev=true)
-    γ = val[Γ + 1]
+    val = sort(abs.(α); rev = true)
+    γ = val[Γ+1]
 
     if norm(α, Inf) <= γ
         return zeros(n, 1)
@@ -105,7 +105,7 @@ One-bit compressed sensing reverse correlation with basis.
 
 - Zhang, L., Yi, J. and Jin, R., 2014, June. Efficient algorithms for robust one-bit compressive sensing. In *International Conference on Machine Learning* (pp. 820-828). PMLR.
 """
-function cs(responses, Φ::AbstractArray{T}, Γ::Integer=32) where {T<:Real}
+function cs(responses, Φ::AbstractArray{T}, Γ::Integer = 32) where {T<:Real}
     n_samples = length(responses)
     len_signal = size(Φ, 2)
 
@@ -113,7 +113,7 @@ function cs(responses, Φ::AbstractArray{T}, Γ::Integer=32) where {T<:Real}
     p = plan_idct!(ek)
 
     Θ = zeros(n_samples, len_signal)
-    for i in 1:len_signal
+    for i = 1:len_signal
         ek = zeros(Int, len_signal)
         ek[i] = 1
         Ψ = p * ek
@@ -123,7 +123,7 @@ function cs(responses, Φ::AbstractArray{T}, Γ::Integer=32) where {T<:Real}
     s = zhangpassivegamma(Θ, responses, Γ)
 
     x = zeros(len_signal)
-    for i in 1:len_signal
+    for i = 1:len_signal
         ek = zeros(Int, len_signal)
         ek[i] = 1
         Ψ = p * ek
@@ -133,7 +133,7 @@ function cs(responses, Φ::AbstractArray{T}, Γ::Integer=32) where {T<:Real}
     return x
 end
 
-cs_no_basis(Φ, responses, Γ=32) = zhangpassivegamma(Φ, responses, Γ)
+cs_no_basis(Φ, responses, Γ = 32) = zhangpassivegamma(Φ, responses, Γ)
 
 """
     subject_selection_process(s::SG, target_signal::AbstractVector{T}, n_trials::I) where {SG<:Stimgen, T<:Real, I<:Integer}
@@ -150,7 +150,8 @@ Return an `n_trials x 1` or `size(stimuli, 1) x 1` vector of `-1` for "no" and `
 function subject_selection_process end
 
 function subject_selection_process(
-    stimuli::AbstractArray{T}, target_signal::AbstractVector{T}
+    stimuli::AbstractArray{T},
+    target_signal::AbstractVector{T},
 ) where {T<:Real}
     @assert(
         !isempty(stimuli),
@@ -161,14 +162,15 @@ function subject_selection_process(
     # Ideal selection
     e = stimuli * target_signal
     y = -ones(Int, size(e))
-    y[e .>= quantile(e, 0.5; alpha=0.5, beta=0.5)] .= 1
+    y[e.>=quantile(e, 0.5; alpha = 0.5, beta = 0.5)] .= 1
 
     return y, stimuli
 end
 
 # Convert target_signal to a Vector if passed as an Array.
 function subject_selection_process(
-    stimuli::AbstractArray{T}, target_signal::AbstractMatrix{T}
+    stimuli::AbstractArray{T},
+    target_signal::AbstractMatrix{T},
 ) where {T<:Real}
     @assert size(target_signal, 2) == 1 "Target signal must be a Vector or single-column Matrix."
     return subject_selection_process(stimuli, vec(target_signal))
@@ -180,9 +182,9 @@ end
 Crops an audio buffer to between `start` and `stop` in seconds.
 TODO: use Unitful to add dimensions to these values.
 """
-function crop_signal!(audio::AbstractSampleBuf{T,I}; start=0, stop=1) where {T,I}
+function crop_signal!(audio::AbstractSampleBuf{T,I}; start = 0, stop = 1) where {T,I}
     fs = samplerate(audio)
-    audio.data = audio.data[(Int(fs * start) + 1):(Int(fs * stop)), :]
+    audio.data = audio.data[(Int(fs * start)+1):(Int(fs * stop)), :]
     return audio
 end
 
@@ -194,9 +196,9 @@ TODO: use Unitful to add dimensions to these values.
 
 See also [`crop_signal!`](@ref).
 """
-function crop_signal(audio::AbstractSampleBuf{T,I}; start=0, stop=1) where {T,I}
+function crop_signal(audio::AbstractSampleBuf{T,I}; start = 0, stop = 1) where {T,I}
     fs = samplerate(audio)
-    return audio[(Int(fs * start) + 1):(Int(fs * stop))]
+    return audio[(Int(fs * start)+1):(Int(fs * stop))]
 end
 
 function DSP.stft(audio::AbstractSampleBuf{T,I}, args...; kwargs...) where {T,I}
@@ -211,18 +213,23 @@ end
 Load an audio file, crop it to `duration`,
     then compute and return the short time Fourier transform.
 """
-function wav2spect(audio_file::String; duration=0.5)
+function wav2spect(audio_file::String; duration = 0.5)
     audio = load(audio_file)
-    crop_signal!(audio; start=0, stop=duration)
+    crop_signal!(audio; start = 0, stop = duration)
 
     samples = length(audio)
     fs = samplerate(audio)
 
     S = stft(
-        audio, samples ÷ 4, div(samples ÷ 4, 2); nfft=samples - 1, fs=fs, window=hamming
+        audio,
+        samples ÷ 4,
+        div(samples ÷ 4, 2);
+        nfft = samples - 1,
+        fs = fs,
+        window = hamming,
     )
 
-    return mean(abs.(S); dims=2)
+    return mean(abs.(S); dims = 2)
 end
 
 """
@@ -234,26 +241,26 @@ between `x` and `y` using a Gaussian kernel.
 # Examples
 TODO
 """
-function mmd(x, y, σ=1)
+function mmd(x, y, σ = 1)
     M = length(x)
     N = length(y)
 
     mmd = 0
 
     running_total = 0
-    for i in 1:M, j in 1:M
+    for i = 1:M, j = 1:M
         running_total += gaussian_kernel(x[i], x[j])
     end
     mmd += (running_total / M^2)
 
     running_total = 0
-    for i in 1:M, j in 1:N
+    for i = 1:M, j = 1:N
         running_total += gaussian_kernel(x[i], y[j])
     end
     mmd -= (2 / (M * N) * running_total)
 
     running_total = 0
-    for i in 1:N, j in 1:N
+    for i = 1:N, j = 1:N
         running_total += gaussian_kernel(y[i], y[j])
     end
     mmd += (running_total / N^2)
@@ -275,7 +282,7 @@ julia> TinnitusReconstructor.gaussian_kernel(1, 1)
 1.0
 ```
 """
-function gaussian_kernel(x, y; σ=1)
+function gaussian_kernel(x, y; σ = 1)
     return @. exp(-1 / (2 * σ^2) * abs(x - y)^2)
 end
 

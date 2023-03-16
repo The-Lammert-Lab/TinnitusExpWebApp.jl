@@ -11,20 +11,18 @@ function up()
     stimgen_settings = JSON3.write(UP)
     stimgen_type = split(string(Base.typename(typeof(UP)).wrapper), '.')[end]
 
-    Experiment(; 
+    Experiment(;
         stimgen_settings = stimgen_settings,
         stimgen_type = stimgen_type,
         n_trials = 10,
         name = "TestExperiment_1",
-        visible = true,
     ) |> save!
 
-    Experiment(; 
+    Experiment(;
         stimgen_settings = stimgen_settings,
         stimgen_type = stimgen_type,
         n_trials = 50,
         name = "TestExperiment_2",
-        visible = true,
     ) |> save!
 
 end

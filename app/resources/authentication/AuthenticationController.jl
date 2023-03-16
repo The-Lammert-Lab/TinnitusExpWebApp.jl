@@ -14,63 +14,70 @@ using GenieAuthentication.GenieSessionFileSession
 
 
 function show_login()
-  html(:authentication, :login, context = @__MODULE__)
+    html(:authentication, :login, context = @__MODULE__)
 end
 
 function login()
-  try
-    user = findone(User, username = params(:username), password = Users.hash_password(params(:password)))
-    authenticate(user.id, GenieSession.session(params()))
+    try
+        user = findone(
+            User,
+            username = params(:username),
+            password = Users.hash_password(params(:password)),
+        )
+        authenticate(user.id, GenieSession.session(params()))
 
-    if user.is_admin
-      redirect("/admin")
-    else
-      redirect("/home")
+        if user.is_admin
+            redirect("/admin")
+        else
+            redirect("/home")
+        end
+    catch ex
+        flash("Authentication failed! ")
+
+        redirect(:show_login)
     end
-  catch ex
-    flash("Authentication failed! ")
-
-    redirect(:show_login)
-  end
 end
 
 function success()
-  html(:authentication, :success, context = @__MODULE__)
+    html(:authentication, :success, context = @__MODULE__)
 end
 
 function logout()
-  deauthenticate(GenieSession.session(params()))
+    deauthenticate(GenieSession.session(params()))
 
-  flash("Good bye! ")
+    flash("Good bye! ")
 
-  redirect(:show_login)
+    redirect(:show_login)
 end
 
 function show_register()
-  html(:authentication, :register, context = @__MODULE__)
+    html(:authentication, :register, context = @__MODULE__)
 end
 
 function register()
-  try
-    user = User(username  = params(:username),
-                password  = params(:password) |> Users.hash_password,
-                name      = params(:name),
-                email     = params(:email)) |> save!
+    try
+        user =
+            User(
+                username = params(:username),
+                password = params(:password) |> Users.hash_password,
+                name = params(:name),
+                email = params(:email),
+            ) |> save!
 
-    authenticate(user.id, GenieSession.session(params()))
+        authenticate(user.id, GenieSession.session(params()))
 
-    "Registration successful"
-  catch ex
-    @error ex
+        "Registration successful"
+    catch ex
+        @error ex
 
-    if hasfield(typeof(ex), :msg)
-      flash(ex.msg)
-    else
-      flash(string(ex))
+        if hasfield(typeof(ex), :msg)
+            flash(ex.msg)
+        else
+            flash(string(ex))
+        end
+
+        redirect(:show_register)
     end
-
-    redirect(:show_register)
-  end
 end
 
 end

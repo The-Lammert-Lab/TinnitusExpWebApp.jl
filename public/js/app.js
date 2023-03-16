@@ -1,22 +1,11 @@
-// Index
-function showOptions() {
-    document.getElementById("stimgenDropdown").classList.toggle("show");
-}
-
 // Main protocol logic
 function recordAndPlay(ans) {
     // Interpret response
-    switch (ans) {
-        case 'yes':
-            var val = 1;
-            break;
-        case 'no':
-            var val = -1;
-            break;
-    }
+    // TODO: Make more robust (?)
+    const val = (ans === "yes") ? 1 : -1;
 
     // Save response
-    axios.post('/save', {
+    axios.post("/save", {
         resp: val
     })
         .then(function (response) {
@@ -29,8 +18,8 @@ function recordAndPlay(ans) {
                 return;
             } else if (stimuli.length === 0) {
                 const params = new URLSearchParams(window.location.search);
-                window.location.replace("/rest?" + "name=" + params.get('name') +
-                    "&instance=" + params.get('instance')
+                window.location.replace("/rest?" + "name=" + params.get("name") +
+                    "&instance=" + params.get("instance")
                 );
                 return;
             } else {
@@ -39,8 +28,8 @@ function recordAndPlay(ans) {
                 // 300ms delay then play sound
                 setTimeout(() => { document.getElementById(curr_id).play() }, 300);
                 // Disallow answer while the sound plays
-                document.getElementById('yes').disabled = true;
-                document.getElementById('no').disabled = true;
+                document.getElementById("yes").disabled = true;
+                document.getElementById("no").disabled = true;
             }
         })
         .catch(function (error) {
@@ -55,7 +44,7 @@ function recordAndPlay(ans) {
                 return;
             } else {
                 // Something happened in setting up the request that triggered an Error
-                console.log('Error', error.message);
+                console.log("Error", error.message);
                 return;
             }
         });
@@ -65,17 +54,17 @@ function recordAndPlay(ans) {
 function getAudioFromStorage() {
     // Get data from local storage
     // TODO: Add check clause to be sure the data is there(?)
-    const stims = JSON.parse(sessionStorage.getItem('stims'));
+    const stims = JSON.parse(sessionStorage.getItem("stims"));
 
     // Create the elements
     for (let i = 0; i < stims.length; i++) {
-        let audio = document.createElement('audio');
+        let audio = document.createElement("audio");
         audio.id = (i + 1).toString();
         audio.src = "data:audio/wav;base64," + stims[i];
-        audio.preload = 'auto';
+        audio.preload = "auto";
         audio.addEventListener("ended", function () {
-            document.getElementById('yes').disabled = false;
-            document.getElementById('no').disabled = false;
+            document.getElementById("yes").disabled = false;
+            document.getElementById("no").disabled = false;
             this.remove();
         });
         document.body.appendChild(audio);
@@ -83,36 +72,29 @@ function getAudioFromStorage() {
         document.getElementById((i + 1).toString()).setAttribute("name", "stimulus");
     }
     // Remove audio data from storage.
-    sessionStorage.removeItem('stims');
+    sessionStorage.removeItem("stims");
 } // function
 
 // Redirect from rest page to experiment page
 function restToExp() {
     const params = new URLSearchParams(window.location.search);
-    window.location.href = "/experiment?" + "name=" + params.get('name') +
-        "&instance=" + params.get('instance') + "&from=rest";
+    window.location.href = "/experiment?" + "name=" + params.get("name") +
+        "&instance=" + params.get("instance") + "&from=rest";
 } // function
-
-// function addRespToStorage(ans) {
-//     let responses = JSON.parse(sessionStorage.getItem("responses"));
-//     if (responses == null) responses = [];
-//     responses.push(ans);
-//     sessionStorage.setItem("responses", JSON.stringify(responses));
-// } // function
 
 // Request server to generate audio elements then save to session storage
 function getAndStoreAudio() {
     const params = new URLSearchParams(window.location.search);
-    axios.post('/generate', {
-        name: params.get('name'),
-        instance: params.get('instance')
+    axios.post("/generate", {
+        name: params.get("name"),
+        instance: params.get("instance")
     })
         .then(function (stimuli) {
-            sessionStorage.setItem('stims', JSON.stringify(stimuli.data));
+            sessionStorage.setItem("stims", JSON.stringify(stimuli.data));
         })
         .then(function () {
             // Only allow continuing once stimuli have been stored. 
-            document.getElementById('continue').disabled = false;
+            document.getElementById("continue").disabled = false;
         })
         // Debugging purposes.
         // TODO: Do something meaningful on error
@@ -127,16 +109,17 @@ function getAndStoreAudio() {
                 console.log(error.request);
             } else {
                 // Something happened in setting up the request that triggered an Error
-                console.log('Error', error.message);
+                console.log("Error", error.message);
             }
         });
 } // function
 
+// Send user_id and name of experiment to add to server
 function addExperiment(form) {
     const formData = new FormData(form);
-    axios.post('/add', {
-        experiment: formData.get('experiment'),
-        user_id: formData.get('user_id')
+    axios.post("/add", {
+        experiment: formData.get("experiment"),
+        user_id: formData.get("user_id")
     })
         .then(function () {
             window.location.reload();
@@ -146,10 +129,10 @@ function addExperiment(form) {
 // Post data from experiment to restart to server and refresh page.
 function restartExperiment(form) {
     const formData = new FormData(form);
-    axios.post('/restart', {
-        name: formData.get('name'),
-        instance: formData.get('instance'),
-        user_id: formData.get('user_id')
+    axios.post("/restart", {
+        name: formData.get("name"),
+        instance: formData.get("instance"),
+        user_id: formData.get("user_id")
     })
         .then(function () {
             window.location.reload();
@@ -159,13 +142,12 @@ function restartExperiment(form) {
 // Post data from experiment to remove to server and refresh page.
 function removeExperiment(form) {
     const formData = new FormData(form);
-    axios.post('/remove', {
-        name: formData.get('name'),
-        instance: formData.get('instance'),
-        user_id: formData.get('user_id')
+    axios.post("/remove", {
+        name: formData.get("name"),
+        instance: formData.get("instance"),
+        user_id: formData.get("user_id")
     })
         .then(function () {
-            console.log("here")
             window.location.reload();
         })
         .catch(function (error) {
@@ -178,24 +160,24 @@ function removeExperiment(form) {
                 console.log(error.request);
             } else {
                 // Something happened in setting up the request that triggered an Error
-                console.log('Error', error.message);
+                console.log("Error", error.message);
             }
         });
 } // function
 
-function viewExperiment() {
-    const formData = new FormData(document.getElementById("experiment-form"));
-    const experiment = formData.get('experiment');
-    axios.get('/admin/view/' + experiment, {
-        name: experiment,
-    })
+// Send experiment name to server and build  
+// table with settings and table with 
+// status of this experiment for all users from response data.
+function viewExperiment(experiment) {
+    // TODO: is this get format better than sending experiment in query params?
+    axios.get("/admin/view/" + experiment, {})
         .then(function (response) {
             // Make table for experimental settings
-            const ex_table = document.getElementById('experiment-settings')
-            ex_table.innerHTML = ''; // Delete old table rows
+            const ex_table = document.getElementById("experiment-settings")
+            ex_table.innerHTML = ""; // Delete old table rows
             const ex_data = response.data.experiment_data.value;
             // Build new table
-            for (element in ex_data) {
+            for (const element in ex_data) {
                 let row = ex_table.insertRow();
                 let cell1 = row.insertCell();
                 let cell2 = row.insertCell();
@@ -208,10 +190,10 @@ function viewExperiment() {
             // NOTE: use innerHTML to get row value
 
             // Make table with user information for this experiment
-            const user_table = document.getElementById('user-experiment-data')
-            user_table.innerHTML = ''; // Delete old table rows
+            const user_table = document.getElementById("user-experiment-data");
+            user_table.innerHTML = ""; // Delete old table rows
             const user_data = response.data.user_data.value;
-            for (element in user_data) {
+            for (const element in user_data) {
                 let row = user_table.insertRow();
                 let cell1 = row.insertCell();
                 let cell2 = row.insertCell();
@@ -234,7 +216,93 @@ function viewExperiment() {
                 console.log(error.request);
             } else {
                 // Something happened in setting up the request that triggered an Error
-                console.log('Error', error.message);
+                console.log("Error", error.message);
             }
         });
 }
+
+// Populate table with stimgen settings.
+function viewStimgen(form) {
+    const formData = new FormData(form);
+    const type = formData.get("type");
+    // TODO: is this get format better than sending experiment in query params?
+    axios.get("/create/get/" + type, {})
+        .then(function (response) {
+            const sg_tbody = document.getElementById("stimgen-settings");
+            // Fully delete stimgen rows (do not know what new ones will be added)
+            sg_tbody.innerHTML = ""; 
+
+            // Clear input values in experiment rows b/c all else stays same.
+            const exp_tbody = document.getElementById("experiment-settings");
+            for (let input of exp_tbody.getElementsByTagName("input")) {
+                input.value = "";
+            }
+            // Build new table
+            const sg_data = response.data;
+            for (const element in sg_data) {
+                let row = sg_tbody.insertRow();
+                let cell1 = row.insertCell();
+                let cell2 = row.insertCell();
+                let field = document.createTextNode(sg_data[element].label);
+
+                let input = document.createElement("INPUT");
+                input.setAttribute("type", sg_data[element].type);
+                input.setAttribute("name", "stimgen." + sg_data[element].name);
+                input.setAttribute("value", sg_data[element].value);
+                input.required = true;
+
+                cell1.appendChild(field);
+                cell2.appendChild(input);
+            }
+            // Include stimgen type in form (shown in dropdown on page)
+            const _type_input = document.getElementById("_type");
+            let input = (_type_input === null) ? document.createElement("INPUT") : _type_input;
+            input.setAttribute("id", "_type");
+            input.setAttribute("type", "hidden");
+            input.setAttribute("name", "_stimgen-type");
+            input.setAttribute("value", type);
+            document.getElementById("create-form").appendChild(input);
+
+            // Enable the save button
+            document.getElementById("saveButton").disabled = false;
+        });
+} // function
+
+// Post new experiment parameters to server to save.
+function saveExperiment(form) {
+    const formData = new FormData(form);
+    const formObj = Object.fromEntries(formData);
+
+    // Separate experiment settings and stimgen settings for easier processing
+    let exp_data = new FormData;
+    let sg_data = new FormData;
+    for (const [key, value] of Object.entries(formObj)) {
+        if (key.startsWith("experiment")) {
+            exp_data.append(key.split(".")[1], value);
+        } else if (key.startsWith("stimgen")) {
+            sg_data.append(key.split(".")[1], value);
+        }
+    }
+
+    axios.post("/create/save", {
+        experiment: JSON.stringify(Object.fromEntries(exp_data)),
+        stimgen: JSON.stringify(Object.fromEntries(sg_data)),
+        stimgen_type: formData.get("_stimgen-type")
+    })
+        .then(function () {
+            window.alert("Experiment saved!");
+            window.location.reload();
+        })
+        .catch(function (error) {
+            if (error.response) {
+                // Request made and server responded
+                window.alert(error.response.data.error);
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.log(error.request);
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log("Error", error.message);
+            }
+        });
+} // function

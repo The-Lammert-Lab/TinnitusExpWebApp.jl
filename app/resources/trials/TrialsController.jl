@@ -19,36 +19,16 @@ using Primes
 using SearchLight
 using SearchLight.Validation
 using SHA
+using StructTypes
 
-const STIMGEN_MAPPINGS = Dict{String,DataType}(
-    "UniformPrior" => UniformPrior
-)
+const STIMGEN_MAPPINGS =
+    Dict{String,DataType}("UniformPrior" => UniformPrior, "GaussianPrior" => GaussianPrior)
+
+StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
 
 const IDEAL_BLOCK_SIZE = 80
 const MAX_BLOCK_SIZE = 120
-
-"""
-    _subtypes(type::Type)    
-
-Collect all concrete subtypes. 
-
-# References
-- https://gist.github.com/Datseris/1b1aa1287041cab1b2dff306ddc4f899
-"""
-function _subtypes(type::Type)
-    out = Any[]
-    _subtypes!(out, type)
-end
-
-function _subtypes!(out, type::Type)
-    if !isabstracttype(type)
-        push!(out, type)
-    else
-        foreach(T->_subtypes!(out, T), subtypes(type))
-    end
-    return out
-end
-
 
 """
     scale_audio(x)
@@ -80,13 +60,13 @@ function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
     stimuli_matrix, Fs, _, binned_repr_matrix = generate_stimuli_matrix(s, n_trials)
 
     # Scale all columns
-    scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims=1)
+    scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims = 1)
 
     # Save base64 encoded wav files to stimuli vector of strings
     stimuli = Vector{String}(undef, size(scaled_stimuli, 2))
     for (ind, stimulus) in enumerate(eachcol(scaled_stimuli))
         buf = Base.IOBuffer()
-        wavwrite(stimulus, buf; Fs=Fs)
+        wavwrite(stimulus, buf; Fs = Fs)
         stimuli[ind] = base64encode(take!(buf))
         close(buf)
     end
@@ -97,7 +77,7 @@ end
 """
     choose_n_trials(x::I) where {I<:Integer}
 
-Returns number of trials to use for this "block" based on IDEAL_BLOCK_SIZE and MAX_BLOCK_SIZE.
+Returns number of trials to use for this "block" based on `IDEAL_BLOCK_SIZE` and `MAX_BLOCK_SIZE`.
 """
 function choose_n_trials(x::I) where {I<:Integer}
     if x <= MAX_BLOCK_SIZE
@@ -122,7 +102,7 @@ end
 Returns base64 encoded stimuli and vector of `Trial` structs (a "block") based on `parameters`.
     Assumes `parameters` has: `:name`, and `:instance`.
 """
-function gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
+function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
     instance = parse(Int, getindex(parameters, :instance))
 
     # Get experiment info and create stimgen struct
@@ -130,29 +110,33 @@ function gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
     stimgen = JSON3.read(e.stimgen_settings, STIMGEN_MAPPINGS[e.stimgen_type])
 
     # Decide on n_trials using existing data
-    current_trials = find(  Trial; 
-                            experiment_name = e.name, 
-                            instance = instance, 
-                            user_id = current_user_id()
-                        )
+    current_trials = find(
+        Trial;
+        experiment_name = e.name,
+        instance = instance,
+        user_id = current_user_id(),
+    )
 
     remaining_trials = e.n_trials - length(current_trials)
     n_trials = choose_n_trials(remaining_trials)
 
     # Get stimuli vector
     stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials)
-    
+
     # Make array of Trial structs
-    block = [Trial(; stimulus=JSON3.write(stim), 
-                     user_id=current_user_id(),
-                     experiment_name=e.name,
-                     instance=instance
-                    ) for stim in eachcol(binned_repr_matrix)]
-                    
+    block = [
+        Trial(;
+            stimulus = JSON3.write(stim),
+            user_id = current_user_id(),
+            experiment_name = e.name,
+            instance = instance,
+        ) for stim in eachcol(binned_repr_matrix)
+    ]
+
     return stimuli, block
 end
 
-function gen_stim_and_block(parameters::Dict{S, W}) where {S<:AbstractString, W}
+function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
     instance = parse(Int, getindex(parameters, "instance"))
 
     # Get experiment info and create stimgen struct
@@ -160,25 +144,29 @@ function gen_stim_and_block(parameters::Dict{S, W}) where {S<:AbstractString, W}
     stimgen = JSON3.read(e.stimgen_settings, STIMGEN_MAPPINGS[e.stimgen_type])
 
     # Decide on n_trials using existing data
-    current_trials = find(  Trial; 
-                            experiment_name = e.name, 
-                            instance = instance, 
-                            user_id = current_user_id()
-                        )
+    current_trials = find(
+        Trial;
+        experiment_name = e.name,
+        instance = instance,
+        user_id = current_user_id(),
+    )
 
     remaining_trials = e.n_trials - length(current_trials)
     n_trials = choose_n_trials(remaining_trials)
 
     # Get stimuli vector
     stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials)
-    
+
     # Make array of Trial structs
-    block = [Trial(; stimulus=JSON3.write(stim), 
-                     user_id=current_user_id(),
-                     experiment_name=e.name,
-                     instance=instance
-                    ) for stim in eachcol(binned_repr_matrix)]
-                    
+    block = [
+        Trial(;
+            stimulus = JSON3.write(stim),
+            user_id = current_user_id(),
+            experiment_name = e.name,
+            instance = instance,
+        ) for stim in eachcol(binned_repr_matrix)
+    ]
+
     return stimuli, block
 end
 
@@ -192,17 +180,17 @@ function index()
     html(:trials, :index)
 end
 
-function expsetup()
-    # full_types is CharacterizeTinnitus.TinnitusReconstructor.XXXXX (typeof = Vector{DataType})
-    full_types = _subtypes(Stimgen)
+# function expsetup()
+#     # full_types is CharacterizeTinnitus.TinnitusReconstructor.XXXXX (typeof = Vector{DataType})
+#     full_types = _subtypes(Stimgen)
 
-    # Get just the stimgen name
-    # NOTE: This method can probably be considerably improved.
-    stimgen_types = Vector{String}(undef, length(full_types))
-    [stimgen_types[ind] = split.(type, '.')[end][end] for (ind, type) in enumerate(eachrow(string.(full_types)))]
+#     # Get just the stimgen name
+#     # NOTE: This method can probably be considerably improved.
+#     stimgen_types = Vector{String}(undef, length(full_types))
+#     [stimgen_types[ind] = split.(type, '.')[end][end] for (ind, type) in enumerate(eachrow(string.(full_types)))]
 
-    html(:trials, :expsetup; stimgen_types)
-end
+#     html(:trials, :expsetup; stimgen_types)
+# end
 
 function experiment()
     authenticated!()
@@ -232,17 +220,22 @@ function save_response()
 
     curr_block = GenieSession.get(:current_block, nothing)
     if curr_block === nothing
-        return Router.error(INTERNAL_ERROR, "Could not save response.", MIME"application/json"; 
-                            error_info = "Current block in session returned nothing.")
-    end 
+        return Router.error(
+            INTERNAL_ERROR,
+            "Could not save response.",
+            MIME"application/json";
+            error_info = "Current block in session returned nothing.",
+        )
+    end
 
     curr_trial = pop!(curr_block)
 
-    curr_usr_exp = findone(UserExperiment; 
-                            experiment_name = curr_trial.experiment_name,
-                            instance = curr_trial.instance, 
-                            user_id = current_user_id()
-                        )
+    curr_usr_exp = findone(
+        UserExperiment;
+        experiment_name = curr_trial.experiment_name,
+        instance = curr_trial.instance,
+        user_id = current_user_id(),
+    )
 
     n_trials = GenieSession.get!(:n_trials, nothing)
     if n_trials === nothing
@@ -265,7 +258,7 @@ function save_response()
 
     # Save to db and send response
     save(curr_trial) && GenieSession.set!(:curr_block, curr_block)
-    save(curr_usr_exp) && json(Dict(:frac_complete => (:value => new_frac_complete))) 
+    save(curr_usr_exp) && json(Dict(:frac_complete => (:value => new_frac_complete)))
 end
 
 function gen_stim_rest()
