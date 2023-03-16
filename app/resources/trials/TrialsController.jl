@@ -79,7 +79,7 @@ end
 """
     choose_n_trials(x::I) where {I<:Integer}
 
-Returns number of trials to use for this "block" based on IDEAL_BLOCK_SIZE and MAX_BLOCK_SIZE.
+Returns number of trials to use for this "block" based on `IDEAL_BLOCK_SIZE` and `MAX_BLOCK_SIZE`.
 """
 function choose_n_trials(x::I) where {I<:Integer}
     if x <= MAX_BLOCK_SIZE

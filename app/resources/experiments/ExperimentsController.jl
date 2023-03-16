@@ -20,6 +20,12 @@ using SearchLight.Validation
 using JSON3
 using StructTypes
 
+
+"""
+    const EXPERIMENT_FIELDS = Dict{Symbol,String}
+
+Maps stimgen fields to natural language descriptions.
+"""
 const EXPERIMENT_FIELDS = Dict{Symbol,String}(
     :min_freq => "Minimum frequency (Hz)",
     :max_freq => "Maximum frequency (Hz)",
@@ -34,11 +40,18 @@ const EXPERIMENT_FIELDS = Dict{Symbol,String}(
     :visible => "Visible"
 )
 
+
+"""
+    const STIMGEN_MAPPINGS = Dict{String,DataType}
+
+Maps stimgen name as string to DataType
+"""
 const STIMGEN_MAPPINGS = Dict{String,DataType}(
     "UniformPrior" => UniformPrior,
     "GaussianPrior" => GaussianPrior,
 )
 
+# Register stimgens with StructTypes.
 StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
 StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
 
@@ -64,57 +77,79 @@ function _subtypes!(out, type::Type)
     return out
 end
 
+"""
+    view_exp()
+
+Returns JSON response of requested experiment's fields and status for all users.
+    
+    Response is dictionary containing:
+
+    - :experiment_data => :value, which holds a dictionary of the requested stimgen's 
+    parameters in natural language form, excluding :id and :settings_hash.
+
+    - :user_data => :value, which holds a vector of dictionaries, each containing
+    username, instance, and frac_complete for every UserExperiment with requested experiment.
+"""
 function view_exp()
     authenticated!() 
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
 
     ex = findone(Experiment; name = params(:name))
     if ex === nothing
-        return Router.error(INTERNAL_ERROR, """Could not find an experiment with name "$(params(:name))".""", 
-                            MIME"application/json")
+        return Router.error(INTERNAL_ERROR, """Could not find an experiment with name "$(params(:name))".""", MIME"application/json")
     end
 
     # Get all user experiments for this experiment
     added_experiments = find(UserExperiment; experiment_name = params(:name))
 
     # Make a vector of dicts with data to display
-    user_data = Vector{Dict}()
+    user_data = Vector{Dict{Symbol,Any}}(undef,length(added_experiments))
     cache = Dict{DbId, String}()
-    for ae in added_experiments
+    for (ind, ae) in enumerate(added_experiments)
+        # Simple memoization 
         if ae.user_id in keys(cache)
             username = cache[ae.user_id]
         else
             username = findone(User; id = ae.user_id).username
             cache[ae.user_id] = username
         end
-        push!(user_data, Dict(:username => username, :instance => ae.instance, :frac_complete => ae.frac_complete))
+
+        # Add dictionary to user_data
+        user_data[ind] = Dict(:username => username, 
+                              :instance => ae.instance, 
+                              :frac_complete => ae.frac_complete
+                            )
     end
 
     # Pre-process experiment fields
-    exp_data = Dict()
+    exp_data = Dict() # Can't initialize length b/c varying stimgen_settings fields
     skip_fields = [:id, :settings_hash]
     for field in fieldnames(typeof(ex))
         if field in skip_fields
             continue
         elseif field == :stimgen_settings
+            # Loop over :stimgen_settings field, which is JSON of stimgen.
             settings = JSON3.read(getproperty(ex, field))
             for setting in keys(settings)
                 if setting in keys(EXPERIMENT_FIELDS)
                     exp_data[EXPERIMENT_FIELDS[setting]] = getproperty(settings, setting)
-                else
+                else # Do not skip field if no natural language version written.
                     exp_data[setting] = getproperty(settings, setting)
                 end
             end
         else
             if field in keys(EXPERIMENT_FIELDS)
                 exp_data[EXPERIMENT_FIELDS[field]] = getproperty(ex, field)
-            else
+            else # Do not skip field if no natural language version written.
                 exp_data[field] = getproperty(ex, field)
             end
         end
     end
 
-    json(Dict(:experiment_data => (:value => exp_data), :user_data => (:value => user_data)))
+    return json(Dict(
+                    :experiment_data => (:value => exp_data), 
+                    :user_data => (:value => user_data)
+                ))
 end
 
 """
@@ -131,26 +166,30 @@ function get_exp_fields()
     ex = Experiment()
     fnames = fieldnames(typeof(ex))
     exclude = [:id, :stimgen_settings, :stimgen_type, :settings_hash]
-    exp_fields = Vector{NamedTuple}(undef, length(fnames)-length(exclude))
-    ind = 0
-    for field in fnames
-        if !(field in exclude)
-            ind += 1
-            if typeof(getproperty(ex,field)) <: Real
-                input_type = "number"
-            elseif typeof(getproperty(ex,field)) <: AbstractString
-                input_type = "text"
-            end
+    
+    exp_inds = findall(!in(exclude), fnames)
 
-            if !(field in keys(EXPERIMENT_FIELDS))
-                lab = field
-            else
-                lab = EXPERIMENT_FIELDS[field]
-            end
-
-            exp_fields[ind] = (name = field, label = lab, type = input_type, value = "")
+    exp_fields = Vector{NamedTuple}(undef, length(exp_inds))
+    for (ind, field) in enumerate(fnames[exp_inds])
+        if typeof(getproperty(ex,field)) <: Real
+            input_type = "number"
+        elseif typeof(getproperty(ex,field)) <: AbstractString
+            input_type = "text"
         end
+
+        if field in keys(EXPERIMENT_FIELDS)
+            lab = EXPERIMENT_FIELDS[field]
+        else
+            lab = field
+        end
+
+        exp_fields[ind] = ( name = field, 
+                            label = lab, 
+                            type = input_type, 
+                            value = ""
+                        )
     end
+
     return exp_fields
 end
 
@@ -159,28 +198,31 @@ function get_exp_fields(ex::E) where {E<:Experiment}
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
 
     fnames = fieldnames(typeof(ex))
-
     exclude = [:id, :stimgen_settings, :stimgen_type, :settings_hash]
-    exp_fields = Vector{NamedTuple}(undef, length(fnames)-length(exclude))
-    ind = 0
-    for field in fnames
-        if !(field in exclude)
-            ind += 1
-            if typeof(getproperty(ex,field)) <: Real
-                input_type = "number"
-            elseif typeof(getproperty(ex,field)) <: AbstractString
-                input_type = "text"
-            end
+    
+    exp_inds = findall(!in(exclude), fnames)
 
-            if !(field in keys(EXPERIMENT_FIELDS))
-                lab = field
-            else
-                lab = EXPERIMENT_FIELDS[field]
-            end
-
-            exp_fields[ind] = (name = field, label = lab, type = input_type, value = getproperty(ex, field))
+    exp_fields = Vector{NamedTuple}(undef, length(exp_inds))
+    for (ind, field) in enumerate(fnames[exp_inds])
+        if typeof(getproperty(ex,field)) <: Real
+            input_type = "number"
+        elseif typeof(getproperty(ex,field)) <: AbstractString
+            input_type = "text"
         end
+
+        if field in keys(EXPERIMENT_FIELDS)
+            lab = EXPERIMENT_FIELDS[field]
+        else
+            lab = field
+        end
+
+        exp_fields[ind] = ( name = field, 
+                            label = lab, 
+                            type = input_type, 
+                            value = ""
+                        )
     end
+
     return exp_fields
 end
 
@@ -204,13 +246,17 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
             input_type = "text"
         end
 
-        if !(field in keys(EXPERIMENT_FIELDS))
-            lab = field
-        else
+        if field in keys(EXPERIMENT_FIELDS)
             lab = EXPERIMENT_FIELDS[field]
+        else
+            lab = field
         end
 
-        sg_fields[ind] = (name = field, label = lab, type = input_type, value = getproperty(s, field))
+        sg_fields[ind] = (name = field, 
+                          label = lab, 
+                          type = input_type, 
+                          value = getproperty(s, field)
+                        )
     end
     return sg_fields
 end
@@ -260,7 +306,7 @@ end
 
 function get_stimgen()
     s = STIMGEN_MAPPINGS[params(:type)]()
-    stimgen_fields = get_stimgen_fields(s);
+    stimgen_fields = get_stimgen_fields(s)
 
     json(stimgen_fields)
 end

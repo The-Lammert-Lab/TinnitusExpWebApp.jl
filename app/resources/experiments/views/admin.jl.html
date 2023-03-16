@@ -133,7 +133,7 @@
     const ddl = document.getElementById('experiment-ddl');
     ddl.addEventListener('change', () => {
         if (ddl.value != 'default') {
-            viewExperiment();
+            viewExperiment(document.getElementById("experiment-form"));
         }
     });
 </script>

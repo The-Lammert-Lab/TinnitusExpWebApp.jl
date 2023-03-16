@@ -24,7 +24,7 @@ function is_unique(field::Symbol, m::T)::ValidationResult where {T<:AbstractMode
 end
 
 function is_positive(field::Symbol, m::T)::ValidationResult where {T<:AbstractModel}
-  getfield(m, field) > 0 || return ValidationResult(invalid, :is_nonnegative, "must be greater than zero")
+  getfield(m, field) > 0 || return ValidationResult(invalid, :is_positive, "must be greater than zero")
 
   ValidationResult(valid)
 end
