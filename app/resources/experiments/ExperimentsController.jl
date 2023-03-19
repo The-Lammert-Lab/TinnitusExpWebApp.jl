@@ -348,24 +348,7 @@ function save_exp()
         setproperty!(ex, Symbol(field), val)
     end
 
-    # TODO: Implement some bounds on acceptable new n_trials value
-    # Maybe: must be at least 100 different from all others.
-    same_sg_exp = findone(
-        Experiment;
-        settings_hash = ex.settings_hash,
-        stimgen_type = sg_type,
-        n_trials = ex.n_trials,
-    )
-
-    if same_sg_exp !== nothing
-        return Router.error(
-            INTERNAL_ERROR,
-            """An experiment with these settings already exists named: "$(same_sg_exp.name)".""",
-            MIME"application/json",
-        )
-        # return flash("Experiment already exists as $(same_sg_exp.name)")
-    end
-
+    # Make sure experiment is valid before other checks.
     validator = validate(ex)
     if haserrors(validator)
         return Router.error(
@@ -374,6 +357,41 @@ function save_exp()
             MIME"application/json",
         )
         # return flash(errors_to_string(validator))
+    end
+
+    # Check for identical experiments
+    identical_exp = findone(
+        Experiment;
+        settings_hash = ex.settings_hash,
+        stimgen_type = sg_type,
+        n_trials = ex.n_trials,
+    )
+
+    if identical_exp !== nothing
+        return Router.error(
+            INTERNAL_ERROR,
+            """An experiment with these exact settings already exists as: "$(identical_exp.name)".""",
+            MIME"application/json",
+        )
+        # return flash("Experiment already exists as $(identical_exp.name)")
+    end
+
+    # Check that ex.n_trials is not within ± `pm` n_trials of existing, otherwise identical experiments.
+    same_sg_exps = find(
+        Experiment;
+        settings_hash = ex.settings_hash,
+        stimgen_type = sg_type,
+    )
+
+    pm = 100
+    for val in getproperty.(same_sg_exps, :n_trials)
+        if val - pm <= ex.n_trials <= val + pm
+            return Router.error(
+                INTERNAL_ERROR,
+                """At least one experiment with these settings within +/- $(pm) trials exists. Please pick a different number of trials.""",
+                MIME"application/json"
+            )
+        end
     end
 
     # save(ex) && flash("Experiment $(ex.name) successfully saved!")
