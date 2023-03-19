@@ -218,7 +218,7 @@ function get_exp_fields(ex::E) where {E<:Experiment}
             lab = field
         end
 
-        exp_fields[ind] = 
+        exp_fields[ind] =
             (name = field, label = lab, type = input_type, value = getproperty(ex, field))
     end
 
@@ -281,9 +281,10 @@ function manage()
 
     user_id = findone(User; username = params(:username)).id
 
-    added_experiments = find(UserExperiment; user_id = user_id)
     experiments = all(Experiment)
-    unstarted_experiments = [ex for ex in added_experiments if ex.frac_complete == 0]
+    added_experiments = find(UserExperiment; user_id = user_id)
+    unstarted_experiments = [e for e in added_experiments if e.frac_complete == 0]
+
     html(
         :experiments,
         :manage;

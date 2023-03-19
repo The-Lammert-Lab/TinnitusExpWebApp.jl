@@ -141,8 +141,21 @@ function addExperiment(form) {
     })
     .then(function () {
       window.location.reload();
+    })
+    .catch(function (error) {
+      if (error.response) {
+        // Request made and server responded
+        window.alert(error.response.data.error);
+        window.location.reload();
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log(error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log("Error", error.message);
+      }
     });
-}
+} // function
 
 // Post data from experiment to restart to server and refresh page.
 function restartExperiment(form) {
@@ -155,6 +168,19 @@ function restartExperiment(form) {
     })
     .then(function () {
       window.location.reload();
+    })
+    .catch(function (error) {
+      if (error.response) {
+        // Request made and server responded
+        window.alert(error.response.data.error);
+        window.location.reload();
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log(error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log("Error", error.message);
+      }
     });
 } // function
 
