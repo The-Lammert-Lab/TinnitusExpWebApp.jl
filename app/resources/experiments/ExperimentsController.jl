@@ -335,7 +335,7 @@ function save_exp()
     sg_data = jsonpayload("stimgen")
     sg_type = jsonpayload("stimgen_type")
 
-    # Ensures hash and order consistency
+    # Ensures valid stimgen and hash consistency
     stimgen = JSON3.read(sg_data, STIMGEN_MAPPINGS[sg_type]; parsequoted = true)
     ex = Experiment(; stimgen_settings = JSON3.write(stimgen), stimgen_type = sg_type)
 
