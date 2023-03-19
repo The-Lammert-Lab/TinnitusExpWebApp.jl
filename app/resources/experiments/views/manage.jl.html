@@ -14,15 +14,25 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="userexperiment-tbody">
             <% for_each(added_experiments) do e %>
                 <tr>
                     <td>$(e.experiment_name)</td>
                     <td>$(e.instance)</td>
                     <td>$(round(Int, 100*e.frac_complete))&percnt;</td>
-                    <%  if e.frac_complete >= 1  %>
-                            <td>None</td>
-                    <%  elseif e.frac_complete > 0  %>
+                    <%  if e.frac_complete == 0  %>
+                        <td>
+                            <form style="float:left;" name="remove-form" method="post">
+                                <input type="hidden" name="name" value="$(e.experiment_name)">
+                                <input type="hidden" name="instance" value="$(e.instance)">
+                                <input type="hidden" name="user_id" value="$(user_id)">
+                                <input type="submit" value="Remove"></input>
+                            </form>
+                        </td>
+                    <%  elseif !(
+                            e.experiment_name in getproperty.(unstarted_experiments, :experiment_name)
+                        ) && e.frac_complete < 1 
+                    %>
                             <td> 
                                 <form style="float:left;" name="restart-form">
                                     <input type="hidden" name="name" value="$(e.experiment_name)">
@@ -32,14 +42,7 @@
                                 </form>
                             </td>
                     <%  else  %>
-                            <td>
-                                <form style="float:right;margin-left:2px" name="remove-form" method="post">
-                                    <input type="hidden" name="name" value="$(e.experiment_name)">
-                                    <input type="hidden" name="instance" value="$(e.instance)">
-                                    <input type="hidden" name="user_id" value="$(user_id)">
-                                    <input type="submit" value="Remove"></input>
-                                </form>
-                            </td>
+                        <td>None</td>
                     <%  end  %>
                 </tr>
             <% end %>

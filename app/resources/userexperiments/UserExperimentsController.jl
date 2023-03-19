@@ -11,7 +11,6 @@ using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using GenieAuthentication
 
-# TODO: Add error handling (no experiment or no trials)
 function restart_exp()
     authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
@@ -20,12 +19,31 @@ function restart_exp()
     instance = jsonpayload("instance")
     user_id = jsonpayload("user_id")
 
+    # Check if there is another of same experiment with no trials done.
+    existing_unstarted =
+        find(UserExperiment; experiment_name = name, user_id = user_id, frac_complete = 0)
+    if !isempty(existing_unstarted)
+        return Router.error(
+            INTERNAL_ERROR,
+            """Could not restart experiment "$(name)", instance "$(instance)". An unstarted instance of "$(name)" already exists for user "$(username(user_id))".""",
+            MIME"application/json",
+        )
+    end
+
     experiment = findone(
         UserExperiment;
         experiment_name = name,
         instance = instance,
         user_id = user_id,
     )
+
+    if experiment === nothing
+        return Router.error(
+            INTERNAL_ERROR,
+            """Could not find an experiment with name "$(name)" and instance "$(instance)" for user "$(username(user_id))" to restart.""",
+            MIME"application/json",
+        )
+    end
 
     trials = find(Trial; experiment_name = name, instance = instance, user_id = user_id)
 
@@ -45,18 +63,28 @@ function remove_exp()
 
     if !isempty(trials)
         return Router.error(
-            "Could not remove this experiment. Data has already been collected.",
-            MIME"application/json",
             INTERNAL_ERROR,
+            """Could not remove experiment "$(name)", instance "$(instance)". User "$(username(user_id))" has saved trials.""",
+            MIME"application/json",
         )
-    else
-        findone(
-            UserExperiment;
-            experiment_name = name,
-            instance = instance,
-            user_id = user_id,
-        ) |> delete
     end
+
+    ue = findone(
+        UserExperiment;
+        experiment_name = name,
+        instance = instance,
+        user_id = user_id,
+    )
+
+    if ue === nothing
+        return Router.error(
+            INTERNAL_ERROR,
+            """Could not find an experiment with name "$(name)" and instance "$(instance)" for user "$(username(user_id))" to remove.""",
+            MIME"application/json",
+        )
+    end
+
+    delete(ue)
 end
 
 function add_exp()
@@ -67,11 +95,24 @@ function add_exp()
     user_id = jsonpayload("user_id")
 
     curr_user_exps = find(UserExperiment; experiment_name = name, user_id = user_id)
+
+    # Check request validity (can't add experiment if unstarted already exists)
+    if any(i -> i == 0, getproperty.(curr_user_exps, :frac_complete))
+        return Router.error(
+            INTERNAL_ERROR,
+            """Could not add experiment "$(name)". An unstarted instance already exists.""",
+            MIME"application/json",
+        )
+    end
+
+    # Get instance of new experiment
     if !isempty(curr_user_exps)
         new_instance = maximum(getproperty.(curr_user_exps, :instance)) + 1
     else
         new_instance = 1
     end
+
+    # Create
     ue = UserExperiment(;
         user_id = user_id,
         experiment_name = name,
@@ -79,6 +120,7 @@ function add_exp()
         frac_complete = 0.0,
     )
 
+    # Validate
     validator = validate(ue)
     if haserrors(validator)
         return redirect("/?error=$(errors_to_string(validator))")
