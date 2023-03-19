@@ -215,9 +215,12 @@ function removeExperiment(form) {
 // table with settings and table with
 // status of this experiment for all users from response data.
 function viewExperiment(experiment) {
-  // TODO: is this get format better than sending experiment in query params?
   axios
-    .get("/admin/view/" + experiment, {})
+    .get("/admin/view", {
+      params: {
+        name: experiment,
+      },
+    })
     .then(function (response) {
       // Make table for experimental settings
       const ex_table = document.getElementById("experiment-settings");
@@ -274,47 +277,52 @@ function viewExperiment(experiment) {
 function viewStimgen(form) {
   const formData = new FormData(form);
   const type = formData.get("type");
-  // TODO: is this get format better than sending experiment in query params?
-  axios.get("/create/get/" + type, {}).then(function (response) {
-    const sg_tbody = document.getElementById("stimgen-settings");
-    // Fully delete stimgen rows (do not know what new ones will be added)
-    sg_tbody.innerHTML = "";
+  axios
+    .get("/create/get", {
+      params: {
+        type: type,
+      },
+    })
+    .then(function (response) {
+      const sg_tbody = document.getElementById("stimgen-settings");
+      // Fully delete stimgen rows (do not know what new ones will be added)
+      sg_tbody.innerHTML = "";
 
-    // Clear input values in experiment rows b/c all else stays same.
-    const exp_tbody = document.getElementById("experiment-settings");
-    for (let input of exp_tbody.getElementsByTagName("input")) {
-      input.value = "";
-    }
-    // Build new table
-    const sg_data = response.data;
-    for (const element in sg_data) {
-      let row = sg_tbody.insertRow();
-      let cell1 = row.insertCell();
-      let cell2 = row.insertCell();
-      let field = document.createTextNode(sg_data[element].label);
+      // Clear input values in experiment rows b/c all else stays same.
+      const exp_tbody = document.getElementById("experiment-settings");
+      for (let input of exp_tbody.getElementsByTagName("input")) {
+        input.value = "";
+      }
+      // Build new table
+      const sg_data = response.data;
+      for (const element in sg_data) {
+        let row = sg_tbody.insertRow();
+        let cell1 = row.insertCell();
+        let cell2 = row.insertCell();
+        let field = document.createTextNode(sg_data[element].label);
 
-      let input = document.createElement("INPUT");
-      input.setAttribute("type", sg_data[element].type);
-      input.setAttribute("name", "stimgen." + sg_data[element].name);
-      input.setAttribute("value", sg_data[element].value);
-      input.required = true;
+        let input = document.createElement("INPUT");
+        input.setAttribute("type", sg_data[element].type);
+        input.setAttribute("name", "stimgen." + sg_data[element].name);
+        input.setAttribute("value", sg_data[element].value);
+        input.required = true;
 
-      cell1.appendChild(field);
-      cell2.appendChild(input);
-    }
-    // Include stimgen type in form (shown in dropdown on page)
-    const _type_input = document.getElementById("_type");
-    let input =
-      _type_input === null ? document.createElement("INPUT") : _type_input;
-    input.setAttribute("id", "_type");
-    input.setAttribute("type", "hidden");
-    input.setAttribute("name", "_stimgen-type");
-    input.setAttribute("value", type);
-    document.getElementById("create-form").appendChild(input);
+        cell1.appendChild(field);
+        cell2.appendChild(input);
+      }
+      // Include stimgen type in form (shown in dropdown on page)
+      const _type_input = document.getElementById("_type");
+      let input =
+        _type_input === null ? document.createElement("INPUT") : _type_input;
+      input.setAttribute("id", "_type");
+      input.setAttribute("type", "hidden");
+      input.setAttribute("name", "_stimgen-type");
+      input.setAttribute("value", type);
+      document.getElementById("create-form").appendChild(input);
 
-    // Enable the save button
-    document.getElementById("saveButton").disabled = false;
-  });
+      // Enable the save button
+      document.getElementById("saveButton").disabled = false;
+    });
 } // function
 
 // Post new experiment parameters to server to save.
