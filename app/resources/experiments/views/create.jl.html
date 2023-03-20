@@ -32,7 +32,11 @@
                     <tr>
                         <td>$(f.label)</td>
                         <td> 
-                            <input type="$(f.type)" name="experiment.$(f.name)" value="$(f.value)" required> 
+                            <% if f.step === nothing %> 
+                                <input type="$(f.type)" name="experiment.$(f.name)" value="$(f.value)" required> 
+                            <% else %>
+                                <input type="$(f.type)" step="$(f.step)" name="experiment.$(f.name)" value="$(f.value)" required> 
+                            <% end %>
                         </td>
                     </tr>
                 <% end %>
@@ -43,7 +47,11 @@
                         <tr>
                             <td>$(s.label)</td>
                             <td> 
-                                <input type="$(s.type)" name="stimgen.$(s.name)" value="$(s.value)" required> 
+                            <% if s.step === nothing %> 
+                                <input type="$(s.type)" name="experiment.$(s.name)" value="$(s.value)" required> 
+                            <% else %>
+                                <input type="$(s.type)" step="$(s.step)" name="experiment.$(s.name)" value="$(s.value)" required> 
+                            <% end %>
                             </td>
                         </tr>
                     <% end 
