@@ -173,9 +173,12 @@ function get_exp_fields()
 
     exp_fields = Vector{NamedTuple}(undef, length(exp_inds))
     for (ind, field) in enumerate(fnames[exp_inds])
-        if typeof(getproperty(ex, field)) <: Real
+        fieldtype = typeof(getproperty(ex, field))
+        step = nothing
+        if fieldtype <: Real
             input_type = "number"
-        elseif typeof(getproperty(ex, field)) <: AbstractString
+            step = fieldtype <: Integer ? "1" : "any"
+        elseif fieldtype <: AbstractString
             input_type = "text"
         else
             input_type = "text"
@@ -187,7 +190,7 @@ function get_exp_fields()
             lab = field
         end
 
-        exp_fields[ind] = (name = field, label = lab, type = input_type, value = "")
+        exp_fields[ind] = (name = field, label = lab, type = input_type, value = "", step = step)
     end
 
     return exp_fields
@@ -204,9 +207,12 @@ function get_exp_fields(ex::E) where {E<:Experiment}
 
     exp_fields = Vector{NamedTuple}(undef, length(exp_inds))
     for (ind, field) in enumerate(fnames[exp_inds])
-        if typeof(getproperty(ex, field)) <: Real
+        fieldtype = typeof(getproperty(ex, field))
+        step = nothing
+        if fieldtype <: Real
             input_type = "number"
-        elseif typeof(getproperty(ex, field)) <: AbstractString
+            step = fieldtype <: Integer ? "1" : "any"
+        elseif fieldtype <: AbstractString
             input_type = "text"
         else
             input_type = "text"
@@ -219,7 +225,7 @@ function get_exp_fields(ex::E) where {E<:Experiment}
         end
 
         exp_fields[ind] =
-            (name = field, label = lab, type = input_type, value = getproperty(ex, field))
+            (name = field, label = lab, type = input_type, value = getproperty(ex, field), step = step)
     end
 
     return exp_fields
@@ -239,9 +245,12 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
 
     sg_fields = Vector{NamedTuple}(undef, length(fnames))
     for (ind, field) in enumerate(fnames)
-        if typeof(getproperty(s, field)) <: Real
+        fieldtype = typeof(getproperty(s, field))
+        step = nothing
+        if fieldtype <: Real
             input_type = "number"
-        elseif typeof(getproperty(s, field)) <: AbstractString
+            step = fieldtype <: Integer ? "1" : "any"
+        elseif fieldtype <: AbstractString
             input_type = "text"
         else
             input_type = "text"
@@ -254,7 +263,7 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
         end
 
         sg_fields[ind] =
-            (name = field, label = lab, type = input_type, value = getproperty(s, field))
+            (name = field, label = lab, type = input_type, value = getproperty(s, field), step = step)
     end
     return sg_fields
 end

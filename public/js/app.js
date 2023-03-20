@@ -307,6 +307,10 @@ function viewStimgen(form) {
         input.setAttribute("value", sg_data[element].value);
         input.required = true;
 
+        if (sg_data[element].step !== "nothing") {
+          input.setAttribute("step", sg_data[element].step);
+        }
+
         cell1.appendChild(field);
         cell2.appendChild(input);
       }
