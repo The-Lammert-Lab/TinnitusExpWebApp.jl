@@ -1,6 +1,8 @@
 <h1 id="header1">Create an experiment!</h1>
 <% partial("app/layouts/_logout.jl.html") %>
 
+<span id="dock"></span>
+
 <div>
     <form id="exptype-form">
         <label>Stimulus Type:</label>
@@ -73,7 +75,11 @@
     </form>
 </div>
 
+<div id="snackbar"></div>
+
 <script>
+    ready(showToast)
+
     document.addEventListener("submit", function(e) {
         if (e.target.getAttribute("id") == "exptype-form") {
             e.preventDefault();

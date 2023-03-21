@@ -75,7 +75,11 @@
     </form>
 </div>
 
+<div id="snackbar"></div>
+
 <script>
+    ready(showToast)
+
     // Post add or remove request
     document.addEventListener("submit", function(e) {
         if (e.target.getAttribute("id") == "add-form") { // using id because only ever one

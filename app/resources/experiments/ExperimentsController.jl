@@ -354,15 +354,10 @@ function get_stimgen()
     json(stimgen_fields)
 end
 
-# TODO: Get flash() (and output_flash) to work.
 function save_exp()
     exp_data = JSON3.read(jsonpayload("experiment"))
     sg_data = jsonpayload("stimgen")
     sg_type = jsonpayload("stimgen_type")
-
-    println(exp_data)
-    println(sg_data)
-    println(sg_type)
 
     # Ensures valid stimgen and hash consistency
     stimgen = JSON3.read(sg_data, STIMGEN_MAPPINGS[sg_type]; parsequoted = true)
@@ -385,7 +380,6 @@ function save_exp()
             """Invalid settings: "$(errors_to_string(validator))".""",
             MIME"application/json",
         )
-        # return flash(errors_to_string(validator))
     end
 
     # Check for identical experiments
@@ -402,7 +396,6 @@ function save_exp()
             """An experiment with these exact settings already exists as: "$(identical_exp.name)".""",
             MIME"application/json",
         )
-        # return flash("Experiment already exists as $(identical_exp.name)")
     end
 
     # Check that ex.n_trials is not within ± `pm` n_trials of existing, otherwise identical experiments.
@@ -420,7 +413,7 @@ function save_exp()
         end
     end
 
-    save(ex)
+    save(ex) && json("""Experiment "$(ex.name)" successfully saved.""")
 end
 
 end
