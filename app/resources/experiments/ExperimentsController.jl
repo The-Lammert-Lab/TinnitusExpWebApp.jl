@@ -337,14 +337,7 @@ function create()
         type = nothing
     end
 
-    html(
-        :experiments,
-        :create;
-        stimgen_types,
-        exp_fields,
-        stimgen_fields,
-        type,
-    )
+    html(:experiments, :create; stimgen_types, exp_fields, stimgen_fields, type)
 end
 
 function get_stimgen()
