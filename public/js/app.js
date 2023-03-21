@@ -139,7 +139,8 @@ function addExperiment(form) {
       experiment: formData.get("experiment"),
       user_id: formData.get("user_id"),
     })
-    .then(function () {
+    .then(function (response) {
+      sessionStorage.setItem("ToastMsg", response.data);
       window.location.reload();
     })
     .catch(function (error) {
@@ -166,7 +167,8 @@ function restartExperiment(form) {
       instance: formData.get("instance"),
       user_id: formData.get("user_id"),
     })
-    .then(function () {
+    .then(function (response) {
+      sessionStorage.setItem("ToastMsg", response.data);
       window.location.reload();
     })
     .catch(function (error) {
@@ -193,7 +195,8 @@ function removeExperiment(form) {
       instance: formData.get("instance"),
       user_id: formData.get("user_id"),
     })
-    .then(function () {
+    .then(function (response) {
+      sessionStorage.setItem("ToastMsg", response.data);
       window.location.reload();
     })
     .catch(function (error) {
@@ -351,9 +354,10 @@ function saveExperiment(form) {
       stimgen: JSON.stringify(Object.fromEntries(sg_data)),
       stimgen_type: formData.get("_stimgen-type"),
     })
-    .then(function () {
-      window.alert("Experiment saved!");
-      window.location.reload();
+    .then(function (response) {
+      sessionStorage.setItem("ToastMsg", response.data);
+      // reset to blank create page regardless of if from template or not.
+      window.location.href = window.location.pathname;
     })
     .catch(function (error) {
       if (error.response) {
@@ -367,4 +371,27 @@ function saveExperiment(form) {
         console.log("Error", error.message);
       }
     });
+} // function
+
+// $(document).ready replacement for no jQuery.
+function ready(fn) {
+  if (document.readyState !== "loading") {
+    fn();
+    return;
+  }
+  document.addEventListener("DOMContentLoaded", fn);
+} // function
+
+// Gets "ToastMsg" from session storage and displays it for 3s if not null.
+function showToast() {
+  const msg = sessionStorage.getItem("ToastMsg");
+  if (msg !== null) {
+    let x = document.getElementById("snackbar");
+    x.innerHTML = msg;
+    x.className = "show";
+    sessionStorage.clear("ToastMsg");
+    setTimeout(function () {
+      x.className = x.className.replace("show", "");
+    }, 3000);
+  }
 } // function

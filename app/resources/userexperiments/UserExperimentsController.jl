@@ -17,7 +17,7 @@ function restart_exp()
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
-    user_id = jsonpayload("user_id")
+    user_id = parse(Int, jsonpayload("user_id"))
 
     # Check if there is another of same experiment with no trials done.
     existing_unstarted =
@@ -49,6 +49,9 @@ function restart_exp()
 
     experiment.frac_complete = 0.0
     save(experiment) && delete.(trials)
+    json(
+        """Experiment "$(name)" instance $(instance) restarted for user "$(username(user_id))." """,
+    )
 end
 
 function remove_exp()
@@ -57,7 +60,7 @@ function remove_exp()
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
-    user_id = jsonpayload("user_id")
+    user_id = parse(Int, jsonpayload("user_id"))
 
     trials = find(Trial; experiment_name = name, instance = instance, user_id = user_id)
 
@@ -85,6 +88,9 @@ function remove_exp()
     end
 
     delete(ue)
+    json(
+        """Experiment "$(name)" instance $(instance) removed from user "$(username(user_id))." """,
+    )
 end
 
 function add_exp()
@@ -92,7 +98,7 @@ function add_exp()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
 
     name = jsonpayload("experiment")
-    user_id = jsonpayload("user_id")
+    user_id = parse(Int, jsonpayload("user_id"))
 
     curr_user_exps = find(UserExperiment; experiment_name = name, user_id = user_id)
 
@@ -126,7 +132,7 @@ function add_exp()
         return redirect("/?error=$(errors_to_string(validator))")
     end
 
-    save(ue)
+    save(ue) && json("""Experiment "$(name)" added to user "$(username(user_id))." """)
 end
 
 #########################

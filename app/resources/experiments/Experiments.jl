@@ -36,6 +36,7 @@ SearchLight.Validation.validator(::Type{Experiment}) = ModelValidator([
     ValidationRule(:n_trials, ExperimentsValidator.is_positive),
     ValidationRule(:n_trials, ExperimentsValidator.is_int),
     ValidationRule(:name, ExperimentsValidator.not_empty),
+    ValidationRule(:name, ExperimentsValidator.is_unique),
 ])
 
 function hash_settings(settings::AbstractString)
