@@ -352,7 +352,6 @@ function saveExperiment(form) {
       stimgen_type: formData.get("_stimgen-type"),
     })
     .then(function () {
-      window.alert("Experiment saved!");
       window.location.reload();
     })
     .catch(function (error) {

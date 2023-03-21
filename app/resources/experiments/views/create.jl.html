@@ -1,4 +1,4 @@
-<h1>Create an experiment!</h1>
+<h1 id="header1">Create an experiment!</h1>
 <% partial("app/layouts/_logout.jl.html") %>
 
 <div>
@@ -48,9 +48,9 @@
                             <td>$(s.label)</td>
                             <td> 
                             <% if s.step === nothing %> 
-                                <input type="$(s.type)" name="experiment.$(s.name)" value="$(s.value)" required> 
+                                <input type="$(s.type)" name="stimgen.$(s.name)" value="$(s.value)" required> 
                             <% else %>
-                                <input type="$(s.type)" step="$(s.step)" name="experiment.$(s.name)" value="$(s.value)" required> 
+                                <input type="$(s.type)" step="$(s.step)" name="stimgen.$(s.name)" value="$(s.value)" required> 
                             <% end %>
                             </td>
                         </tr>
@@ -58,10 +58,10 @@
                 end %>
             </tbody>
         </table>
-        <% if type !== nothing %>
+        <% if type !== nothing [ %>
             <input id="_type" type="hidden" name="_stimgen-type" value="$(type)">
             <input id="saveButton" type="submit" value="Save">
-        <% else %>
+        <% ] else %>
             <input id="saveButton" type="submit" value="Save" disabled>
         <% end %>
     </form>

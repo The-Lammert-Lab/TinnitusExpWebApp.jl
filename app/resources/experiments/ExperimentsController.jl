@@ -5,14 +5,12 @@ using CharacterizeTinnitus.TinnitusReconstructor
 using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Experiments
-using CharacterizeTinnitus.GenieAuthenticationViewHelper
 using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using Genie.Exceptions
 using GenieAuthentication
 using GenieSession
-using GenieSession.Flash
 using InteractiveUtils: subtypes
 using NamedTupleTools
 using SearchLight
@@ -190,7 +188,8 @@ function get_exp_fields()
             lab = field
         end
 
-        exp_fields[ind] = (name = field, label = lab, type = input_type, value = "", step = step)
+        exp_fields[ind] =
+            (name = field, label = lab, type = input_type, value = "", step = step)
     end
 
     return exp_fields
@@ -224,8 +223,13 @@ function get_exp_fields(ex::E) where {E<:Experiment}
             lab = field
         end
 
-        exp_fields[ind] =
-            (name = field, label = lab, type = input_type, value = getproperty(ex, field), step = step)
+        exp_fields[ind] = (
+            name = field,
+            label = lab,
+            type = input_type,
+            value = getproperty(ex, field),
+            step = step,
+        )
     end
 
     return exp_fields
@@ -262,8 +266,13 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
             lab = field
         end
 
-        sg_fields[ind] =
-            (name = field, label = lab, type = input_type, value = getproperty(s, field), step = step)
+        sg_fields[ind] = (
+            name = field,
+            label = lab,
+            type = input_type,
+            value = getproperty(s, field),
+            step = step,
+        )
     end
     return sg_fields
 end
@@ -328,7 +337,14 @@ function create()
         type = nothing
     end
 
-    html(:experiments, :create; stimgen_types, exp_fields, stimgen_fields, type)
+    html(
+        :experiments,
+        :create;
+        stimgen_types,
+        exp_fields,
+        stimgen_fields,
+        type,
+    )
 end
 
 function get_stimgen()
@@ -343,6 +359,10 @@ function save_exp()
     exp_data = JSON3.read(jsonpayload("experiment"))
     sg_data = jsonpayload("stimgen")
     sg_type = jsonpayload("stimgen_type")
+
+    println(exp_data)
+    println(sg_data)
+    println(sg_type)
 
     # Ensures valid stimgen and hash consistency
     stimgen = JSON3.read(sg_data, STIMGEN_MAPPINGS[sg_type]; parsequoted = true)
@@ -386,11 +406,8 @@ function save_exp()
     end
 
     # Check that ex.n_trials is not within ± `pm` n_trials of existing, otherwise identical experiments.
-    same_sg_exps = find(
-        Experiment;
-        settings_hash = ex.settings_hash,
-        stimgen_type = sg_type,
-    )
+    same_sg_exps =
+        find(Experiment; settings_hash = ex.settings_hash, stimgen_type = sg_type)
 
     pm = 100
     for val in getproperty.(same_sg_exps, :n_trials)
@@ -398,12 +415,11 @@ function save_exp()
             return Router.error(
                 INTERNAL_ERROR,
                 """At least one experiment with these settings within +/- $(pm) trials exists. Please pick a different number of trials.""",
-                MIME"application/json"
+                MIME"application/json",
             )
         end
     end
 
-    # save(ex) && flash("Experiment $(ex.name) successfully saved!")
     save(ex)
 end
 
