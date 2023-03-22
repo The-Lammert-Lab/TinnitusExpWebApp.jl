@@ -13,6 +13,10 @@
     </form>
 </div>
 
+<div class="bs-callout bs-callout-primary">
+  <p>Register a new user: <a href="$(linkto(:register))">Register</a></p>
+</div>
+
 <div>
     <form style="float:left; margin-top:2px; margin-bottom:2px;" action="/create">
         <input type="submit" value="Create new experiment"></input>
@@ -83,12 +87,12 @@
 <script>
     ready(showToast)
 
-    document.addEventListener("submit", function(e) {
-        if (e.target.getAttribute("id") == "delete-form") { 
+    document
+        .getElementById("delete-form")
+        .addEventListener("submit", function(e) {
             e.preventDefault();
             deleteExperiment(e.target);
-        }
-    });
+        })
 
     const ddl = document.getElementById("experiment-ddl");
     ddl.addEventListener("change", () => {

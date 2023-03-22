@@ -19,4 +19,10 @@ function unique(field::Symbol, m::T)::ValidationResult where {T<:AbstractModel}
     ValidationResult(valid)
 end
 
+function no_spaces(field::Symbol, m::T)::ValidationResult where {T<:AbstractModel}
+    occursin(' ', getfield(m, field)) && return ValidationResult(invalid, :no_spaces, "should not contain spaces")
+
+    ValidationResult(valid)
+end
+
 end

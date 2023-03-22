@@ -2,6 +2,7 @@ module AuthenticationController
 
 using Genie, Genie.Renderer, Genie.Renderer.Html
 using SearchLight
+using SearchLight.Validation
 using Logging
 
 using ..Main.UserApp.Users
@@ -55,18 +56,22 @@ function show_register()
 end
 
 function register()
+    println(params())
     try
-        user =
-            User(
-                username = params(:username),
-                password = params(:password) |> Users.hash_password,
-                name = params(:name),
-                email = params(:email),
-            ) |> save!
+        user = User(
+            username = params(:username) |> strip,
+            password = params(:password) |> Users.hash_password,
+            is_admin = parse(Bool, params(:is_admin)),
+        )
 
-        authenticate(user.id, GenieSession.session(params()))
+        validator = validate(user)
+        if haserrors(validator)
+            flash("Invalid: $(errors_to_string(validator))")
+            return redirect(:show_register)
+        end
 
-        "Registration successful"
+        save(user) && flash("""Successfully registered new user: "$(params(:username))". """)
+        redirect(:show_register)
     catch ex
         @error ex
 

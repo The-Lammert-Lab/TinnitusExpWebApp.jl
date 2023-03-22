@@ -17,6 +17,7 @@ end
 Validation.validator(u::Type{User}) = ModelValidator([
     ValidationRule(:username, UsersValidator.not_empty),
     ValidationRule(:username, UsersValidator.unique),
+    ValidationRule(:username, UsersValidator.no_spaces),
 ])
 
 function hash_password(password::AbstractString)
