@@ -217,8 +217,9 @@ function removeExperiment(form) {
 // Send experiment name to server and build
 // table with settings and table with
 // status of this experiment for all users from response data.
+// Returns true if experiment added to any user, false if not, rejected promise if error.
 function viewExperiment(experiment) {
-  axios
+  const result = axios
     .get("/admin/view", {
       params: {
         name: experiment,
@@ -260,6 +261,7 @@ function viewExperiment(experiment) {
         cell2.appendChild(instance);
         cell3.appendChild(perc_complete);
       }
+      return user_data.length > 0 ? true : false;
     })
     .catch(function (error) {
       if (error.response) {
@@ -273,7 +275,9 @@ function viewExperiment(experiment) {
         // Something happened in setting up the request that triggered an Error
         console.log("Error", error.message);
       }
+      return Promise.reject();
     });
+  return result;
 }
 
 // Populate table with stimgen settings.
@@ -394,4 +398,31 @@ function showToast() {
       x.className = x.className.replace("show", "");
     }, 3000);
   }
+} // function
+
+function deleteExperiment(form) {
+  const formData = new FormData(form);
+  axios
+    .get("/delete", {
+      params: {
+        name: formData.get("name"),
+      },
+    })
+    .then(function (response) {
+      sessionStorage.setItem("ToastMsg", response.data);
+      window.location.reload();
+    })
+    .catch(function (error) {
+      if (error.response) {
+        // Request made and server responded
+        window.alert(error.response.data.error);
+        window.location.reload();
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log(error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log("Error", error.message);
+      }
+    });
 } // function

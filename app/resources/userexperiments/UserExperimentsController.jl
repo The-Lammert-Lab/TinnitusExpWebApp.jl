@@ -48,7 +48,7 @@ function restart_exp()
     trials = find(Trial; experiment_name = name, instance = instance, user_id = user_id)
 
     experiment.frac_complete = 0.0
-    save(experiment) && delete.(trials)
+    save(experiment) && SearchLight.delete.(trials)
     json(
         """Experiment "$(name)" instance $(instance) restarted for user "$(username(user_id))." """,
     )
@@ -87,7 +87,7 @@ function remove_exp()
         )
     end
 
-    delete(ue)
+    SearchLight.delete(ue)
     json(
         """Experiment "$(name)" instance $(instance) removed from user "$(username(user_id))." """,
     )

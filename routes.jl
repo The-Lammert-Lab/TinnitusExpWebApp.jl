@@ -12,10 +12,11 @@ route("/save", TrialsController.save_response; method = POST)
 
 route("/admin", ExperimentsController.admin)
 route("/admin/view", ExperimentsController.view_exp)
-route("/manage/:username", ExperimentsController.manage)
+route("/manage", ExperimentsController.manage)
 route("/create", ExperimentsController.create)
 route("/create/get", ExperimentsController.get_stimgen)
 route("/create/save", ExperimentsController.save_exp; method = POST)
+route("/delete", ExperimentsController.delete_exp)
 
 route("/home", UserExperimentsController.home)
 route("/add", UserExperimentsController.add_exp; method = POST)

@@ -17,6 +17,11 @@ function username(id::Int)
     return user === nothing ? nothing : user.username
 end
 
+function username(id::DbId)
+    user = findone(Users.User; id = id)
+    return user === nothing ? nothing : user.username
+end
+
 route("/login", AuthenticationController.show_login, named = :show_login)
 route("/login", AuthenticationController.login, method = POST, named = :login)
 route("/success", AuthenticationController.success, method = GET, named = :success)
