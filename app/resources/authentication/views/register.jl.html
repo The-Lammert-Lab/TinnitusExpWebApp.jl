@@ -43,8 +43,7 @@
 </form>
 
 <script>
-  const form = document.getElementById("register-form");
-  form.addEventListener("submit", () => {
+  document.getElementById("register-form").addEventListener("submit", () => {
     if (document.getElementById("admin-flag").checked) {
       document.getElementById("admin-flag-hidden").disabled = true;
     }

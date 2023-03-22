@@ -56,7 +56,6 @@ function show_register()
 end
 
 function register()
-    println(params())
     try
         user = User(
             username = params(:username) |> strip,
