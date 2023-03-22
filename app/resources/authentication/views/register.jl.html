@@ -46,6 +46,8 @@
   document.getElementById("register-form").addEventListener("submit", () => {
     if (document.getElementById("admin-flag").checked) {
       document.getElementById("admin-flag-hidden").disabled = true;
+    } else {
+      document.getElementById("admin-flag-hidden").disabled = false;
     }
   });
 </script>
