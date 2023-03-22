@@ -327,12 +327,7 @@ function create()
     if haskey(params(), :template) && !isempty(params(:template))
         ex = findone(Experiment; name = params(:template))
         if ex === nothing
-            # TODO: Do something better with error.
-            return Router.error(
-                BAD_REQUEST,
-                "Invalid template name.",
-                MIME"application/json",
-            )
+            return redirect("/create")
         end
         type = ex.stimgen_type
         stimgen = JSON3.read(ex.stimgen_settings, STIMGEN_MAPPINGS[type])
