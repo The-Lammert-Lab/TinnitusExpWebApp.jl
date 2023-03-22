@@ -3,7 +3,7 @@ using Genie
 using GenieAuthentication
 import ..Main.UserApp.AuthenticationController
 import ..Main.UserApp.Users
-import SearchLight: findone
+import SearchLight: findone, DbId
 
 export current_user
 export current_user_id
@@ -29,5 +29,5 @@ route("/logout", AuthenticationController.logout, named = :logout)
 
 #===#
 
-# route("/register", AuthenticationController.show_register, named = :show_register)
-# route("/register", AuthenticationController.register, method = POST, named = :register)
+route("/register", AuthenticationController.show_register, named = :show_register)
+route("/register", AuthenticationController.register, method = POST, named = :register)
