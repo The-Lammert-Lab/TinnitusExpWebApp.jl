@@ -69,7 +69,8 @@ function register()
             return redirect(:show_register)
         end
 
-        save(user) && flash("""Successfully registered new user: "$(params(:username))". """)
+        save(user) &&
+            flash("""Successfully registered new user: "$(params(:username))". """)
         redirect(:show_register)
     catch ex
         @error ex
