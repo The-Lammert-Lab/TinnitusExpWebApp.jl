@@ -1,70 +1,4 @@
-<style>
-     /* The switch - the box around the slider */
-    .switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-    }
-
-    /* Hide default HTML checkbox */
-    .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    }
-
-    /* The slider */
-    .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
-    }
-
-    .slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-    }
-
-    input:checked + .slider {
-    background-color: #2196F3;
-    }
-
-    input:focus + .slider {
-    box-shadow: 0 0 1px #2196F3;
-    }
-
-    input:checked + .slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-    }
-
-    /* Rounded sliders */
-    .slider.round {
-    border-radius: 34px;
-    }
-
-    .slider.round:before {
-    border-radius: 50%;
-    } 
-</style>
-
-
-<h1>Admin</h1>
+<h1>Admin Home</h1>
 <% partial("app/layouts/_logout.jl.html") %>
 
 <div>
@@ -80,17 +14,20 @@
 </div>
 
 <div>
-    <form style="margin-top:2px" action="/create">
+    <form style="float:left; margin-top:2px; margin-bottom:2px;" action="/create">
         <input type="submit" value="Create new experiment"></input>
     </form>
 
-    <form style="margin-top:2px" action="/create">
-        <input id="template-input" type="hidden" name="template" value="">
-        <input id="template-submit" type="submit" value="Create experiment from this template" disabled></input>
+    <form id="create-from-template-form" style="float:left; margin-left:2px; margin-top:2px; margin-bottom:2px;" action="/create">
+        <input id="template-name" type="hidden" name="template" value="">
+    </form>
+
+    <form id="delete-form" style="float:left; margin-left:2px; margin-top:2px; margin-bottom:2px;" action="/delete">
+        <input id="delete-name" type="hidden" name="name" value="">
     </form>
 </div>
 
-<div>
+<div style="clear:both;">
     <table class="styled-table">
         <thead>
             <tr>
@@ -130,7 +67,8 @@
                 <tr>
                     <td>$(user.username)</td>
                     <td>
-                        <form action="/manage/$(user.username)">
+                        <form action="/manage">
+                            <input type="hidden" name="username" value="$(user.username)">
                             <input type="submit" value="Manage"></input>
                         </form>
                     </td>
@@ -140,17 +78,61 @@
     </table>
 </div>
 
+<div id="snackbar"></div>
+
 <script>
+    ready(showToast)
+
+    document.addEventListener("submit", function(e) {
+        if (e.target.getAttribute("id") == "delete-form") { 
+            e.preventDefault();
+            deleteExperiment(e.target);
+        }
+    });
+
     const ddl = document.getElementById("experiment-ddl");
-    const templateSubmit = document.getElementById("template-submit");
     ddl.addEventListener("change", () => {
-        if (ddl.value != "default") {
-            let template_input = document.getElementById("template-input");
-            template_input.setAttribute("value", ddl.value);
-            viewExperiment(ddl.value);
-            templateSubmit.disabled = false;
+        const template_submit = document.getElementById("template-submit");
+        const template_input = document.getElementById("template-name");
+        const delete_submit = document.getElementById("delete-submit");
+        const delete_input = document.getElementById("delete-name");
+        if (ddl.value !== "default") {
+            viewExperiment(ddl.value) // Returns a Promise
+            .then((added_to_a_user) => {
+                template_input.setAttribute("value", ddl.value);
+                delete_input.setAttribute("value", ddl.value);
+
+                if (template_submit === null) {
+                    let submit = document.createElement("input");
+                    submit.setAttribute("id", "template-submit");
+                    submit.setAttribute("type", "submit");
+                    submit.setAttribute("value", "Create experiment from this template");
+                    document
+                        .getElementById("create-from-template-form")
+                        .appendChild(submit);
+                }
+
+                // Only create delete button if it doesn't exist already and 
+                // experiment is not added to any user
+                if (added_to_a_user && delete_submit !== null) {
+                    delete_submit.remove();
+                } else if (!added_to_a_user && delete_submit === null) {
+                    let submit = document.createElement("input");
+                    submit.setAttribute("id", "delete-submit");
+                    submit.setAttribute("type", "submit");
+                    submit.setAttribute("value", "Delete this experiment");
+                    document.getElementById("delete-form").appendChild(submit);
+                }
+            })
+            // Error handled in viewExperiment. This prevents any code from running.
+            .catch((error) => {});
         } else {
-            templateSubmit.disabled = true;
+            document.getElementById("experiment-settings").innerHTML = "";
+            document.getElementById("user-experiment-data").innerHTML = "";
+            template_submit.remove();
+            template_input.setAttribute("value", "");
+            delete_submit.remove();
+            delete_input.setAttribute("value", "");
         }
     });
 </script>

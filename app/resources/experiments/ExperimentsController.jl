@@ -12,7 +12,6 @@ using Genie.Exceptions
 using GenieAuthentication
 using GenieSession
 using InteractiveUtils: subtypes
-using NamedTupleTools
 using SearchLight
 using SearchLight.Validation
 using JSON3
@@ -327,6 +326,9 @@ function create()
     # From template experiment or not
     if haskey(params(), :template) && !isempty(params(:template))
         ex = findone(Experiment; name = params(:template))
+        if ex === nothing
+            return redirect("/create")
+        end
         type = ex.stimgen_type
         stimgen = JSON3.read(ex.stimgen_settings, STIMGEN_MAPPINGS[type])
         exp_fields = get_exp_fields(ex)
@@ -369,7 +371,7 @@ function save_exp()
     validator = validate(ex)
     if haserrors(validator)
         return Router.error(
-            INTERNAL_ERROR,
+            BAD_REQUEST,
             """Invalid settings: "$(errors_to_string(validator))".""",
             MIME"application/json",
         )
@@ -407,6 +409,32 @@ function save_exp()
     end
 
     save(ex) && json("""Experiment "$(ex.name)" successfully saved.""")
+end
+
+function delete_exp()
+    authenticated!()
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+
+    ex = findone(Experiment; name = params(:name))
+    if ex === nothing
+        return Router.error(
+            BAD_REQUEST,
+            """Could not find an experiment with name "$(params(:name))" to delete.""",
+            MIME"application/json",
+        )
+    end
+
+    added_ues = find(UserExperiment; experiment_name = params(:name))
+    if !isempty(added_ues)
+        return Router.error(
+            INTERNAL_ERROR,
+            """Experiment "$(params(:name))" is added to user(s): $(unique(username.(getproperty.(added_ues, :user_id)))). Cannot delete.""",
+            MIME"application/json",
+        )
+    end
+
+    SearchLight.delete(ex)
+    json("""Experiment "$(params(:name))" deleted.""")
 end
 
 end
