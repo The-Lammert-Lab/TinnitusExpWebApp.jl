@@ -15,7 +15,7 @@ function recordAndPlay(ans) {
       // Collect all stimulus audio elements
       const stimuli = document.getElementsByName("stimulus");
 
-      // Get params (name, instance, from)
+      // Determine next action (go to done, rest, or play next stimulus)
       if (parseFloat(response.data.frac_complete.value) >= 1) {
         window.location.replace("/done");
         return;
@@ -43,27 +43,27 @@ function recordAndPlay(ans) {
     })
     .catch(function (error) {
       if (error.response) {
-        // Request made and server responded
         window.alert(error.response.data.error);
         window.location.replace("/home");
-        return;
       } else if (error.request) {
-        // The request was made but no response was received
-        console.log(error.request);
-        return;
+        window.alert(error.request);
+        window.location.replace("/home");
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log("Error", error.message);
-        return;
+        window.alert("Error: " + error.message);
+        window.location.replace("/home");
       }
+      return;
     });
 } // function
 
 // Load html audio elements from local storage
 function getAudioFromStorage() {
   // Get data from local storage
-  // TODO: Add check clause to be sure the data is there(?)
   const stims = JSON.parse(sessionStorage.getItem("stims"));
+  if (stims === null) {
+    window.alert("Unable to load stimuli. Click 'OK' to return home.");
+    return window.location.replace("/home");
+  }
 
   // Create the elements
   for (let i = 0; i < stims.length; i++) {
@@ -71,16 +71,13 @@ function getAudioFromStorage() {
     audio.id = (i + 1).toString();
     audio.src = "data:audio/wav;base64," + stims[i];
     audio.preload = "auto";
+    audio.setAttribute("name", "stimulus");
     audio.addEventListener("ended", function () {
       document.getElementById("yes").disabled = false;
       document.getElementById("no").disabled = false;
       this.remove();
     });
     document.body.appendChild(audio);
-    // Unclear why, but audio.name does not actually add the name attribute.
-    document
-      .getElementById((i + 1).toString())
-      .setAttribute("name", "stimulus");
   }
   // Remove audio data from storage.
   sessionStorage.removeItem("stims");
@@ -117,17 +114,16 @@ function getAndStoreAudio() {
     // TODO: Do something meaningful on error
     .catch(function (error) {
       if (error.response) {
-        // Request made and server responded
-        console.log(error.response.data);
-        console.log(error.response.status);
-        console.log(error.response.headers);
+        window.alert(error.response.data.error);
+        window.location.replace("/home");
       } else if (error.request) {
-        // The request was made but no response was received
-        console.log(error.request);
+        window.alert(error.request);
+        window.location.replace("/home");
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log("Error", error.message);
+        window.alert("Error: " + error.message);
+        window.location.replace("/home");
       }
+      return;
     });
 } // function
 
@@ -145,16 +141,16 @@ function addExperiment(form) {
     })
     .catch(function (error) {
       if (error.response) {
-        // Request made and server responded
         window.alert(error.response.data.error);
         window.location.reload();
       } else if (error.request) {
-        // The request was made but no response was received
-        console.log(error.request);
+        window.alert(error.request);
+        window.location.reload();
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log("Error", error.message);
+        window.alert("Error", error.message);
+        window.location.reload();
       }
+      return;
     });
 } // function
 
@@ -173,16 +169,16 @@ function restartExperiment(form) {
     })
     .catch(function (error) {
       if (error.response) {
-        // Request made and server responded
         window.alert(error.response.data.error);
         window.location.reload();
       } else if (error.request) {
-        // The request was made but no response was received
-        console.log(error.request);
+        window.alert(error.request);
+        window.location.reload();
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log("Error", error.message);
+        window.alert("Error", error.message);
+        window.location.reload();
       }
+      return;
     });
 } // function
 
@@ -201,25 +197,24 @@ function removeExperiment(form) {
     })
     .catch(function (error) {
       if (error.response) {
-        // Request made and server responded
         window.alert(error.response.data.error);
         window.location.reload();
       } else if (error.request) {
-        // The request was made but no response was received
-        console.log(error.request);
+        window.alert(error.request);
+        window.location.reload();
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log("Error", error.message);
+        window.alert("Error", error.message);
+        window.location.reload();
       }
+      return;
     });
 } // function
 
 // Send experiment name to server and build
 // table with settings and table with
 // status of this experiment for all users from response data.
-// Returns true if experiment added to any user, false if not, rejected promise if error.
 function viewExperiment(experiment) {
-  const result = axios
+  axios
     .get("/admin/view", {
       params: {
         name: experiment,
@@ -261,23 +256,20 @@ function viewExperiment(experiment) {
         cell2.appendChild(instance);
         cell3.appendChild(perc_complete);
       }
-      return user_data.length > 0 ? true : false;
     })
     .catch(function (error) {
       if (error.response) {
-        // Request made and server responded
         window.alert(error.response.data.error);
         window.location.reload();
       } else if (error.request) {
-        // The request was made but no response was received
-        console.log(error.request);
+        window.alert(error.request);
+        window.location.reload();
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log("Error", error.message);
+        window.alert("Error", error.message);
+        window.location.reload();
       }
-      return Promise.reject();
+      return;
     });
-  return result;
 }
 
 // Populate table with stimgen settings.
@@ -333,6 +325,15 @@ function viewStimgen(form) {
 
       // Enable the save button
       document.getElementById("saveButton").disabled = false;
+    })
+    .catch(function (error) {
+      if (error.response) {
+        window.alert(error.response.data.error);
+      } else if (error.request) {
+        window.alert(error.request);
+      } else {
+        window.alert("Error: " + error.message);
+      }
     });
 } // function
 
@@ -365,14 +366,11 @@ function saveExperiment(form) {
     })
     .catch(function (error) {
       if (error.response) {
-        // Request made and server responded
         window.alert(error.response.data.error);
       } else if (error.request) {
-        // The request was made but no response was received
-        console.log(error.request);
+        window.alert(error.request);
       } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log("Error", error.message);
+        window.alert("Error: " + error.message);
       }
     });
 } // function
@@ -398,31 +396,4 @@ function showToast() {
       x.className = x.className.replace("show", "");
     }, 3000);
   }
-} // function
-
-function deleteExperiment(form) {
-  const formData = new FormData(form);
-  axios
-    .get("/delete", {
-      params: {
-        name: formData.get("name"),
-      },
-    })
-    .then(function (response) {
-      sessionStorage.setItem("ToastMsg", response.data);
-      window.location.reload();
-    })
-    .catch(function (error) {
-      if (error.response) {
-        // Request made and server responded
-        window.alert(error.response.data.error);
-        window.location.reload();
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.log(error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.log("Error", error.message);
-      }
-    });
 } // function
