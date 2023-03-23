@@ -129,7 +129,11 @@ function add_exp()
     # Validate
     validator = validate(ue)
     if haserrors(validator)
-        return redirect("/?error=$(errors_to_string(validator))")
+        return Router.error(
+            INTERNAL_ERROR,
+            errors_to_string(validator),
+            MIME"application/json",
+        )
     end
 
     save(ue) && json("""Experiment "$(name)" added to user "$(username(user_id))." """)

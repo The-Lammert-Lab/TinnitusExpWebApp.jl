@@ -15,7 +15,7 @@ export Trial
     response::Int = 0
     user_id::DbId = DbId()
     experiment_name::String = ""
-    instance::Int = 1
+    instance::Int = 0
 end
 
 SearchLight.Validation.validator(::Type{Trial}) = ModelValidator([

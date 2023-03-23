@@ -17,7 +17,6 @@ export UserExperiment
     frac_complete::AbstractFloat = 0.0
 end
 
-# TODO: test to see if this can be condensed
 SearchLight.Validation.validator(::Type{UserExperiment}) = ModelValidator([
     ValidationRule(:user_id, UserExperimentsValidator.dbid_is_not_nothing),
     ValidationRule(:experiment_name, UserExperimentsValidator.is_experiment),
