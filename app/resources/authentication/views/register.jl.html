@@ -42,6 +42,12 @@
   <input type="submit" value="Register" class="btn btn-primary" />
 </form>
 
+<div>
+  <form style="margin-top: 10px" action="/admin">
+    <input type="submit" value="Back to admin page" />
+  </form>
+</div>
+
 <script>
   document.getElementById("register-form").addEventListener("submit", () => {
     if (document.getElementById("admin-flag").checked) {
