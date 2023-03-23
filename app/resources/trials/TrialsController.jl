@@ -180,18 +180,6 @@ function index()
     html(:trials, :index)
 end
 
-# function expsetup()
-#     # full_types is CharacterizeTinnitus.TinnitusReconstructor.XXXXX (typeof = Vector{DataType})
-#     full_types = _subtypes(Stimgen)
-
-#     # Get just the stimgen name
-#     # NOTE: This method can probably be considerably improved.
-#     stimgen_types = Vector{String}(undef, length(full_types))
-#     [stimgen_types[ind] = split.(type, '.')[end][end] for (ind, type) in enumerate(eachrow(string.(full_types)))]
-
-#     html(:trials, :expsetup; stimgen_types)
-# end
-
 function experiment()
     authenticated!()
     # Params = :name, :instance, :from
@@ -251,9 +239,17 @@ function save_response()
     trial_validator = validate(curr_trial)
     usr_exp_validator = validate(curr_usr_exp)
     if haserrors(trial_validator)
-        return redirect("/?error=$(errors_to_string(trial_validator))")
+        return Router.error(
+            INTERNAL_ERROR,
+            errors_to_string(trial_validator),
+            MIME"application/json",
+        )
     elseif haserrors(usr_exp_validator)
-        return redirect("/?error=$(errors_to_string(user_exp_validator))")
+        return Router.error(
+            INTERNAL_ERROR,
+            errors_to_string(user_exp_validator),
+            MIME"application/json",
+        )
     end
 
     # Save to db and send response
