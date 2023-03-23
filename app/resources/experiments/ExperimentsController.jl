@@ -181,11 +181,7 @@ function get_exp_fields()
             input_type = "text"
         end
 
-        if field in keys(EXPERIMENT_FIELDS)
-            lab = EXPERIMENT_FIELDS[field]
-        else
-            lab = field
-        end
+        lab = field in keys(EXPERIMENT_FIELDS) ? EXPERIMENT_FIELDS[field] : field
 
         exp_fields[ind] =
             (name = field, label = lab, type = input_type, value = "", step = step)
@@ -216,11 +212,7 @@ function get_exp_fields(ex::E) where {E<:Experiment}
             input_type = "text"
         end
 
-        if field in keys(EXPERIMENT_FIELDS)
-            lab = EXPERIMENT_FIELDS[field]
-        else
-            lab = field
-        end
+        lab = field in keys(EXPERIMENT_FIELDS) ? EXPERIMENT_FIELDS[field] : field
 
         exp_fields[ind] = (
             name = field,
@@ -259,11 +251,7 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
             input_type = "text"
         end
 
-        if field in keys(EXPERIMENT_FIELDS)
-            lab = EXPERIMENT_FIELDS[field]
-        else
-            lab = field
-        end
+        lab = field in keys(EXPERIMENT_FIELDS) ? EXPERIMENT_FIELDS[field] : field
 
         sg_fields[ind] = (
             name = field,
