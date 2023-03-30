@@ -3,6 +3,7 @@ module TrialsController
 using CharacterizeTinnitus
 using CharacterizeTinnitus.Trials
 using CharacterizeTinnitus.TinnitusReconstructor
+using CharacterizeTinnitus.TinnitusReconstructor: Stimgen
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
 using Combinatorics
