@@ -77,13 +77,13 @@ Constructor for stimulus generation type in which
 - `max_bins::Integer = 50`: The maximum number of bins that may be filled on any stimuli.
 """
 function UniformPrior(;
-    min_freq=100.0,
-    max_freq=22e3,
-    duration=0.5,
-    Fs=44.1e3,
-    n_bins=100,
-    min_bins=10,
-    max_bins=50,
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+    min_bins = 10,
+    max_bins = 50,
 )
     return UniformPrior(min_freq, max_freq, duration, Fs, n_bins, min_bins, max_bins)
 end
@@ -116,7 +116,13 @@ struct GaussianPrior <: BinnedStimgen
         @assert min_freq <= max_freq "`min_freq` cannot be greater than `max_freq`. `min_freq` = $min_freq, `max_freq` = $max_freq."
         @assert isinteger(Fs * duration) "The product of `Fs` and `duration` (the number of samples) must be an integer."
         return new(
-            min_freq, max_freq, duration, Fs, n_bins, n_bins_filled_mean, n_bins_filled_var
+            min_freq,
+            max_freq,
+            duration,
+            Fs,
+            n_bins,
+            n_bins_filled_mean,
+            n_bins_filled_var,
         )
     end
 end
@@ -139,16 +145,22 @@ Constructor for stimulus generation type in which
 - `n_bins_filled_var::Real = 1`: The variance of number of bins that may be filled on any stimuli.
 """
 function GaussianPrior(;
-    min_freq=100.0,
-    max_freq=22e3,
-    duration=0.5,
-    Fs=44.1e3,
-    n_bins=100,
-    n_bins_filled_mean=20,
-    n_bins_filled_var=1,
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+    n_bins_filled_mean = 20,
+    n_bins_filled_var = 1,
 )
     return GaussianPrior(
-        min_freq, max_freq, duration, Fs, n_bins, n_bins_filled_mean, n_bins_filled_var
+        min_freq,
+        max_freq,
+        duration,
+        Fs,
+        n_bins,
+        n_bins_filled_mean,
+        n_bins_filled_var,
     )
 end
 
@@ -196,7 +208,12 @@ Constructor for stimulus generation type in which
 - `bin_prob::Real=0.3`: The probability of a bin being filled.
 """
 function Bernoulli(;
-    min_freq=100.0, max_freq=22e3, duration=0.5, Fs=44.1e3, n_bins=100, bin_prob=0.3
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+    bin_prob = 0.3,
 )
     return Bernoulli(min_freq, max_freq, duration, Fs, n_bins, bin_prob)
 end
@@ -252,14 +269,14 @@ Constructor for stimulus generation type in which
 - `amp_step::Int = 6`: The number of evenly spaced steps between `amp_min` and `amp_max`. 
 """
 function Brimijoin(;
-    min_freq=100.0,
-    max_freq=22e3,
-    duration=0.5,
-    Fs=44.1e3,
-    n_bins=100,
-    amp_min=-20,
-    amp_max=0,
-    amp_step=6,
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+    amp_min = -20,
+    amp_max = 0,
+    amp_step = 6,
 )
     return Brimijoin(min_freq, max_freq, duration, Fs, n_bins, amp_min, amp_max, amp_step)
 end
@@ -316,17 +333,24 @@ Constructor for stimulus generation type in which
 - `amp_step::Int = 6`: The number of evenly spaced steps between `amp_min` and `amp_max`. 
 """
 function BrimijoinGaussianSmoothed(;
-    min_freq=100.0,
-    max_freq=22e3,
-    duration=0.5,
-    Fs=44.1e3,
-    n_bins=100,
-    amp_min=-20,
-    amp_max=0,
-    amp_step=6,
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+    amp_min = -20,
+    amp_max = 0,
+    amp_step = 6,
 )
     return BrimijoinGaussianSmoothed(
-        min_freq, max_freq, duration, Fs, n_bins, amp_min, amp_max, amp_step
+        min_freq,
+        max_freq,
+        duration,
+        Fs,
+        n_bins,
+        amp_min,
+        amp_max,
+        amp_step,
     )
 end
 
@@ -376,16 +400,22 @@ Constructor for stimulus generation type in which
 - `amplitude_var::Real = 3`: The variance of the Gaussian. 
 """
 function GaussianNoise(;
-    min_freq=100.0,
-    max_freq=22e3,
-    duration=0.5,
-    Fs=44.1e3,
-    n_bins=100,
-    amplitude_mean=-10,
-    amplitude_var=3,
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+    amplitude_mean = -10,
+    amplitude_var = 3,
 )
     return GaussianNoise(
-        min_freq, max_freq, duration, Fs, n_bins, amplitude_mean, amplitude_var
+        min_freq,
+        max_freq,
+        duration,
+        Fs,
+        n_bins,
+        amplitude_mean,
+        amplitude_var,
     )
 end
 
@@ -400,7 +430,11 @@ struct UniformNoise <: BinnedStimgen
 
     # Inner constructor to validate inputs
     function UniformNoise(
-        min_freq::Real, max_freq::Real, duration::Real, Fs::Real, n_bins::Integer
+        min_freq::Real,
+        max_freq::Real,
+        duration::Real,
+        Fs::Real,
+        n_bins::Integer,
     )
         @assert all(x -> x > 0, [min_freq max_freq duration Fs n_bins]) "All arguments must be greater than 0."
         @assert min_freq <= max_freq "`min_freq` cannot be greater than `max_freq`. `min_freq` = $min_freq, `max_freq` = $max_freq."
@@ -423,7 +457,13 @@ Constructor for stimulus generation type in which
 - `Fs::Real = 44.1e3`: The frequency of the stimuli in Hz.
 - `n_bins::Integer = 100`: The number of bins into which to partition the frequency range.
 """
-function UniformNoise(; min_freq=100.0, max_freq=22e3, duration=0.5, Fs=44.1e3, n_bins=100)
+function UniformNoise(;
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+)
     return UniformNoise(min_freq, max_freq, duration, Fs, n_bins)
 end
 
@@ -452,7 +492,8 @@ struct UniformPriorWeightedSampling <: BinnedStimgen
         alpha_::Real,
     )
         @assert all(
-            x -> x > 0, [min_freq max_freq duration Fs n_bins min_bins max_bins alpha_]
+            x -> x > 0,
+            [min_freq max_freq duration Fs n_bins min_bins max_bins alpha_],
         ) "All arguments must be greater than 0."
         @assert min_freq <= max_freq "`min_freq` cannot be greater than `max_freq`. `min_freq` = $min_freq, `max_freq` = $max_freq."
         @assert min_bins <= max_bins "`min_bins` cannot be greater than `max_bins`. `min_bins` = $min_bins, `max_bins` = $max_bins."
@@ -460,7 +501,7 @@ struct UniformPriorWeightedSampling <: BinnedStimgen
         @assert isinteger(Fs * duration) "The product of `Fs` and `duration` (the number of samples) must be an integer."
 
         binnums, = freq_bins(
-            new(min_freq, max_freq, duration, Fs, n_bins, min_bins, max_bins, alpha_)
+            new(min_freq, max_freq, duration, Fs, n_bins, min_bins, max_bins, alpha_),
         )
 
         # Compute the bin occupancy, which is a `n_bins x 1` vector
@@ -468,14 +509,22 @@ struct UniformPriorWeightedSampling <: BinnedStimgen
         # This bin occupancy quantity is not related to which bins
         # are "filled".
         bin_occupancy = zeros(n_bins)
-        [bin_occupancy[i] = sum(binnums .== i) for i in 1:n_bins]
+        [bin_occupancy[i] = sum(binnums .== i) for i = 1:n_bins]
 
         # Set `bin_probs` equal to the bin occupancy, exponentiated by `alpha_`.
         bin_occupancy .^= alpha_
         bin_probs = normalize(bin_occupancy)
 
         return new(
-            min_freq, max_freq, duration, Fs, n_bins, min_bins, max_bins, alpha_, bin_probs
+            min_freq,
+            max_freq,
+            duration,
+            Fs,
+            n_bins,
+            min_bins,
+            max_bins,
+            alpha_,
+            bin_probs,
         )
     end
 end
@@ -499,17 +548,24 @@ Constructor for stimulus generation type in which
 - `alpha_::Real = 1`: The tuning parameter that exponentiates the number of unique frequencies in each bin.
 """
 function UniformPriorWeightedSampling(;
-    min_freq=100.0,
-    max_freq=22e3,
-    duration=0.5,
-    Fs=44.1e3,
-    n_bins=100,
-    min_bins=10,
-    max_bins=50,
-    alpha_=1,
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+    min_bins = 10,
+    max_bins = 50,
+    alpha_ = 1,
 )
     return UniformPriorWeightedSampling(
-        min_freq, max_freq, duration, Fs, n_bins, min_bins, max_bins, alpha_
+        min_freq,
+        max_freq,
+        duration,
+        Fs,
+        n_bins,
+        min_bins,
+        max_bins,
+        alpha_,
     )
 end
 
@@ -544,7 +600,13 @@ struct PowerDistribution <: BinnedStimgen
         end
 
         return new(
-            min_freq, max_freq, duration, Fs, n_bins, distribution, distribution_filepath
+            min_freq,
+            max_freq,
+            duration,
+            Fs,
+            n_bins,
+            distribution,
+            distribution_filepath,
         )
     end
 end
@@ -567,15 +629,20 @@ Constructor for stimulus generation type in which
 - `distribution_filepath::AbstractString=joinpath(@__DIR__, "distribution.csv")`: The filepath to the default power distribution from which stimuli are generated
 """
 function PowerDistribution(;
-    min_freq=100.0,
-    max_freq=22e3,
-    duration=0.5,
-    Fs=44.1e3,
-    n_bins=100,
-    distribution_filepath=joinpath(@__DIR__, "distribution.csv"),
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    n_bins = 100,
+    distribution_filepath = joinpath(@__DIR__, "distribution.csv"),
 )
     return PowerDistribution(
-        min_freq, max_freq, duration, Fs, n_bins, distribution_filepath
+        min_freq,
+        max_freq,
+        duration,
+        Fs,
+        n_bins,
+        distribution_filepath,
     )
 end
 
@@ -609,7 +676,12 @@ Constructor for stimulus generation type in which
 - `duration::Real = 0.5`: The length of time for which stimuli are played in seconds.
 - `Fs::Real = 44.1e3`: The frequency of the stimuli in Hz.
 """
-function UniformNoiseNoBins(; min_freq=100.0, max_freq=22e3, duration=0.5, Fs=44.1e3)
+function UniformNoiseNoBins(;
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+)
     return UniformNoiseNoBins(min_freq, max_freq, duration, Fs)
 end
 
@@ -656,15 +728,20 @@ Constructor for stimulus generation type in which
 - `amplitude_var::Real = 3`: The variance of the Gaussian. 
 """
 function GaussianNoiseNoBins(;
-    min_freq=100.0,
-    max_freq=22e3,
-    duration=0.5,
-    Fs=44.1e3,
-    amplitude_mean=-10,
-    amplitude_var=3,
+    min_freq = 100.0,
+    max_freq = 22e3,
+    duration = 0.5,
+    Fs = 44.1e3,
+    amplitude_mean = -10,
+    amplitude_var = 3,
 )
     return GaussianNoiseNoBins(
-        min_freq, max_freq, duration, Fs, amplitude_mean, amplitude_var
+        min_freq,
+        max_freq,
+        duration,
+        Fs,
+        amplitude_mean,
+        amplitude_var,
     )
 end
 
@@ -708,12 +785,14 @@ generating the stimuli on-the-fly using the stimulus
 generation method `s`.
 """
 function subject_selection_process(
-    s::SG, target_signal::AbstractVector{T}, n_trials::I
+    s::SG,
+    target_signal::AbstractVector{T},
+    n_trials::I,
 ) where {SG<:Stimgen,T<:Real,I<:Integer}
     _, _, spect, binned_repr = generate_stimuli_matrix(s, n_trials)
     e = spect'target_signal
     y = -ones(Int, size(e))
-    y[e .>= quantile(e, 0.5; alpha=0.5, beta=0.5)] .= 1
+    y[e.>=quantile(e, 0.5; alpha = 0.5, beta = 0.5)] .= 1
     return y, spect, binned_repr
 end
 
@@ -722,7 +801,9 @@ end
     subject_selection_process(s::SG, target_signal::AbstractMatrix{T}, n_trials::I) where {SG<:Stimgen,T<:Real,I<:Integer}
 """
 function subject_selection_process(
-    s::SG, target_signal::AbstractMatrix{T}, n_trials::I
+    s::SG,
+    target_signal::AbstractMatrix{T},
+    n_trials::I,
 ) where {SG<:Stimgen,T<:Real,I<:Integer}
     return subject_selection_process(s, vec(target_signal), n_trials)
 end
@@ -746,7 +827,7 @@ function generate_stimuli_matrix(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integ
     spect_matrix = zeros(length(spect), n_trials)
     stimuli_matrix[:, 1] = stim
     spect_matrix[:, 1] = spect
-    for ii in 2:n_trials
+    for ii = 2:n_trials
         stimuli_matrix[:, ii], _, spect_matrix[:, ii], _ = generate_stimulus(s)
     end
     binned_repr_matrix = nothing
@@ -770,13 +851,12 @@ function generate_stimuli_matrix(s::BS, n_trials::I) where {BS<:BinnedStimgen,I<
 
     # Instantiate stimuli matrix
     stimuli_matrix = zeros(length(stim), n_trials)
-    spect_matrix = zeros(length(spect), n_trials) 
+    spect_matrix = zeros(length(spect), n_trials)
     stimuli_matrix[:, 1] = stim
     spect_matrix[:, 1] = spect
-    for ii in 2:n_trials
-        stimuli_matrix[:, ii], _, spect_matrix[:, ii], binned_repr_matrix[:, ii] = generate_stimulus(
-            s
-        )
+    for ii = 2:n_trials
+        stimuli_matrix[:, ii], _, spect_matrix[:, ii], binned_repr_matrix[:, ii] =
+            generate_stimulus(s)
     end
 
     return stimuli_matrix, Fs, spect_matrix, binned_repr_matrix
@@ -809,15 +889,14 @@ Generates a vector indicating which frequencies belong to the same bin,
                 collect(range(hz2mels.(s.min_freq), hz2mels.(s.max_freq), s.n_bins + 1))
             )
         )
-    bin_starts = bintops[1:(end - 1)]
+    bin_starts = bintops[1:(end-1)]
     bin_stops = bintops[2:end]
     binnum = zeros(Int, nfft ÷ 2)
     frequency_vector = collect(range(0, Fs ÷ 2, nfft ÷ 2))
 
     # This is a slow point
-    for i in 1:(s.n_bins)
-        @.. binnum[(frequency_vector <= bin_stops[i]) & (frequency_vector >= bin_starts[i])] =
-            i
+    for i = 1:(s.n_bins)
+        @.. binnum[(frequency_vector<=bin_stops[i])&(frequency_vector>=bin_starts[i])] = i
     end
 
     return binnum, Fs, nfft, frequency_vector, bin_starts, bin_stops
@@ -844,8 +923,8 @@ function spect2binnedrepr(s::BS, spect::AbstractVecOrMat{T}) where {BS<:BinnedSt
 
     @assert size(spect, 1) == length(B)
 
-    for bin_num in 1:(s.n_bins)
-        a = spect[B .== bin_num, :]
+    for bin_num = 1:(s.n_bins)
+        a = spect[B.==bin_num, :]
         binned_repr[bin_num, :] .= a[1, :]
     end
 
@@ -863,8 +942,8 @@ function binnedrepr2spect(s::BS, binned_repr::AbstractArray{T}) where {BS<:Binne
     B, = freq_bins(s)
     spect = -100 * ones(length(B), size(binned_repr, 2))
 
-    for bin_num in 1:(s.n_bins)
-        spect[B .== bin_num, :] .= repeat(binned_repr[[bin_num], :], sum(B .== bin_num), 1)
+    for bin_num = 1:(s.n_bins)
+        spect[B.==bin_num, :] .= repeat(binned_repr[[bin_num], :], sum(B .== bin_num), 1)
     end
 
     return spect
@@ -876,10 +955,10 @@ end
 Builds the default power distribution from ATA tinnitus sample files.
     Saves the distribution as a vector in dB at save_path.
 """
-function build_distribution(s::PowerDistribution; save_path::AbstractString=@__DIR__)
+function build_distribution(s::PowerDistribution; save_path::AbstractString = @__DIR__)
     @assert ispath(save_path) "`save_path` must be a valid path"
 
-    ATA_files = readdir(abspath("ATA"); join=true)
+    ATA_files = readdir(abspath("ATA"); join = true)
     freq_vec = get_freq(s)
 
     audio = load(pop!(ATA_files))
@@ -889,7 +968,7 @@ function build_distribution(s::PowerDistribution; save_path::AbstractString=@__D
     y = (y .- minimum(y)) ./ (maximum(y) - minimum(y))
     Y = fft(y) / length(y)
     freq_file = Fs_file / 2 * range(0, 1, Fs_file ÷ 2 + 1)
-    pxx = abs.(Y[1:(Fs_file ÷ 2 + 1)])
+    pxx = abs.(Y[1:(Fs_file÷2+1)])
 
     power_spectra = zeros(length(pxx), length(ATA_files) + 1)
     power_spectra[:, 1] = pow2db.(pxx)
@@ -899,12 +978,12 @@ function build_distribution(s::PowerDistribution; save_path::AbstractString=@__D
         y = float(vec(audio.data))
         y = (y .- minimum(y)) ./ (maximum(y) - minimum(y))
         Y = fft(y) / length(y)
-        pxx = abs.(Y[1:(Fs_file ÷ 2 + 1)])
+        pxx = abs.(Y[1:(Fs_file÷2+1)])
 
         power_spectra[:, ind] = pow2db.(pxx)
     end
 
-    spect = mean(power_spectra; dims=2)
+    spect = mean(power_spectra; dims = 2)
 
     # Interpolate (analagous to MATLAB's interp1(freq_file, spect, freq_vec, 'cubic');)
     distribution = zeros(length(freq_vec))
@@ -940,10 +1019,10 @@ function generate_stimulus(s::UniformPrior)
 
     # sample from uniform distribution to get the number of bins to fill
     n_bins_to_fill = rand(DiscreteUniform(s.min_bins, s.max_bins))
-    bins_to_fill = sample(1:(s.n_bins), n_bins_to_fill; replace=false)
+    bins_to_fill = sample(1:(s.n_bins), n_bins_to_fill; replace = false)
 
     # Set spectrum ranges corresponding to bins to 0dB.
-    [spect[binnum .== bins_to_fill[i]] .= 0 for i in 1:n_bins_to_fill]
+    [spect[binnum.==bins_to_fill[i]] .= 0 for i = 1:n_bins_to_fill]
 
     # Synthesize Audio
     stim = synthesize_audio(spect, nfft)
@@ -963,10 +1042,10 @@ function generate_stimulus(s::GaussianPrior)
     # sample from gaussian distribution to get the number of bins to fill
     d = truncated(Normal(s.n_bins_filled_mean, sqrt(s.n_bins_filled_var)), 1, s.n_bins)
     n_bins_to_fill = round(Int, rand(d))
-    bins_to_fill = sample(1:(s.n_bins), n_bins_to_fill; replace=false)
+    bins_to_fill = sample(1:(s.n_bins), n_bins_to_fill; replace = false)
 
     # Set spectrum ranges corresponding to bins to 0dB.
-    [spect[binnum .== bins_to_fill[i]] .= 0 for i in 1:n_bins_to_fill]
+    [spect[binnum.==bins_to_fill[i]] .= 0 for i = 1:n_bins_to_fill]
 
     # Synthesize Audio
     stim = synthesize_audio(spect, nfft)
@@ -985,10 +1064,10 @@ function generate_stimulus(s::Bernoulli)
 
     # Get binned representation
     binned_repr = unfilled_db * ones(Int, s.n_bins)
-    binned_repr[rand(s.n_bins) .< s.bin_prob] .= 0
+    binned_repr[rand(s.n_bins).<s.bin_prob] .= 0
 
     # Set spectrum ranges corresponding to bins to bin level.
-    [spect[binnum .== i] .= binned_repr[i] for i in 1:(s.n_bins)]
+    [spect[binnum.==i] .= binned_repr[i] for i = 1:(s.n_bins)]
 
     # Synthesize Audio
     stim = synthesize_audio(spect, nfft)
@@ -1005,7 +1084,7 @@ function generate_stimulus(s::Brimijoin)
     binned_repr = sample(range(s.amp_min, s.amp_max, s.amp_step), s.n_bins)
 
     # Set spectrum ranges corresponding to bin levels.
-    [spect[binnum .== i] .= binned_repr[i] for i in 1:(s.n_bins)]
+    [spect[binnum.==i] .= binned_repr[i] for i = 1:(s.n_bins)]
 
     # Synthesize Audio
     stim = synthesize_audio(spect, nfft)
@@ -1031,7 +1110,7 @@ function generate_stimulus(s::BrimijoinGaussianSmoothed)
     # Create distributions
     d = Normal.(μ, σ)
 
-    for i in 1:(s.n_bins)
+    for i = 1:(s.n_bins)
         # Create a normal distribution with the correct number of points
         normal = pdf.(d[i], frequency_vector)
         # Rescale
@@ -1058,7 +1137,7 @@ function generate_stimulus(s::GaussianNoise)
     binned_repr = rand(Normal(s.amplitude_mean, sqrt(s.amplitude_var)), s.n_bins)
 
     # Set spectrum ranges corresponding to bin levels.
-    [spect[binnum .== i] .= binned_repr[i] for i in 1:(s.n_bins)]
+    [spect[binnum.==i] .= binned_repr[i] for i = 1:(s.n_bins)]
 
     # Synthesize Audio
     stim = synthesize_audio(spect, nfft)
@@ -1075,7 +1154,7 @@ function generate_stimulus(s::UniformNoise)
     binned_repr = rand(Uniform(unfilled_db, 0), s.n_bins)
 
     # Set spectrum ranges corresponding to bin levels.
-    [spect[binnum .== i] .= binned_repr[i] for i in 1:(s.n_bins)]
+    [spect[binnum.==i] .= binned_repr[i] for i = 1:(s.n_bins)]
 
     # Synthesize Audio
     stim = synthesize_audio(spect, nfft)
@@ -1131,10 +1210,11 @@ function generate_stimulus(s::UniformPriorWeightedSampling)
 
     # sample from a weighted distribution without replacement
     # to get the bins that should be filled
-    filled_bins = sample(1:(s.n_bins), Weights(s.bin_probs), n_bins_to_fill; replace=false)
+    filled_bins =
+        sample(1:(s.n_bins), Weights(s.bin_probs), n_bins_to_fill; replace = false)
 
     # fill those bins
-    [spect[binnum .== bin] .= 0 for bin in eachindex(filled_bins)]
+    [spect[binnum.==bin] .= 0 for bin in eachindex(filled_bins)]
 
     # Synthesize Audio
     stim = synthesize_audio(spect, nfft)
@@ -1155,7 +1235,7 @@ function generate_stimulus(s::PowerDistribution)
     # Force 16 bins using edges parameter. May be unnecessary.
     h = normalize(
         fit(Histogram, vec(s.distribution), range(extrema(s.distribution)..., 16));
-        mode=:pdf,
+        mode = :pdf,
     )
 
     bin_centers = h.edges[1][1] .+ cumsum(diff(h.edges[1]) / 2)
@@ -1172,7 +1252,7 @@ function generate_stimulus(s::PowerDistribution)
     end
 
     # Create the random frequency spectrum
-    [spect[binnum .== i] .= binned_repr[i] for i in 1:(s.n_bins)]
+    [spect[binnum.==i] .= binned_repr[i] for i = 1:(s.n_bins)]
 
     # Synthesize Audio
     stim = synthesize_audio(spect, nfft)

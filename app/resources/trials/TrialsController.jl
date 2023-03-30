@@ -22,11 +22,31 @@ using SearchLight.Validation
 using SHA
 using StructTypes
 
-const STIMGEN_MAPPINGS =
-    Dict{String,DataType}("UniformPrior" => UniformPrior, "GaussianPrior" => GaussianPrior)
+const STIMGEN_MAPPINGS = Dict{String,DataType}(
+    "UniformPrior" => UniformPrior,
+    "GaussianPrior" => GaussianPrior,
+    "Brimijoin" => Brimijoin,
+    "Bernoulli" => Bernoulli,
+    "BrimijoinGaussianSmoothed" => BrimijoinGaussianSmoothed,
+    "GaussianNoise" => GaussianNoise,
+    "UniformNoise" => UniformNoise,
+    "GaussianNoiseNoBins" => GaussianNoiseNoBins,
+    "UniformNoiseNoBins" => UniformNoiseNoBins,
+    "UniformPriorWeightedSampling" => UniformPriorWeightedSampling,
+    "PowerDistribution" => PowerDistribution,
+)
 
 StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
 StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
+StructTypes.StructType(::Type{Brimijoin}) = StructTypes.Struct()
+StructTypes.StructType(::Type{Bernoulli}) = StructTypes.Struct()
+StructTypes.StructType(::Type{BrimijoinGaussianSmoothed}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianNoise}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformNoise}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianNoiseNoBins}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformNoiseNoBins}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformPriorWeightedSampling}) = StructTypes.Struct()
+StructTypes.StructType(::Type{PowerDistribution}) = StructTypes.Struct()
 
 const IDEAL_BLOCK_SIZE = 80
 const MAX_BLOCK_SIZE = 120

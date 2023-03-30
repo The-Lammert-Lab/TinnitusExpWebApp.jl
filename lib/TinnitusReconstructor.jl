@@ -3,11 +3,15 @@ module TinnitusReconstructor
 include("funcs.jl")
 include("StimGens.jl")
 
-export UniformPrior, GaussianPrior
-export BrimijoinGaussianSmoothed, Brimijoin
-export Bernoulli, BrimijoinGaussianSmoothed
-export GaussianNoise, UniformNoise
-export GaussianNoiseNoBins, UniformNoiseNoBins
+export UniformPrior
+export GaussianPrior
+export Brimijoin
+export Bernoulli
+export BrimijoinGaussianSmoothed
+export GaussianNoise
+export UniformNoise
+export GaussianNoiseNoBins
+export UniformNoiseNoBins
 export UniformPriorWeightedSampling
 export PowerDistribution
 export generate_stimuli_matrix
