@@ -1,0 +1,2 @@
+# Ignore all Julia HTML files:
+*.jl.html
