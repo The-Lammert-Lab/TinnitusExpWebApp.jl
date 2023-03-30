@@ -120,7 +120,7 @@ end
 
 Returns number of trials to use for this "block" based on `IDEAL_BLOCK_SIZE` and `MAX_BLOCK_SIZE`.
 """
-choose_n_trials(x::I) where {I<:Integer} = return x <= MAX_BLOCK_SIZE ? x : IDEAL_BLOCK_SIZE
+choose_n_trials(x::I) where {I<:Integer} = return x <= MAX_BLOCK_SIZE ? x : oftype(x, IDEAL_BLOCK_SIZE)
 
 """
     gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
