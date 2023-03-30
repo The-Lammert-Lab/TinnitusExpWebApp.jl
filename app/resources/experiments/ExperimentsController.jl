@@ -2,6 +2,7 @@ module ExperimentsController
 
 using CharacterizeTinnitus
 using CharacterizeTinnitus.TinnitusReconstructor
+using CharacterizeTinnitus.TinnitusReconstructor: Stimgen
 using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Experiments
@@ -34,21 +35,50 @@ const EXPERIMENT_FIELDS = Dict{Symbol,String}(
     :stimgen_type => "Stimgen type",
     :n_trials => "Number of trials",
     :name => "Experiment name",
-    :visible => "Visible",
+    :n_bins_filled_mean => "Mean of Gaussian for filled bins",
+    :n_bins_filled_var => "Variance of Gaussian for filled bins",
+    :bin_prob => "Probability of a bin being filles",
+    :amp_min => "Minimum amplitude of a bin (dB)",
+    :amp_max => "Maximum amplitude of a bin (dB)",
+    :amp_step => "Number of steps between min and max amplitude",
+    :amplitude_mean => "Mean of Gaussian for amplitude (dB)",
+    :amplitude_var => "Variance of Gaussian for amplitude (dB)",
+    :alpha_ => "Exponential factor of number of unique frequencies in each bin",
 )
-
 
 """
     const STIMGEN_MAPPINGS = Dict{String,DataType}
 
 Maps stimgen name as string to DataType
 """
-const STIMGEN_MAPPINGS =
-    Dict{String,DataType}("UniformPrior" => UniformPrior, "GaussianPrior" => GaussianPrior)
+const STIMGEN_MAPPINGS = Dict{String,DataType}(
+    "UniformPrior" => UniformPrior,
+    "GaussianPrior" => GaussianPrior,
+    "Brimijoin" => Brimijoin,
+    "Bernoulli" => Bernoulli,
+    "BrimijoinGaussianSmoothed" => BrimijoinGaussianSmoothed,
+    "GaussianNoise" => GaussianNoise,
+    "UniformNoise" => UniformNoise,
+    "GaussianNoiseNoBins" => GaussianNoiseNoBins,
+    "UniformNoiseNoBins" => UniformNoiseNoBins,
+    "UniformPriorWeightedSampling" => UniformPriorWeightedSampling,
+    "PowerDistribution" => PowerDistribution,
+)
 
 # Register stimgens with StructTypes.
 StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
 StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
+StructTypes.StructType(::Type{Brimijoin}) = StructTypes.Struct()
+StructTypes.StructType(::Type{Bernoulli}) = StructTypes.Struct()
+StructTypes.StructType(::Type{BrimijoinGaussianSmoothed}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianNoise}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformNoise}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianNoiseNoBins}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformNoiseNoBins}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformPriorWeightedSampling}) = StructTypes.Struct()
+StructTypes.StructType(::Type{PowerDistribution}) = StructTypes.Struct()
 
 """
     _subtypes(type::Type)    
@@ -123,7 +153,8 @@ function view_exp()
 
     # Pre-process experiment fields
     exp_data = Dict() # Can't initialize length b/c varying stimgen_settings fields
-    skip_fields = [:id, :settings_hash]
+    skip_fields = [:id, :settings_hash, :bin_probs, :distribution, :distribution_filepath]
+    skip_settings = [:bin_probs, :distribution, :distribution_filepath]
     for field in fieldnames(typeof(ex))
         if field in skip_fields
             continue
@@ -131,7 +162,9 @@ function view_exp()
             # Loop over :stimgen_settings field, which is JSON of stimgen.
             settings = JSON3.read(getproperty(ex, field))
             for setting in keys(settings)
-                if setting in keys(EXPERIMENT_FIELDS)
+                if setting in skip_settings
+                    continue
+                elseif setting in keys(EXPERIMENT_FIELDS)
                     exp_data[EXPERIMENT_FIELDS[setting]] = getproperty(settings, setting)
                 else # Do not skip field if no natural language version written.
                     exp_data[setting] = getproperty(settings, setting)
@@ -155,7 +188,7 @@ end
     get_exp_fields()
     get_exp_fields(ex::E) where {E<:Experiment}
 
-Returns Vector{NamedTuple} corresponding to each non-stimgen field in a generic or specific experiment.
+Returns Vector{NamedTuple} corresponding to each non-stimgen field in a generic or specific experiment (`ex`).
     Each NamedTuple has `name`, `label`, `type`, and `value`.
 """
 function get_exp_fields()
@@ -164,7 +197,15 @@ function get_exp_fields()
 
     ex = Experiment()
     fnames = fieldnames(typeof(ex))
-    exclude = [:id, :stimgen_settings, :stimgen_type, :settings_hash]
+    exclude = [
+        :id,
+        :stimgen_settings,
+        :stimgen_type,
+        :settings_hash,
+        :bin_probs,
+        :distribution,
+        :distribution_filepath,
+    ]
 
     exp_inds = findall(!in(exclude), fnames)
 
@@ -195,7 +236,15 @@ function get_exp_fields(ex::E) where {E<:Experiment}
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
 
     fnames = fieldnames(typeof(ex))
-    exclude = [:id, :stimgen_settings, :stimgen_type, :settings_hash]
+    exclude = [
+        :id,
+        :stimgen_settings,
+        :stimgen_type,
+        :settings_hash,
+        :bin_probs,
+        :distribution,
+        :distribution_filepath,
+    ]
 
     exp_inds = findall(!in(exclude), fnames)
 

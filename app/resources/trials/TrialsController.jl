@@ -3,6 +3,7 @@ module TrialsController
 using CharacterizeTinnitus
 using CharacterizeTinnitus.Trials
 using CharacterizeTinnitus.TinnitusReconstructor
+using CharacterizeTinnitus.TinnitusReconstructor: Stimgen, BinnedStimgen
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
 using Combinatorics
@@ -21,11 +22,31 @@ using SearchLight.Validation
 using SHA
 using StructTypes
 
-const STIMGEN_MAPPINGS =
-    Dict{String,DataType}("UniformPrior" => UniformPrior, "GaussianPrior" => GaussianPrior)
+const STIMGEN_MAPPINGS = Dict{String,DataType}(
+    "UniformPrior" => UniformPrior,
+    "GaussianPrior" => GaussianPrior,
+    "Brimijoin" => Brimijoin,
+    "Bernoulli" => Bernoulli,
+    "BrimijoinGaussianSmoothed" => BrimijoinGaussianSmoothed,
+    "GaussianNoise" => GaussianNoise,
+    "UniformNoise" => UniformNoise,
+    "GaussianNoiseNoBins" => GaussianNoiseNoBins,
+    "UniformNoiseNoBins" => UniformNoiseNoBins,
+    "UniformPriorWeightedSampling" => UniformPriorWeightedSampling,
+    "PowerDistribution" => PowerDistribution,
+)
 
 StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
 StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
+StructTypes.StructType(::Type{Brimijoin}) = StructTypes.Struct()
+StructTypes.StructType(::Type{Bernoulli}) = StructTypes.Struct()
+StructTypes.StructType(::Type{BrimijoinGaussianSmoothed}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianNoise}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformNoise}) = StructTypes.Struct()
+StructTypes.StructType(::Type{GaussianNoiseNoBins}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformNoiseNoBins}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UniformPriorWeightedSampling}) = StructTypes.Struct()
+StructTypes.StructType(::Type{PowerDistribution}) = StructTypes.Struct()
 
 const IDEAL_BLOCK_SIZE = 80
 const MAX_BLOCK_SIZE = 120
@@ -52,11 +73,13 @@ function scale_audio(x)
 end
 
 """
+    gen_b64_stimuli(s::SG, n_trials::I) where {SG<:BinnedStimgen,I<:Integer}
     gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
 
 Generate a vector of `n_trials` base64 encoded stimuli from stimgen settings.
+    Returns either binned_repr_matrix or spect_matrix if `s` is not a subtype of `BinnedStimgen`.
 """
-function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
+function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:BinnedStimgen,I<:Integer}
     stimuli_matrix, Fs, _, binned_repr_matrix = generate_stimuli_matrix(s, n_trials)
 
     # Scale all columns
@@ -74,26 +97,30 @@ function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
     return stimuli, binned_repr_matrix
 end
 
+function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
+    stimuli_matrix, Fs, spect_matrix, _ = generate_stimuli_matrix(s, n_trials)
+
+    # Scale all columns
+    scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims = 1)
+
+    # Save base64 encoded wav files to stimuli vector of strings
+    stimuli = Vector{String}(undef, size(scaled_stimuli, 2))
+    for (ind, stimulus) in enumerate(eachcol(scaled_stimuli))
+        buf = Base.IOBuffer()
+        wavwrite(stimulus, buf; Fs = Fs)
+        stimuli[ind] = base64encode(take!(buf))
+        close(buf)
+    end
+
+    return stimuli, spect_matrix
+end
+
 """
     choose_n_trials(x::I) where {I<:Integer}
 
 Returns number of trials to use for this "block" based on `IDEAL_BLOCK_SIZE` and `MAX_BLOCK_SIZE`.
 """
-function choose_n_trials(x::I) where {I<:Integer}
-    if x <= MAX_BLOCK_SIZE
-        return x
-    elseif (x ÷ IDEAL_BLOCK_SIZE < 2) # Potential last block 
-        n_trials = IDEAL_BLOCK_SIZE + (x % IDEAL_BLOCK_SIZE)
-        if n_trials > MAX_BLOCK_SIZE # Large remainder, do in next block
-            return IDEAL_BLOCK_SIZE
-        else
-            return n_trials
-        end
-    else
-        return IDEAL_BLOCK_SIZE
-    end
-end
-
+choose_n_trials(x::I) where {I<:Integer} = return x <= MAX_BLOCK_SIZE ? x : oftype(x, IDEAL_BLOCK_SIZE)
 
 """
     gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
@@ -121,7 +148,10 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
     n_trials = choose_n_trials(remaining_trials)
 
     # Get stimuli vector
-    stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials)
+    # Second output of gen_b64_stimuli is binned_repr_matrix unless
+    # Stimgen is not <:BinnedStimgen, in which case it returns spect_matrix.
+    # Either way, that is the one to save.
+    stimuli, stim_rep_to_save = gen_b64_stimuli(stimgen, n_trials)
 
     # Make array of Trial structs
     block = [
@@ -130,7 +160,7 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
             user_id = current_user_id(),
             experiment_name = e.name,
             instance = instance,
-        ) for stim in eachcol(binned_repr_matrix)
+        ) for stim in eachcol(stim_rep_to_save)
     ]
 
     return stimuli, block
@@ -155,7 +185,10 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
     n_trials = choose_n_trials(remaining_trials)
 
     # Get stimuli vector
-    stimuli, binned_repr_matrix = gen_b64_stimuli(stimgen, n_trials)
+    # Second output of gen_b64_stimuli is binned_repr_matrix unless
+    # Stimgen is not <:BinnedStimgen, in which case it returns spect_matrix.
+    # Either way, that is the one to save.
+    stimuli, stim_rep_to_save = gen_b64_stimuli(stimgen, n_trials)
 
     # Make array of Trial structs
     block = [
@@ -164,7 +197,7 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
             user_id = current_user_id(),
             experiment_name = e.name,
             instance = instance,
-        ) for stim in eachcol(binned_repr_matrix)
+        ) for stim in eachcol(stim_rep_to_save)
     ]
 
     return stimuli, block
