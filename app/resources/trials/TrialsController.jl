@@ -216,7 +216,7 @@ function save_response()
         )
     end
 
-    curr_trial = pop!(curr_block)
+    curr_trial = popfirst!(curr_block)
 
     curr_usr_exp = findone(
         UserExperiment;
