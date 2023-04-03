@@ -20,8 +20,6 @@ function get_stimgen_struct(id::I) where {I<:Integer}
     return stimgen
 end
 
-const STIMGEN_MAPPINGS = Dict{String,DataType}("UniformPrior" => UniformPrior)
-
 """
     stimgen_from_params(stimgen::S; kwargs...) where {S<:AbstractString}
 

@@ -16,13 +16,12 @@ using GenieAuthentication
 using InteractiveUtils: subtypes
 using Base64
 using JSON3
-using Primes
 using SearchLight
 using SearchLight.Validation
 using SHA
 using StructTypes
 
-const STIMGEN_MAPPINGS = Dict{String,DataType}(
+const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
     "UniformPrior" => UniformPrior,
     "GaussianPrior" => GaussianPrior,
     "Brimijoin" => Brimijoin,

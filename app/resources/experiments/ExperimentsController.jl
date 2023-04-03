@@ -51,7 +51,7 @@ const EXPERIMENT_FIELDS = Dict{Symbol,String}(
 
 Maps stimgen name as string to DataType
 """
-const STIMGEN_MAPPINGS = Dict{String,DataType}(
+const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
     "UniformPrior" => UniformPrior,
     "GaussianPrior" => GaussianPrior,
     "Brimijoin" => Brimijoin,
