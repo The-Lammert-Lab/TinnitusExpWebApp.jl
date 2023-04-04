@@ -19,7 +19,6 @@ using JSON3
 using SearchLight
 using SearchLight.Validation
 using SHA
-using StructTypes
 
 const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
     "UniformPrior" => UniformPrior,
@@ -35,20 +34,22 @@ const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
     "PowerDistribution" => PowerDistribution,
 )
 
-StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
-StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
-StructTypes.StructType(::Type{Brimijoin}) = StructTypes.Struct()
-StructTypes.StructType(::Type{Bernoulli}) = StructTypes.Struct()
-StructTypes.StructType(::Type{BrimijoinGaussianSmoothed}) = StructTypes.Struct()
-StructTypes.StructType(::Type{GaussianNoise}) = StructTypes.Struct()
-StructTypes.StructType(::Type{UniformNoise}) = StructTypes.Struct()
-StructTypes.StructType(::Type{GaussianNoiseNoBins}) = StructTypes.Struct()
-StructTypes.StructType(::Type{UniformNoiseNoBins}) = StructTypes.Struct()
-StructTypes.StructType(::Type{UniformPriorWeightedSampling}) = StructTypes.Struct()
-StructTypes.StructType(::Type{PowerDistribution}) = StructTypes.Struct()
-
 const IDEAL_BLOCK_SIZE = 80
 const MAX_BLOCK_SIZE = 120
+
+"""
+    stimgen_from_json(json::T, name::T) where {T<:AbstractString}
+
+Returns a fully instantiated stimgen type from JSON string of field values and type name.
+"""
+function stimgen_from_json(json::T, name::T) where {T<:AbstractString}
+    j = JSON3.read(json, Dict{Symbol,Any})
+    try
+        map!(x -> Meta.parse(x), values(j))
+    finally
+        return STIMGEN_MAPPINGS[name](; j...)
+    end
+end
 
 """
     scale_audio(x)
@@ -119,7 +120,8 @@ end
 
 Returns number of trials to use for this "block" based on `IDEAL_BLOCK_SIZE` and `MAX_BLOCK_SIZE`.
 """
-choose_n_trials(x::I) where {I<:Integer} = return x <= MAX_BLOCK_SIZE ? x : oftype(x, IDEAL_BLOCK_SIZE)
+choose_n_trials(x::I) where {I<:Integer} =
+    return x <= MAX_BLOCK_SIZE ? x : oftype(x, IDEAL_BLOCK_SIZE)
 
 """
     gen_stim_and_block(parameters::Dict{S, W}) where {S<:Symbol, W}
@@ -133,7 +135,7 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
 
     # Get experiment info and create stimgen struct
     e = findone(Experiment; name = getindex(parameters, :name))
-    stimgen = JSON3.read(e.stimgen_settings, STIMGEN_MAPPINGS[e.stimgen_type])
+    stimgen = stimgen_from_json(e.stimgen_settings, e.stimgen_type)
 
     # Decide on n_trials using existing data
     current_trials = find(
@@ -170,7 +172,7 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
 
     # Get experiment info and create stimgen struct
     e = findone(Experiment; name = getindex(parameters, "name"))
-    stimgen = JSON3.read(e.stimgen_settings, STIMGEN_MAPPINGS[e.stimgen_type])
+    stimgen = stimgen_from_json(e.stimgen_settings, e.stimgen_type)
 
     # Decide on n_trials using existing data
     current_trials = find(
