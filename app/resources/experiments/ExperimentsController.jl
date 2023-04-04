@@ -16,7 +16,7 @@ using InteractiveUtils: subtypes
 using SearchLight
 using SearchLight.Validation
 using JSON3
-using StructTypes
+using OrderedCollections
 
 
 """
@@ -65,21 +65,6 @@ const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
     "PowerDistribution" => PowerDistribution,
 )
 
-# Register stimgens with StructTypes.
-StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
-StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
-StructTypes.StructType(::Type{UniformPrior}) = StructTypes.Struct()
-StructTypes.StructType(::Type{GaussianPrior}) = StructTypes.Struct()
-StructTypes.StructType(::Type{Brimijoin}) = StructTypes.Struct()
-StructTypes.StructType(::Type{Bernoulli}) = StructTypes.Struct()
-StructTypes.StructType(::Type{BrimijoinGaussianSmoothed}) = StructTypes.Struct()
-StructTypes.StructType(::Type{GaussianNoise}) = StructTypes.Struct()
-StructTypes.StructType(::Type{UniformNoise}) = StructTypes.Struct()
-StructTypes.StructType(::Type{GaussianNoiseNoBins}) = StructTypes.Struct()
-StructTypes.StructType(::Type{UniformNoiseNoBins}) = StructTypes.Struct()
-StructTypes.StructType(::Type{UniformPriorWeightedSampling}) = StructTypes.Struct()
-StructTypes.StructType(::Type{PowerDistribution}) = StructTypes.Struct()
-
 """
     _subtypes(type::Type)    
 
@@ -100,6 +85,20 @@ function _subtypes!(out, type::Type)
         foreach(T -> _subtypes!(out, T), subtypes(type))
     end
     return out
+end
+
+""" 
+    stimgen_from_json(json::T, name::T) where {T<:AbstractString}
+
+Returns a fully instantiated stimgen type from JSON string of field values and type name.
+"""
+function stimgen_from_json(json::T, name::T) where {T<:AbstractString}
+    j = JSON3.read(json, Dict{Symbol,Any})
+    try
+        map!(x -> Meta.parse(x), values(j))
+    finally
+        return STIMGEN_MAPPINGS[name](; j...)
+    end
 end
 
 """
@@ -153,7 +152,7 @@ function view_exp()
 
     # Pre-process experiment fields
     exp_data = Dict() # Can't initialize length b/c varying stimgen_settings fields
-    skip_fields = [:id, :settings_hash, :bin_probs, :distribution, :distribution_filepath]
+    skip_fields = [:id, :settings_hash]
     skip_settings = [:bin_probs, :distribution, :distribution_filepath]
     for field in fieldnames(typeof(ex))
         if field in skip_fields
@@ -216,8 +215,6 @@ function get_exp_fields()
         if fieldtype <: Real
             input_type = "number"
             step = fieldtype <: Integer ? "1" : "any"
-        elseif fieldtype <: AbstractString
-            input_type = "text"
         else
             input_type = "text"
         end
@@ -255,8 +252,6 @@ function get_exp_fields(ex::E) where {E<:Experiment}
         if fieldtype <: Real
             input_type = "number"
             step = fieldtype <: Integer ? "1" : "any"
-        elseif fieldtype <: AbstractString
-            input_type = "text"
         else
             input_type = "text"
         end
@@ -286,16 +281,16 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
     current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
 
     fnames = fieldnames(typeof(s))
+    exclude = [:bin_probs, :distribution, :distribution_filepath]
+    sg_inds = findall(!in(exclude), fnames)
 
-    sg_fields = Vector{NamedTuple}(undef, length(fnames))
-    for (ind, field) in enumerate(fnames)
+    sg_fields = Vector{NamedTuple}(undef, length(fnames[sg_inds]))
+    for (ind, field) in enumerate(fnames[sg_inds])
         fieldtype = typeof(getproperty(s, field))
         step = nothing
         if fieldtype <: Real
             input_type = "number"
             step = fieldtype <: Integer ? "1" : "any"
-        elseif fieldtype <: AbstractString
-            input_type = "text"
         else
             input_type = "text"
         end
@@ -367,7 +362,7 @@ function create()
             return redirect("/create")
         end
         type = ex.stimgen_type
-        stimgen = JSON3.read(ex.stimgen_settings, STIMGEN_MAPPINGS[type])
+        stimgen = stimgen_from_json(ex.stimgen_settings, type)
         exp_fields = get_exp_fields(ex)
         stimgen_fields = get_stimgen_fields(stimgen)
     else
@@ -391,9 +386,18 @@ function save_exp()
     sg_data = jsonpayload("stimgen")
     sg_type = jsonpayload("stimgen_type")
 
-    # Ensures valid stimgen and hash consistency
-    stimgen = JSON3.read(sg_data, STIMGEN_MAPPINGS[sg_type]; parsequoted = true)
-    ex = Experiment(; stimgen_settings = JSON3.write(stimgen), stimgen_type = sg_type)
+    # Ensures valid stimgen and hash consistency (field order)
+    stimgen = stimgen_from_json(sg_data, sg_type)
+
+    # Create ordered dictionary without values in exclude
+    exclude = [:bin_probs, :distribution, :distribution_filepath]
+    LD = LittleDict(
+        key => getfield(stimgen, key) for
+        key in fieldnames(typeof(stimgen)) if !(key in exclude)
+    )
+
+    # Make Experiment from LD
+    ex = Experiment(; stimgen_settings = JSON3.write(LD), stimgen_type = sg_type)
 
     # Add fields to experiment.
     for field in eachindex(exp_data)
