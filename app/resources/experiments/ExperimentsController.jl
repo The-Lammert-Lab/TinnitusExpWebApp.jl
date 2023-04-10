@@ -386,18 +386,7 @@ function save_exp()
     sg_data = jsonpayload("stimgen")
     sg_type = jsonpayload("stimgen_type")
 
-    # Ensures valid stimgen and hash consistency (field order)
-    stimgen = stimgen_from_json(sg_data, sg_type)
-
-    # Create ordered dictionary without values in exclude
-    exclude = [:bin_probs, :distribution, :distribution_filepath]
-    LD = LittleDict(
-        key => getfield(stimgen, key) for
-        key in fieldnames(typeof(stimgen)) if !(key in exclude)
-    )
-
-    # Make Experiment from LD
-    ex = Experiment(; stimgen_settings = JSON3.write(LD), stimgen_type = sg_type)
+    ex = Experiment(; stimgen_settings = sg_data, stimgen_type = sg_type)
 
     # Add fields to experiment.
     for field in eachindex(exp_data)

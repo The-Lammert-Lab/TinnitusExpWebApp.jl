@@ -217,7 +217,18 @@ end
 function experiment()
     authenticated!()
     # Params = :name, :instance, :from
+
+    # Validate that name refers to a real Experiment
+    # Validaton of the trials is done during save.
     experiment = findone(Experiment; name = params(:name))
+    if isnothing(experiment)
+        return Router.error(
+            INTERNAL_ERROR,
+            """Experiment with name "$(params(:name))" could not be found""",
+            MIME"application/json",
+        )
+    end
+
     GenieSession.set!(:n_trials, experiment.n_trials)
     if params(:from) == "rest"
         from_rest = true
