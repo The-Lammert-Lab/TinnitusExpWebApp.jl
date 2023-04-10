@@ -27,11 +27,11 @@ const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
 )
 
 """
-    stimgen_from_json(json::T, name::T) where {T<:AbstractString}
+    stimgen_from_json(json::AbstractString, name::AbstractString)
 
 Returns a fully instantiated stimgen type from JSON string of field values and type name.
 """
-function stimgen_from_json(json::T, name::T) where {T<:AbstractString}
+function stimgen_from_json(json::AbstractString, name::AbstractString)
     j = JSON3.read(json, Dict{Symbol,Any})
     try
         map!(x -> Meta.parse(x), values(j))

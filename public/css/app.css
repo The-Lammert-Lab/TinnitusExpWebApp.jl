@@ -38,7 +38,7 @@ label {
 }
 
 /* Logout button in top right */
-.logoutLblPos {
+.logout-button {
   position: fixed;
   right: 10px;
   top: 5px;

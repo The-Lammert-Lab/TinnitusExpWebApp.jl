@@ -15,7 +15,7 @@ function up()
         stimgen_settings = stimgen_settings,
         stimgen_type = stimgen_type,
         n_trials = 10,
-        name = "TestExperiment_1",
+        name = "Test Experiment 1",
     ) |> save!
 
     Experiment(;
@@ -28,8 +28,8 @@ function up()
 end
 
 function down()
-    findone(Experiment, name = "TestExperiment_1") |> delete
-    findone(Experiment, name = "TestExperiment_2") |> delete
+    findone(Experiment; name = "Test Experiment 1") |> delete
+    findone(Experiment; name = "Test Experiment 2") |> delete
 end
 
 end
