@@ -1,2 +1,3 @@
 # Ignore all Julia HTML files:
 *.jl.html
+connection.yml
