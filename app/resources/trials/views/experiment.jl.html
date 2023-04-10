@@ -39,7 +39,7 @@
     <div>
         <!-- Create and label each stim wav file (base64 encoded) -->
         <% if !from_rest
-            for_each(stimuli) do stimulus 
+            for_each(stimuli) do stim
                 counter += 1 
         %> 
                 <audio 
@@ -48,7 +48,7 @@
                     onended="document.getElementById('yes').disabled=false; 
                         document.getElementById('no').disabled=false;
                         this.remove();" 
-                    src="data:audio/wav;base64,$(stimulus)" 
+                    src="data:audio/x-wav;base64,$(stim)"
                     preload="auto">
                 </audio>
             <% end 
