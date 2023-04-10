@@ -27,7 +27,7 @@ const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
 )
 
 """
-    function stimgen_from_json(json::AbstractString, name::AbstractString)
+    stimgen_from_json(json::AbstractString, name::AbstractString)
 
 Returns a fully instantiated stimgen type from JSON string of field values and type name.
 """
