@@ -18,6 +18,7 @@ mutable struct Experiment <: AbstractModel
     settings_hash::String
 
     # Inner constructor to force consistency in settings_hash
+    # TODO: Try adding in create stimgen here to validate settings, take hash from that.
     function Experiment(;
         id::DbId = DbId(),
         stimgen_settings::AbstractString = "",
