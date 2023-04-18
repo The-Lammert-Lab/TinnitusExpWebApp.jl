@@ -1,81 +1,81 @@
-<% partial("app/layouts/_logout.jl.html") %>
-<div>
-    <h1>Manage User: $(params(:username))</h1>
-</div>
-<div>
-    <!-- TODO: Add sort feature -->
-    <table class="styled-table">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Instance</th>
-                <th>Percent complete</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="userexperiment-tbody">
-        <% for_each(added_experiments) do e %>
-            <tr>
-                <td>$(e.experiment_name)</td>
-                <td>$(e.instance)</td>
-                <td>$(round(Int, 100*e.frac_complete))&percnt;</td>
-                <%  if e.frac_complete == 0  %>
-                    <td>
-                        <form style="float:left;" name="remove-form" method="post">
-                            <input type="hidden" name="name" value="$(e.experiment_name)">
-                            <input type="hidden" name="instance" value="$(e.instance)">
-                            <input type="hidden" name="user_id" value="$(user_id)">
-                            <input type="submit" value="Remove"></input>
-                        </form>
-                    </td>
-                <%  elseif !(
-                        e.experiment_name in getproperty.(unstarted_experiments, :experiment_name)
-                    ) && e.frac_complete < 1 
+<% partial("app/layouts/_admin_header.jl.html") %>
+
+<div class="container">
+    <div class="row">
+        <h1>Manage User: $(params(:username))</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-md-auto">
+            <!-- TODO: Add sort feature -->
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Instance</th>
+                        <th>Percent complete</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="userexperiment-tbody">
+                <% for_each(added_experiments) do e %>
+                    <tr>
+                        <td>$(e.experiment_name)</td>
+                        <td>$(e.instance)</td>
+                        <td>$(round(Int, 100*e.frac_complete))&percnt;</td>
+                        <%  if e.frac_complete == 0  %>
+                            <td>
+                                <form style="float:left;" name="remove-form" method="post">
+                                    <input type="hidden" name="name" value="$(e.experiment_name)">
+                                    <input type="hidden" name="instance" value="$(e.instance)">
+                                    <input type="hidden" name="user_id" value="$(user_id)">
+                                    <input type="submit" value="Remove"></input>
+                                </form>
+                            </td>
+                        <%  elseif !(
+                                e.experiment_name in getproperty.(unstarted_experiments, :experiment_name)
+                            ) && e.frac_complete < 1 
+                        %>
+                                <td> 
+                                    <form style="float:left;" name="restart-form">
+                                        <input type="hidden" name="name" value="$(e.experiment_name)">
+                                        <input type="hidden" name="instance" value="$(e.instance)">
+                                        <input type="hidden" name="user_id" value="$(user_id)">
+                                        <input type="submit" value="Restart"></input>
+                                    </form>
+                                </td>
+                        <%  else  %>
+                            <td>None</td>
+                        <%  end  %>
+                    </tr>
+                <% end %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        <!-- TODO: Check if action and method are necessary here -->
+        <form id="add-form" action="/add" method="post">
+            <label>Add experiment:</label>
+            <select name="experiment" id="add-experiment">
+                <option value="default" selected>Choose here</option>
+                <%  for_each(experiments) do e 
+                        if e.name in getproperty.(unstarted_experiments, :experiment_name)
                 %>
-                        <td> 
-                            <form style="float:left;" name="restart-form">
-                                <input type="hidden" name="name" value="$(e.experiment_name)">
-                                <input type="hidden" name="instance" value="$(e.instance)">
-                                <input type="hidden" name="user_id" value="$(user_id)">
-                                <input type="submit" value="Restart"></input>
-                            </form>
-                        </td>
-                <%  else  %>
-                    <td>None</td>
-                <%  end  %>
-            </tr>
-        <% end %>
-        </tbody>
-    </table>
-</div>
+                            <option value="$(e.name)" disabled>$(e.name)</option>
+                        <% else %>
+                            <option value="$(e.name)">$(e.name)</option>
+                        <% end %>
+                <% end %>
+            </select>
+            <input type="hidden" name="user_id" value="$(user_id)">
+            <input id="add-submit" type="submit" value="Add" disabled>
+        </form>
+    </div>
 
-<div>
-    <!-- TODO: Check if action and method are necessary here -->
-    <form id="add-form" action="/add" method="post">
-        <label>Add experiment:</label>
-        <select name="experiment" id="add-experiment">
-            <option value="default" selected>Choose here</option>
-            <%  for_each(experiments) do e 
-                    if e.name in getproperty.(unstarted_experiments, :experiment_name)
-            %>
-                        <option value="$(e.name)" disabled>$(e.name)</option>
-                    <% else %>
-                        <option value="$(e.name)">$(e.name)</option>
-                    <% end %>
-            <% end %>
-        </select>
-        <input type="hidden" name="user_id" value="$(user_id)">
-        <input id="add-submit" type="submit" value="Add" disabled>
-    </form>
+    <div id="snackbar"></div>
 </div>
-
-<div>
-    <form style="margin-top:10px;" action="/admin">
-        <input type="submit" value="Back to admin page">
-    </form>
-</div>
-
-<div id="snackbar"></div>
 
 <script>
     ready(showToast)

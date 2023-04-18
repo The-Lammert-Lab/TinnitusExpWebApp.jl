@@ -210,10 +210,6 @@ end
 
 #########################
 
-function index()
-    html(:trials, :index)
-end
-
 function experiment()
     authenticated!()
     # Params = :name, :instance, :from

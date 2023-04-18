@@ -1,9 +1,17 @@
-<body>
-    <% partial("app/layouts/_logout.jl.html") %>
-    <div>
-        <h1>Home page!</h1>
-    </div>
-    <div>
+<% 
+if is_admin
+    partial("app/layouts/_admin_header.jl.html")
+else
+    partial("app/layouts/_user_header.jl.html")
+end
+%>
+
+<div class="container">
+    <h1>Experiment profile: $(username)</h1>
+</div>
+
+<div class="container">
+    <div class="align-items-center">
         <!-- TODO: Add sort feature -->
         <table class="styled-table">
             <thead>
@@ -46,4 +54,4 @@
             </tbody>
         </table>
     </div>
-</body>
+</div>

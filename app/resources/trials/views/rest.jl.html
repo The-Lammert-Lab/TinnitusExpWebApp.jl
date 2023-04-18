@@ -1,16 +1,14 @@
-<body>
-    <div>
-        <strong>Rest!</strong>
-        <button id="continue" type="button" onclick="restToExp();" disabled="true">Continue</button>
-        <button type="button" onclick="window.location.href = '/home';">Return home</button>
-    </div>
+<div>
+    <strong>Rest!</strong>
+    <button id="continue" type="button" onclick="restToExp();" disabled="true">Continue</button>
+    <button type="button" onclick="window.location.href = '/home';">Return home</button>
+</div>
 
-    <script> 
-        window.onload = getAndStoreAudio;
-        document.addEventListener("keyup", function(e) {
-            if (e.which == 13) {
-                document.getElementById("continue").click();
-            }
-        }); 
-    </script>
-</body>
+<script> 
+    window.onload = getAndStoreAudio;
+    document.addEventListener("keyup", function(e) {
+        if (e.which == 13) {
+            document.getElementById("continue").click();
+        }
+    }); 
+</script>

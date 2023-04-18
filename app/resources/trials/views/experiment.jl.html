@@ -1,4 +1,4 @@
-<style media="screen">
+<!-- <style media="screen">
     * {
         margin: 0;
         padding: 0;
@@ -33,47 +33,47 @@
         cursor: pointer;
         background: #053056;
     }
-</style>
+</style> -->
 
-<body>
-    <div>
-        <!-- Create and label each stim wav file (base64 encoded) -->
-        <% if !from_rest
-            for_each(stimuli) do stim
-                counter += 1 
-        %> 
-                <audio 
-                    id="$counter" 
-                    name="stimulus" 
-                    onended="document.getElementById('yes').disabled=false; 
-                        document.getElementById('no').disabled=false;
-                        this.remove();" 
-                    src="data:audio/x-wav;base64,$(stim)"
-                    preload="auto">
-                </audio>
-            <% end 
-            else %>
-                <!-- Generate audio elements with JS (after first block)-->
-                <script> getAudioFromStorage(); </script>
-            <% end %>
+<!-- Create and label each stim wav file (base64 encoded) -->
+<% if !from_rest
+for_each(stimuli) do stim
+    counter += 1 
+%> 
+    <audio 
+        id="$counter" 
+        name="stimulus" 
+        onended="document.getElementById('yes').disabled=false; 
+            document.getElementById('no').disabled=false;
+            this.remove();" 
+        src="data:audio/wav;base64,$(stim)"
+        preload="auto">
+    </audio>
+<% end 
+else %>
+    <!-- Generate audio elements with JS (after first block)-->
+    <script> getAudioFromStorage(); </script>
+<% end %>
 
-        <button id="yes" onclick="recordAndPlay('yes');" disabled=true>Yes! (f)</button>
-        <button id="no" onclick="recordAndPlay('no');" disabled=true>No! (j)</button>
-        <button id="start" onclick="document.getElementById('1').play(); this.disabled=true;">Start! (Enter)</button>
-    </div>
+<div class="container">
+    <button class="btn btn-secondary" id="yes" name="response" onclick="recordAndPlay('yes');" disabled=true>Yes! (f)</button>
+    
+    <button class="btn btn-secondary" id="no" name="response" onclick="recordAndPlay('no');" disabled=true>No! (j)</button>
 
-    <script type="text/javascript">
-        // f - 70, j - 74, enter - 13
-        document.addEventListener("keyup", function(e){
-            if(e.which == 70){
-                document.getElementById("yes").click();     
-            }
-            else if(e.which == 74){
-                document.getElementById("no").click();
-            }
-            else if(e.which == 13){
-                document.getElementById("start").click();
-            }
-        });
-    </script>
-</body>
+    <button class="btn btn-primary" id="start" onclick="document.getElementById('1').play(); this.setAttribute('class', 'btn btn-secondary'); this.disabled=true; document.getElementsByName('response').forEach(x => x.setAttribute('class','btn btn-primary'));">Start! (Enter)</button>
+</div>
+
+<script type="text/javascript">
+    // f - 70, j - 74, enter - 13
+    document.addEventListener("keyup", function(e){
+        if(e.which == 70){
+            document.getElementById("yes").click();     
+        }
+        else if(e.which == 74){
+            document.getElementById("no").click();
+        }
+        else if(e.which == 13){
+            document.getElementById("start").click();
+        }
+    });
+</script>

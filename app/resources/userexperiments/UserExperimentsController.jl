@@ -13,7 +13,7 @@ using GenieAuthentication
 
 function restart_exp()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
@@ -56,7 +56,7 @@ end
 
 function remove_exp()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
@@ -95,7 +95,7 @@ end
 
 function add_exp()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     name = jsonpayload("experiment")
     user_id = parse(Int, jsonpayload("user_id"))
@@ -145,10 +145,13 @@ end
 
 #########################
 
-function home()
+function profile()
     authenticated!()
     added_experiments = find(UserExperiment; user_id = current_user_id())
-    html(:userexperiments, :home; added_experiments)
+    user = current_user()
+    is_admin = user.is_admin
+    username = user.username
+    html(:userexperiments, :profile; added_experiments, is_admin, username)
 end
 
 end

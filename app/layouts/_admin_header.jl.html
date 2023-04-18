@@ -1,0 +1,35 @@
+<div class="container">
+    <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom">
+        <a class="d-flex align-items-center col-md-3 mb-2 mb-md-0 text-dark text-decoration-none" href="/">
+            <img class="me-2 rounded" src="/img/logo-mj.png" width="40" height="32">
+        </a>
+        <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+            <li>
+                <a id="/create" class="nav-link px-2 link-dark" href="/create">New Experiment</a>
+            </li>
+            <li>
+                <a id="/register" class="nav-link px-2 link-dark" href="/register">New User</a>
+            </li>
+            <li>
+                <a id="/admin" class="nav-link px-2 link-dark" href="/admin">Admin Profile</a>
+            </li>
+            <li>
+                <a id="/profile" class="nav-link px-2 link-dark" href="/profile">Experiment Profile</a>
+            </li>
+            <li>
+                <a id="/FAQ" class="nav-link px-2 link-dark" href="/FAQ">FAQ</a>
+            </li>
+        </ul>
+        <div class="col-md-3 text-end">
+            <a href="/logout" class="btn btn-outline-primary">Log out</a>
+        </div>
+    </header>
+</div>
+
+<script>
+    const pathname = window.location.pathname;
+    const li = document.getElementById(pathname);
+    if (li !== null) {
+        li.setAttribute("class", "nav-link px-2 link-secondary")
+    };
+</script>

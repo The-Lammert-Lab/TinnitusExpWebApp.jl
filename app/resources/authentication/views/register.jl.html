@@ -1,52 +1,34 @@
-<h1 class="display-3">Register</h1>
+<% partial("app/layouts/_admin_header.jl.html") %>
 
-<p>
-  <span>$(output_flash())</span>
-</p>
-
-<form
-  id="register-form"
-  onsubmit="if (document.getElementById('admin-flag').checked) {return confirm('Are you sure you want this user to be an admin?')}"
-  method="POST"
-  action="$(linkto(:register))"
-  enctype="multipart/form-data"
->
-  <div class="form-group">
-    <label _for="auth_username">Username</label>
-    <input
-      type="text"
-      id="auth_username"
-      name="username"
-      class="form-control"
-      placeholder="User"
-    />
-  </div>
-
-  <div class="form-group">
-    <label _for="auth_password">Password</label>
-    <input
-      type="password"
-      id="auth_password"
-      name="password"
-      class="form-control"
-      placeholder="Password"
-    />
-  </div>
-
-  <div>
-    <label _for="admin-flag">Admin?</label>
-    <input type="hidden" id="admin-flag-hidden" name="is_admin" value="false" />
-    <input type="checkbox" id="admin-flag" name="is_admin" value="true" />
-  </div>
-
-  <input type="submit" value="Register" class="btn btn-primary" />
-</form>
-
-<div>
-  <form style="margin-top: 10px" action="/admin">
-    <input type="submit" value="Back to admin page" />
-  </form>
+<div class="container d-flex justify-content-center align-items-center mb-4">
+  <h1>Register a new user</h1>
 </div>
+
+<div class="container d-flex justify-content-center align-items-center">
+  <form class="card p-3 bg-light" id="register-form" onsubmit="if (document.getElementById('admin-flag').checked) {return confirm('Are you sure you want this user to be an admin?')}" method="POST" action="$(linkto(:register))" enctype="multipart/form-data">
+    <div class="form-group mb-2">
+      <label _for="auth_username">Username</label>
+      <input type="text" id="auth_username" name="username" class="form-control" placeholder="User"/>
+    </div>
+
+    <div class="form-group mb-2">
+      <label _for="auth_password">Password</label>
+      <input type="password" id="auth_password" name="password" class="form-control" placeholder="Password"/>
+    </div>
+
+    <div class="form-group mb-2">
+      <div class="form-check">
+        <input type="hidden" id="admin-flag-hidden" name="is_admin" value="false" />
+        <input class="form-check-input" type="checkbox" id="admin-flag" name="is_admin" value="true" />
+        <label class="form-check-label" for="admin-flag">Admin?</label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <input type="submit" value="Register" class="btn btn-primary" />
+    </div>
+  </form>
+<div>
 
 <script>
   document.getElementById("register-form").addEventListener("submit", () => {

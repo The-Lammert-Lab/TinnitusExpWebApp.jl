@@ -3,8 +3,16 @@
 // Main protocol logic
 function recordAndPlay(ans) {
   // Interpret response
-  // TODO: Make more robust (?)
-  const val = ans === "yes" ? 1 : -1;
+
+  var val = 0;
+  if (ans === "yes") {
+    val = 1;
+  } else if (ans === "no") {
+    val = -1;
+  } else {
+    window.alert("Unexpected response received. Please restart and try again.");
+    window.location.replace("/profile");
+  }
 
   // Save response
   axios
@@ -44,13 +52,13 @@ function recordAndPlay(ans) {
     .catch(function (error) {
       if (error.response) {
         window.alert(error.response.data.error);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       } else if (error.request) {
         window.alert(error.request);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       } else {
         window.alert("Error: " + error.message);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       }
       return;
     });
@@ -62,7 +70,7 @@ function getAudioFromStorage() {
   const stims = JSON.parse(sessionStorage.getItem("stims"));
   if (stims === null) {
     window.alert("Unable to load stimuli. Click 'OK' to return home.");
-    return window.location.replace("/home");
+    return window.location.replace("/profile");
   }
 
   // Create the elements
@@ -115,13 +123,13 @@ function getAndStoreAudio() {
     .catch(function (error) {
       if (error.response) {
         window.alert(error.response.data.error);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       } else if (error.request) {
         window.alert(error.request);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       } else {
         window.alert("Error: " + error.message);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       }
       return;
     });

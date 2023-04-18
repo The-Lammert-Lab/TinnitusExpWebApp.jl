@@ -1,12 +1,11 @@
-<h1 id="header1">Create an experiment!</h1>
-<% partial("app/layouts/_logout.jl.html") %>
+<% partial("app/layouts/_admin_header.jl.html") %>
 
-<span id="dock"></span>
+<div class="container">
+    <h1>Create an experiment</h1>
 
-<div>
-    <form id="exptype-form">
-        <label>Stimulus Type:</label>
-        <select name="type" id="type-ddl">
+    <form class="d-flex flex-row align-items-center flex-wrap" id="exptype-form">
+        <label class="my-1 me-2" for="type-ddl">Stimulus Type:</label>
+        <select class="form-select my-1 me-sm-2 w-auto" name="type" id="type-ddl">
             <option value="default">Select a type</option>
             <% for_each(stimgen_types) do s 
                 if s == type %>
@@ -16,11 +15,9 @@
                 <% end
             end %>
         </select>
-        <input id="exptype-submit" type="submit" value="Choose" disabled>
+        <button class="btn btn-primary my-1" id="exptype-submit" type="submit" disabled>Choose</button>
     </form>
-</div>
 
-<div>
     <form id="create-form">
         <table class="styled-table">
             <thead>
@@ -66,12 +63,6 @@
         <% ] else %>
             <input id="saveButton" type="submit" value="Save" disabled>
         <% end %>
-    </form>
-</div>
-
-<div>
-    <form action="/admin">
-        <input style="margin-top:2px;" type="submit" value="Back to main page"></input>
     </form>
 </div>
 

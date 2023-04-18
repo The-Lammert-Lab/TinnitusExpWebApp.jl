@@ -116,7 +116,7 @@ Returns JSON response of requested experiment's fields and status for all users.
 """
 function view_exp()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     ex = findone(Experiment; name = params(:name))
     if ex === nothing
@@ -192,7 +192,7 @@ Returns Vector{NamedTuple} corresponding to each non-stimgen field in a generic 
 """
 function get_exp_fields()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     ex = Experiment()
     fnames = fieldnames(typeof(ex))
@@ -230,7 +230,7 @@ end
 
 function get_exp_fields(ex::E) where {E<:Experiment}
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     fnames = fieldnames(typeof(ex))
     exclude = [
@@ -278,7 +278,7 @@ Returns Vector{NamedTuple} corresponding to each field in the stimgen struct `s`
 """
 function get_stimgen_fields(s::SG) where {SG<:Stimgen}
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     fnames = fieldnames(typeof(s))
     exclude = [:bin_probs, :distribution, :distribution_filepath]
@@ -316,7 +316,7 @@ end
 
 function admin()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     experiments = all(Experiment)
     users = find(User; is_admin = false)
@@ -326,7 +326,7 @@ end
 
 function manage()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     user_id = findone(User; username = params(:username)).id
 
@@ -346,7 +346,7 @@ end
 
 function create()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     full_types = _subtypes(Stimgen)
     stimgen_types = Vector{String}(undef, length(full_types))
@@ -443,7 +443,7 @@ end
 
 function delete_exp()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     ex = findone(Experiment; name = params(:name))
     if ex === nothing

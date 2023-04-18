@@ -1,3 +1,13 @@
+html * {
+  font-family: -apple-system, BlinkMacSystemFont, “Segoe UI”, “Roboto”, “Oxygen”,
+    “Ubuntu”, “Cantarell”, “Fira Sans”, “Droid Sans”, “Helvetica Neue”,
+    sans-serif;
+}
+
+body {
+  background-color: #f4f3f2;
+}
+
 /* copied from https://dev.to/dcodeyt/creating-beautiful-html-tables-with-css-428l so it looks reasonable*/
 .styled-table {
   border-collapse: collapse;
@@ -29,19 +39,6 @@
 
 .styled-table tbody tr:last-of-type {
   border-bottom: 2px solid #009879;
-}
-
-/* Label on top of dropdown, not next to */
-input,
-label {
-  display: block;
-}
-
-/* Logout button in top right */
-.logout-button {
-  position: fixed;
-  right: 10px;
-  top: 5px;
 }
 
 /* Toast notificaiton */

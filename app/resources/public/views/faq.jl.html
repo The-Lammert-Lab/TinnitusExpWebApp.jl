@@ -1,0 +1,9 @@
+<%
+if is_admin === nothing
+  partial("app/layouts/_generic_header.jl.html")
+elseif is_admin
+  partial("app/layouts/_admin_header.jl.html")
+else
+  partial("app/layouts/_user_header.jl.html")
+end
+%>
