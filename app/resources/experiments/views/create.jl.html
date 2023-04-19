@@ -66,8 +66,16 @@
     </form>
 </div>
 
-<div id="snackbar"></div>
-
+<div aria-live="polite" aria-atomic="true" class="toast-container p-3 bottom-0 start-50 translate-middle-x">
+    <div id="Toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+        <strong class="me-auto">Info</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+        </div>
+    </div>
+</div>
 <script>
     ready(showToast)
 

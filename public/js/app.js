@@ -64,6 +64,20 @@ function recordAndPlay(ans) {
     });
 } // function
 
+// Update progress bar on the experiment page
+function updateProgress() {
+  const bar = document.getElementsByClassName("progress-bar")[0];
+  const percent =
+    -100 *
+    (
+      document.getElementsByName("stimulus").length /
+        sessionStorage.getItem("init_n_stimuli") -
+      1
+    ).toFixed(2);
+  bar.setAttribute("style", "width: " + percent + "%");
+  bar.setAttribute("aria-valuenow", percent);
+} // function
+
 // Load html audio elements from local storage
 function getAudioFromStorage() {
   // Get data from local storage
@@ -111,15 +125,20 @@ function getAndStoreAudio() {
       name: params.get("name"),
       instance: params.get("instance"),
     })
-    .then(function (stimuli) {
-      sessionStorage.setItem("stims", JSON.stringify(stimuli.data));
+    .then(function (response) {
+      sessionStorage.setItem(
+        "stims",
+        JSON.stringify(response.data.stimuli.value)
+      );
+      sessionStorage.setItem(
+        "remaining_blocks",
+        response.data.remaining_blocks.value
+      );
     })
     .then(function () {
       // Only allow continuing once stimuli have been stored.
       document.getElementById("continue").disabled = false;
     })
-    // Debugging purposes.
-    // TODO: Do something meaningful on error
     .catch(function (error) {
       if (error.response) {
         window.alert(error.response.data.error);
@@ -385,6 +404,53 @@ function saveExperiment(form) {
     });
 } // function
 
+function createExpButtons() {
+  const template_submit = document.getElementById("template-submit");
+  const template_input = document.getElementById("template-name");
+  const delete_submit = document.getElementById("delete-submit");
+  const delete_input = document.getElementById("delete-name");
+  if (ddl.value !== "default") {
+    viewExperiment(ddl.value) // Returns a Promise
+      .then((added_to_a_user) => {
+        template_input.setAttribute("value", ddl.value);
+        delete_input.setAttribute("value", ddl.value);
+
+        if (template_submit === null) {
+          let submit = document.createElement("button");
+          submit.setAttribute("id", "template-submit");
+          submit.setAttribute("type", "submit");
+          submit.setAttribute("class", "btn btn-outline-dark");
+          submit.innerHTML = "Create experiment from this template";
+          document
+            .getElementById("create-from-template-form")
+            .appendChild(submit);
+        }
+
+        // Only create delete button if it doesn't exist already and
+        // experiment is not added to any user
+        if (added_to_a_user && delete_submit !== null) {
+          delete_submit.remove();
+        } else if (!added_to_a_user && delete_submit === null) {
+          let submit = document.createElement("button");
+          submit.setAttribute("id", "delete-submit");
+          submit.setAttribute("type", "submit");
+          submit.setAttribute("class", "btn btn-outline-danger");
+          submit.innerHTML = "Delete this experiment";
+          document.getElementById("delete-form").appendChild(submit);
+        }
+      })
+      // Error handled in viewExperiment. This prevents any code from running.
+      .catch((error) => {});
+  } else {
+    document.getElementById("experiment-settings").innerHTML = "";
+    document.getElementById("user-experiment-data").innerHTML = "";
+    template_submit.remove();
+    template_input.setAttribute("value", "");
+    delete_submit.remove();
+    delete_input.setAttribute("value", "");
+  }
+} // function
+
 // $(document).ready replacement for no jQuery.
 function ready(fn) {
   if (document.readyState !== "loading") {
@@ -398,15 +464,13 @@ function ready(fn) {
 function showToast() {
   const msg = sessionStorage.getItem("ToastMsg");
   if (msg !== null) {
-    let x = document.getElementById("snackbar");
-    x.innerHTML = msg;
-    x.className = "show";
+    const body = document.getElementsByClassName("toast-body")[0];
+    body.innerHTML = msg;
+    const toast = new bootstrap.Toast(document.getElementById("Toast"));
+    toast.show();
     sessionStorage.clear("ToastMsg");
-    setTimeout(function () {
-      x.className = x.className.replace("show", "");
-    }, 3000);
   }
-} // function
+}
 
 function deleteExperiment(form) {
   const formData = new FormData(form);

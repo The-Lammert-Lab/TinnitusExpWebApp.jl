@@ -34,8 +34,8 @@ const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
     "PowerDistribution" => PowerDistribution,
 )
 
-const IDEAL_BLOCK_SIZE = 80
-const MAX_BLOCK_SIZE = 120
+const IDEAL_BLOCK_SIZE = 8
+const MAX_BLOCK_SIZE = 12
 
 """
     stimgen_from_json(json::T, name::T) where {T<:AbstractString}
@@ -118,7 +118,7 @@ end
 """
     choose_n_trials(x::I) where {I<:Integer}
 
-Returns number of trials to use for this "block" based on `IDEAL_BLOCK_SIZE` and `MAX_BLOCK_SIZE`.
+Returns number of trials to use for this "block" based on `IDEAL_BLOCK_SIZE` and `MAX_BLOCK_SIZE` where `x` is the number of remaining trials.
 """
 choose_n_trials(x::I) where {I<:Integer} =
     return x <= MAX_BLOCK_SIZE ? x : oftype(x, IDEAL_BLOCK_SIZE)
@@ -147,6 +147,7 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
 
     remaining_trials = e.n_trials - length(current_trials)
     n_trials = choose_n_trials(remaining_trials)
+    remaining_blocks = ceil(Int, remaining_trials / n_trials)
 
     # Get stimuli vector
     # Second output of gen_b64_stimuli is binned_repr_matrix unless
@@ -164,7 +165,7 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
         ) for stim in eachcol(stim_rep_to_save)
     ]
 
-    return stimuli, block
+    return stimuli, block, remaining_blocks
 end
 
 function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
@@ -184,6 +185,7 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
 
     remaining_trials = e.n_trials - length(current_trials)
     n_trials = choose_n_trials(remaining_trials)
+    remaining_blocks = ceil(Int, remaining_trials / n_trials)
 
     # Get stimuli vector
     # Second output of gen_b64_stimuli is binned_repr_matrix unless
@@ -201,7 +203,7 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
         ) for stim in eachcol(stim_rep_to_save)
     ]
 
-    return stimuli, block
+    return stimuli, block, remaining_blocks
 end
 
 #########################
@@ -228,14 +230,15 @@ function experiment()
     GenieSession.set!(:n_trials, experiment.n_trials)
     if params(:from) == "rest"
         from_rest = true
+        remaining_blocks = 0
         html(:trials, :experiment; from_rest)
     else
         from_rest = false
-        stimuli, curr_block = gen_stim_and_block(params())
+        stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
         # Var for labelling audio elements
         counter = 0
         GenieSession.set!(:current_block, curr_block)
-        html(:trials, :experiment; stimuli, counter, from_rest)
+        html(:trials, :experiment; stimuli, counter, from_rest, remaining_blocks)
     end
 end
 
@@ -300,9 +303,9 @@ end
 
 function gen_stim_rest()
     authenticated!()
-    stimuli, curr_block = gen_stim_and_block(jsonpayload())
+    stimuli, curr_block, remaining_blocks = gen_stim_and_block(jsonpayload())
     GenieSession.set!(:current_block, curr_block)
-    json(stimuli)
+    json(Dict(:stimuli => (:value => stimuli), :remaining_blocks => (:value => remaining_blocks)))
 end
 
 function done()

@@ -1,39 +1,45 @@
-<!-- <style media="screen">
-    * {
-        margin: 0;
-        padding: 0;
-        border: none;
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    html,
+<style>
     body {
-        height: 100%;
-    }
-
-    body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
         background: #dff0f6;
     }
+</style>
 
-    button {
-        font-family: 'Open Sans', sans-serif;
-        font-size: 1.5rem;
-        color: #fff;
-        background: #034d85;
-        padding: 1.1rem 3.4rem;
-        border-radius: .2rem;
-        transition: opacity .2s;
+<script>
+    const rem_blocks = $(remaining_blocks);
+    if (rem_blocks != 0) {
+        sessionStorage.setItem("remaining_blocks", rem_blocks);
     }
+    sessionStorage.setItem("current_block", 1);
+</script>
 
-    button:hover {
-        cursor: pointer;
-        background: #053056;
-    }
-</style> -->
+<div class="container">
+    <div class="d-flex justify-content-center">
+        <h1 class="mt-5">Does this sound resemble your tinnitus?</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-4 offset-4 mt-4">
+            <label id="block-info" class="label label-default" for="prog-bar"></label>
+            <div class="progress" id="prog-bar">
+                <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vh-100 d-flex align-items-center justify-content-center">
+        <div class="row">
+            <div class="col-12 text-center">
+                <button class="btn btn-secondary btn-lg" id="yes" name="response" onclick="recordAndPlay('yes'); updateProgress();" disabled=true>Yes (F)</button>
+
+                <button class="btn btn-secondary btn-lg" id="no" name="response" onclick="recordAndPlay('no'); updateProgress();" disabled=true>No (J)</button>
+            </div>
+
+            <div class="col-12 mt-2 text-center">
+                <button class="btn btn-primary btn-lg" id="start" onclick="document.getElementById('1').play(); this.setAttribute('class', 'btn btn-secondary btn-lg'); this.disabled=true; document.getElementById('yes').setAttribute('class','btn btn-success btn-lg'); document.getElementById('no').setAttribute('class','btn btn-info btn-lg');">Start (Enter)</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Create and label each stim wav file (base64 encoded) -->
 <% if !from_rest
@@ -52,18 +58,16 @@ for_each(stimuli) do stim
 <% end 
 else %>
     <!-- Generate audio elements with JS (after first block)-->
-    <script> getAudioFromStorage(); </script>
+    <script>
+        getAudioFromStorage();
+        let current_block = parseInt(sessionStorage.getItem("current_block")) + 1
+        sessionStorage.setItem("current_block", current_block)
+    </script>
 <% end %>
 
-<div class="container">
-    <button class="btn btn-secondary" id="yes" name="response" onclick="recordAndPlay('yes');" disabled=true>Yes! (f)</button>
-    
-    <button class="btn btn-secondary" id="no" name="response" onclick="recordAndPlay('no');" disabled=true>No! (j)</button>
-
-    <button class="btn btn-primary" id="start" onclick="document.getElementById('1').play(); this.setAttribute('class', 'btn btn-secondary'); this.disabled=true; document.getElementsByName('response').forEach(x => x.setAttribute('class','btn btn-primary'));">Start! (Enter)</button>
-</div>
-
 <script type="text/javascript">
+    document.getElementById("block-info").innerHTML = "Block " + sessionStorage.getItem("current_block") + " of " + sessionStorage.getItem("remaining_blocks")
+
     // f - 70, j - 74, enter - 13
     document.addEventListener("keyup", function(e){
         if(e.which == 70){
@@ -76,4 +80,6 @@ else %>
             document.getElementById("start").click();
         }
     });
+
+    ready(sessionStorage.setItem("init_n_stimuli", document.getElementsByName("stimulus").length));
 </script>
