@@ -147,7 +147,9 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
 
     remaining_trials = e.n_trials - length(current_trials)
     n_trials = choose_n_trials(remaining_trials)
-    remaining_blocks = ceil(Int, remaining_trials / n_trials)
+
+    remaining_blocks = remaining_trials / n_trials    
+    remaining_blocks = !isnan(remaining_blocks) ? ceil(Int, remaining_blocks) : 0
 
     # Get stimuli vector
     # Second output of gen_b64_stimuli is binned_repr_matrix unless
@@ -185,7 +187,9 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
 
     remaining_trials = e.n_trials - length(current_trials)
     n_trials = choose_n_trials(remaining_trials)
-    remaining_blocks = ceil(Int, remaining_trials / n_trials)
+
+    remaining_blocks = remaining_trials / n_trials    
+    remaining_blocks = !isnan(remaining_blocks) ? ceil(Int, remaining_blocks) : 0
 
     # Get stimuli vector
     # Second output of gen_b64_stimuli is binned_repr_matrix unless
@@ -230,7 +234,6 @@ function experiment()
     GenieSession.set!(:n_trials, experiment.n_trials)
     if params(:from) == "rest"
         from_rest = true
-        remaining_blocks = 0
         html(:trials, :experiment; from_rest)
     else
         from_rest = false
@@ -274,6 +277,7 @@ function save_response()
         n_trials = findone(Experiment; name = curr_trial.experiment_name).n_trials
     end
     new_frac_complete = ((curr_usr_exp.frac_complete * n_trials) + 1) / n_trials
+    exp_complete = round(Int, new_frac_complete * n_trials) == n_trials ? true : false
 
     # Update
     curr_trial.response = jsonpayload("resp")
@@ -298,14 +302,14 @@ function save_response()
 
     # Save to db and send response
     save(curr_trial) && GenieSession.set!(:curr_block, curr_block)
-    save(curr_usr_exp) && json(Dict(:frac_complete => (:value => new_frac_complete)))
+    save(curr_usr_exp) && json(Dict(:exp_complete => (:value => exp_complete)))
 end
 
 function gen_stim_rest()
     authenticated!()
     stimuli, curr_block, remaining_blocks = gen_stim_and_block(jsonpayload())
     GenieSession.set!(:current_block, curr_block)
-    json(Dict(:stimuli => (:value => stimuli), :remaining_blocks => (:value => remaining_blocks)))
+    json(stimuli)
 end
 
 function done()

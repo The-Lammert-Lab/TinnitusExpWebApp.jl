@@ -4,14 +4,6 @@
     }
 </style>
 
-<script>
-    const rem_blocks = $(remaining_blocks);
-    if (rem_blocks != 0) {
-        sessionStorage.setItem("remaining_blocks", rem_blocks);
-    }
-    sessionStorage.setItem("current_block", 1);
-</script>
-
 <div class="container">
     <div class="d-flex justify-content-center">
         <h1 class="mt-5">Does this sound resemble your tinnitus?</h1>
@@ -41,8 +33,7 @@
     </div>
 </div>
 
-<!-- Create and label each stim wav file (base64 encoded) -->
-<% if !from_rest
+<% if !from_rest [
 for_each(stimuli) do stim
     counter += 1 
 %> 
@@ -55,13 +46,16 @@ for_each(stimuli) do stim
         src="data:audio/wav;base64,$(stim)"
         preload="auto">
     </audio>
-<% end 
-else %>
-    <!-- Generate audio elements with JS (after first block)-->
+<% end %>
+<script>
+    sessionStorage.setItem("remaining_blocks", $(remaining_blocks));
+    sessionStorage.setItem("current_block", 1);
+</script>
+<% ] else %>
     <script>
         getAudioFromStorage();
-        let current_block = parseInt(sessionStorage.getItem("current_block")) + 1
-        sessionStorage.setItem("current_block", current_block)
+        const current_block = parseInt(sessionStorage.getItem("current_block")) + 1;
+        sessionStorage.setItem("current_block", current_block);
     </script>
 <% end %>
 

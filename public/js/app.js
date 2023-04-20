@@ -24,7 +24,7 @@ function recordAndPlay(ans) {
       const stimuli = document.getElementsByName("stimulus");
 
       // Determine next action (go to done, rest, or play next stimulus)
-      if (parseFloat(response.data.frac_complete.value) >= 1) {
+      if (response.data.exp_complete.value) {
         window.location.replace("/done");
         return;
       } else if (stimuli.length === 0) {
@@ -126,14 +126,7 @@ function getAndStoreAudio() {
       instance: params.get("instance"),
     })
     .then(function (response) {
-      sessionStorage.setItem(
-        "stims",
-        JSON.stringify(response.data.stimuli.value)
-      );
-      sessionStorage.setItem(
-        "remaining_blocks",
-        response.data.remaining_blocks.value
-      );
+      sessionStorage.setItem("stims", JSON.stringify(response.data));
     })
     .then(function () {
       // Only allow continuing once stimuli have been stored.
