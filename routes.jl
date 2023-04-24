@@ -25,3 +25,4 @@ route("/remove", UserExperimentsController.remove_exp; method = POST)
 
 route("/", PublicController.index)
 route("/FAQ", PublicController.faq)
+route("/lab", PublicController.lab)
