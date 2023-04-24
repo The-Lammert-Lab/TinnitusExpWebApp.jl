@@ -27,9 +27,13 @@
             </div>
 
             <div class="col-12 mt-2 text-center">
-                <button class="btn btn-primary btn-lg" id="start" onclick="document.getElementById('1').play(); this.setAttribute('class', 'btn btn-secondary btn-lg'); this.disabled=true; document.getElementById('yes').setAttribute('class','btn btn-success btn-lg'); document.getElementById('no').setAttribute('class','btn btn-info btn-lg');">Start (Enter)</button>
+                <button class="btn btn-primary btn-lg" id="start" onclick="document.getElementById('1').play(); document.getElementById('yes').setAttribute('class','btn btn-success btn-lg'); document.getElementById('no').setAttribute('class','btn btn-info btn-lg'); this.remove();">Start (Enter)</button>
             </div>
         </div>
+    </div>
+
+    <div class="position-relative">
+        <a href="/profile" class="position-absolute bottom-0 end-0 btn btn-outline-secondary">Save and quit</a>
     </div>
 </div>
 
