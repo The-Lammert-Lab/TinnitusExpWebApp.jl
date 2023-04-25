@@ -287,11 +287,11 @@ function save_response()
     end
     new_frac_complete = ((curr_usr_exp.frac_complete * n_trials) + 1) / n_trials
 
-    if isapprox(new_frac_complete, round(Int, new_frac_complete); atol=1e-14)
+    # Check if new_frac_complete is within tolerance of nearest integer
+    if isapprox(new_frac_complete, round(Int, new_frac_complete); atol=1e-12)
         new_frac_complete = round(Int, new_frac_complete)
+        exp_complete = new_frac_complete == 1 ? true : false
     end
-
-    exp_complete = round(Int, new_frac_complete * n_trials) == n_trials ? true : false
 
     # Update
     curr_trial.response = jsonpayload("resp")
