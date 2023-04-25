@@ -13,6 +13,7 @@ using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using GenieSession
 using GenieAuthentication
+using Genie.Exceptions
 using InteractiveUtils: subtypes
 using Base64
 using JSON3
@@ -148,13 +149,15 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
     remaining_trials = e.n_trials - length(current_trials)
     n_trials = choose_n_trials(remaining_trials)
 
-    remaining_blocks = remaining_trials / n_trials    
-    remaining_blocks = !isnan(remaining_blocks) ? ceil(Int, remaining_blocks) : 0
+    if n_trials < 1
+        return [], [], NaN
+    end
+
+    remaining_blocks = ceil(Int, remaining_trials / n_trials)
 
     # Get stimuli vector
-    # Second output of gen_b64_stimuli is binned_repr_matrix unless
-    # Stimgen is not <:BinnedStimgen, in which case it returns spect_matrix.
-    # Either way, that is the one to save.
+    # Second output of gen_b64_stimuli is binned_repr_matrix or spect_matrix
+    # if !(stimgen isa BinnedStimgen)
     stimuli, stim_rep_to_save = gen_b64_stimuli(stimgen, n_trials)
 
     # Make array of Trial structs
@@ -188,13 +191,15 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
     remaining_trials = e.n_trials - length(current_trials)
     n_trials = choose_n_trials(remaining_trials)
 
-    remaining_blocks = remaining_trials / n_trials    
-    remaining_blocks = !isnan(remaining_blocks) ? ceil(Int, remaining_blocks) : 0
+    if n_trials < 1
+        return [], [], NaN
+    end
+
+    remaining_blocks = ceil(Int, remaining_trials / n_trials)
 
     # Get stimuli vector
-    # Second output of gen_b64_stimuli is binned_repr_matrix unless
-    # Stimgen is not <:BinnedStimgen, in which case it returns spect_matrix.
-    # Either way, that is the one to save.
+    # Second output of gen_b64_stimuli is binned_repr_matrix or spect_matrix
+    # if !(stimgen isa BinnedStimgen)
     stimuli, stim_rep_to_save = gen_b64_stimuli(stimgen, n_trials)
 
     # Make array of Trial structs
@@ -238,10 +243,14 @@ function experiment()
     else
         from_rest = false
         stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
-        # Var for labelling audio elements
-        counter = 0
-        GenieSession.set!(:current_block, curr_block)
-        html(:trials, :experiment; stimuli, counter, from_rest, remaining_blocks)
+        if isempty(stimuli)
+            throw(ExceptionalResponse(redirect("/profile")))
+        else
+            # Var for labelling audio elements
+            counter = 0
+            GenieSession.set!(:current_block, curr_block)
+            html(:trials, :experiment; stimuli, counter, from_rest, remaining_blocks)
+        end
     end
 end
 
@@ -277,6 +286,11 @@ function save_response()
         n_trials = findone(Experiment; name = curr_trial.experiment_name).n_trials
     end
     new_frac_complete = ((curr_usr_exp.frac_complete * n_trials) + 1) / n_trials
+
+    if isapprox(new_frac_complete, round(Int, new_frac_complete); atol=1e-14)
+        new_frac_complete = round(Int, new_frac_complete)
+    end
+
     exp_complete = round(Int, new_frac_complete * n_trials) == n_trials ? true : false
 
     # Update
@@ -307,9 +321,13 @@ end
 
 function gen_stim_rest()
     authenticated!()
-    stimuli, curr_block, remaining_blocks = gen_stim_and_block(jsonpayload())
-    GenieSession.set!(:current_block, curr_block)
-    json(stimuli)
+    stimuli, curr_block, _ = gen_stim_and_block(jsonpayload())
+    if isempty(stimuli)
+        Router.error(INTERNAL_ERROR, "No more trials to be done", MIME"application/json")
+    else
+        GenieSession.set!(:current_block, curr_block)
+        json(stimuli)
+    end
 end
 
 function done()

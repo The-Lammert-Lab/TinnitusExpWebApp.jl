@@ -453,7 +453,7 @@ function ready(fn) {
   document.addEventListener("DOMContentLoaded", fn);
 } // function
 
-// Gets "ToastMsg" from session storage and displays it for 3s if not null.
+// Gets "ToastMsg" from session storage and displays it if not null.
 function showToast() {
   const msg = sessionStorage.getItem("ToastMsg");
   if (msg !== null) {
