@@ -10,6 +10,7 @@ using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using GenieAuthentication
+using Genie.Exceptions
 
 function restart_exp()
     authenticated!()
