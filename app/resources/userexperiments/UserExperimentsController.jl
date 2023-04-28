@@ -22,7 +22,7 @@ function restart_exp()
 
     # Check if there is another of same experiment with no trials done.
     existing_unstarted =
-        find(UserExperiment; experiment_name = name, user_id = user_id, frac_complete = 0)
+        find(UserExperiment; experiment_name = name, user_id = user_id, trials_complete = 0)
     if !isempty(existing_unstarted)
         return Router.error(
             INTERNAL_ERROR,
@@ -48,7 +48,7 @@ function restart_exp()
 
     trials = find(Trial; experiment_name = name, instance = instance, user_id = user_id)
 
-    experiment.frac_complete = 0.0
+    experiment.trials_complete = 0
     save(experiment) && SearchLight.delete.(trials)
     json(
         """Experiment "$(name)" instance $(instance) restarted for user "$(username(user_id))." """,
@@ -104,7 +104,7 @@ function add_exp()
     curr_user_exps = find(UserExperiment; experiment_name = name, user_id = user_id)
 
     # Check request validity (can't add experiment if unstarted already exists)
-    if any(i -> i == 0, getproperty.(curr_user_exps, :frac_complete))
+    if any(i -> i == 0, getproperty.(curr_user_exps, :trials_complete))
         return Router.error(
             INTERNAL_ERROR,
             """Could not add experiment "$(name)". An unstarted instance already exists.""",
@@ -124,7 +124,7 @@ function add_exp()
         user_id = user_id,
         experiment_name = name,
         instance = new_instance,
-        frac_complete = 0.0,
+        trials_complete = 0,
     )
 
     # Validate
@@ -149,10 +149,13 @@ end
 function profile()
     authenticated!()
     added_experiments = find(UserExperiment; user_id = current_user_id())
+    # Get each experiment for each added experiment
+    n_trials = [findone(Experiment; name = e).n_trials for e in getproperty.(added_experiments, :experiment_name)]
     user = current_user()
     is_admin = user.is_admin
     username = user.username
-    html(:userexperiments, :profile; added_experiments, is_admin, username)
+    counter = 0
+    html(:userexperiments, :profile; added_experiments, is_admin, username, n_trials, counter)
 end
 
 end
