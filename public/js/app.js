@@ -270,7 +270,7 @@ function viewExperiment(experiment) {
         let username = document.createTextNode(user_data[element].username);
         let instance = document.createTextNode(user_data[element].instance);
         let perc_complete = document.createTextNode(
-          100 * user_data[element].frac_complete + "%"
+          user_data[element].percent_complete + "%"
         );
         cell1.appendChild(username);
         cell2.appendChild(instance);

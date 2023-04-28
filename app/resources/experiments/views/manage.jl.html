@@ -18,12 +18,13 @@
                     </tr>
                 </thead>
                 <tbody id="userexperiment-tbody">
-                <% for_each(added_experiments) do e %>
+                <% for_each(added_experiments) do e 
+                    counter += 1 %>
                     <tr>
                         <td>$(e.experiment_name)</td>
                         <td>$(e.instance)</td>
-                        <td>$(round(Int, 100*e.frac_complete))&percnt;</td>
-                        <%  if e.frac_complete == 0  %>
+                        <td>$(round(Int, 100*e.trials_complete / n_trials[counter]))&percnt;</td>
+                        <%  if e.trials_complete == 0  %>
                             <td>
                                 <form style="float:left;" name="remove-form" method="post">
                                     <input type="hidden" name="name" value="$(e.experiment_name)">
@@ -34,7 +35,7 @@
                             </td>
                         <%  elseif !(
                                 e.experiment_name in getproperty.(unstarted_experiments, :experiment_name)
-                            ) && e.frac_complete < 1 
+                            ) && e.trials_complete < n_trials[counter]
                         %>
                                 <td> 
                                     <form style="float:left;" name="restart-form">

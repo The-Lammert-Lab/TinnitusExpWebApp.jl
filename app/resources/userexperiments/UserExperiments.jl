@@ -14,7 +14,7 @@ export UserExperiment
     user_id::DbId = DbId()
     experiment_name::String = ""
     instance::Integer = 1
-    frac_complete::AbstractFloat = 0.0
+    trials_complete::Integer = 0
 end
 
 SearchLight.Validation.validator(::Type{UserExperiment}) = ModelValidator([
@@ -23,7 +23,8 @@ SearchLight.Validation.validator(::Type{UserExperiment}) = ModelValidator([
     ValidationRule(:instance, UserExperimentsValidator.is_positive),
     ValidationRule(:instance, UserExperimentsValidator.is_int),
     ValidationRule(:instance, UserExperimentsValidator.unique_for_usr_and_exp),
-    ValidationRule(:frac_complete, UserExperimentsValidator.is_nonnegative),
+    ValidationRule(:trials_complete, UserExperimentsValidator.is_nonnegative),
+    ValidationRule(:trials_complete, UserExperimentsValidator.is_int),
 ])
 
 end

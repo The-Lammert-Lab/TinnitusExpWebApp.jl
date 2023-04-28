@@ -112,7 +112,7 @@ Returns JSON response of requested experiment's fields and status for all users.
     parameters in natural language form, excluding :id and :settings_hash.
 
     - :user_data => :value, which holds a vector of dictionaries, each containing
-    username, instance, and frac_complete for every UserExperiment with requested experiment.
+    username, instance, and trials_complete for every UserExperiment with requested experiment.
 """
 function view_exp()
     authenticated!()
@@ -142,11 +142,13 @@ function view_exp()
             cache[ae.user_id] = username
         end
 
+        n_trials = findone(Experiment; name = ae.experiment_name).n_trials
+
         # Add dictionary to user_data
         user_data[ind] = Dict(
             :username => username,
             :instance => ae.instance,
-            :frac_complete => ae.frac_complete,
+            :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
         )
     end
 
@@ -332,7 +334,10 @@ function manage()
 
     experiments = all(Experiment)
     added_experiments = find(UserExperiment; user_id = user_id)
-    unstarted_experiments = [e for e in added_experiments if e.frac_complete == 0]
+    unstarted_experiments = [e for e in added_experiments if e.trials_complete == 0]
+
+    n_trials = [findone(Experiment; name = e).n_trials for e in getproperty.(added_experiments, :experiment_name)]
+    counter = 0
 
     html(
         :experiments,
@@ -341,6 +346,8 @@ function manage()
         experiments,
         unstarted_experiments,
         user_id,
+        counter,
+        n_trials
     )
 end
 
