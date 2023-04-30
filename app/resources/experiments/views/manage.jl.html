@@ -1,11 +1,31 @@
 <% partial("app/layouts/_admin_header.jl.html") %>
 
 <div class="container">
-    <div class="row">
+    <div class="row text-center">
         <h1>Manage User: $(params(:username))</h1>
     </div>
 
-    <div class="row">
+    <div>
+        <!-- TODO: Check if action and method are necessary here -->
+        <form class="d-flex align-items-center justify-content-center mt-3" id="add-form" action="/add" method="post">
+            <label class="my-1 me-2">Add experiment:</label>
+            <select name="experiment" class="form-select my-1 me-sm-2 w-auto" id="add-experiment">
+                <option value="default" selected>Choose here</option>
+                <%  for_each(experiments) do e 
+                        if e.name in getproperty.(unstarted_experiments, :experiment_name)
+                %>
+                            <option value="$(e.name)" disabled>$(e.name)</option>
+                        <% else %>
+                            <option value="$(e.name)">$(e.name)</option>
+                        <% end %>
+                <% end %>
+            </select>
+            <input type="hidden" name="user_id" value="$(user_id)">
+            <input id="add-submit" class="btn btn-primary" type="submit" value="Add" disabled>
+        </form>
+    </div>
+
+    <div class="row d-flex justify-content-center">
         <div class="col-md-auto">
             <!-- TODO: Add sort feature -->
             <table class="styled-table">
@@ -55,25 +75,6 @@
         </div>
     </div>
 
-    <div>
-        <!-- TODO: Check if action and method are necessary here -->
-        <form id="add-form" action="/add" method="post">
-            <label>Add experiment:</label>
-            <select name="experiment" id="add-experiment">
-                <option value="default" selected>Choose here</option>
-                <%  for_each(experiments) do e 
-                        if e.name in getproperty.(unstarted_experiments, :experiment_name)
-                %>
-                            <option value="$(e.name)" disabled>$(e.name)</option>
-                        <% else %>
-                            <option value="$(e.name)">$(e.name)</option>
-                        <% end %>
-                <% end %>
-            </select>
-            <input type="hidden" name="user_id" value="$(user_id)">
-            <input id="add-submit" type="submit" value="Add" disabled>
-        </form>
-    </div>
 </div>
 
 <div aria-live="polite" aria-atomic="true" class="toast-container p-3 bottom-0 start-50 translate-middle-x">
