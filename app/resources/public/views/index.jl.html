@@ -31,13 +31,11 @@ end
     </div>
   </div>
 
-  <% if is_admin === nothing %>
-    <div class="text-center">
-      <a href="/login" class="btn btn-outline-primary">Log in to start</a>
-    </div>
-  <% elseif !is_admin %>
-    <div class="text-center">
-      <a href="/profile" class="btn btn-outline-primary">Go to profile to start</a>
-    </div>
-  <% end %>
+  <div class="text-center mt-3">
+    <% if is_admin === nothing %>
+        <a href="/login" class="btn btn-outline-primary">Log in to start</a>
+    <% elseif !is_admin %>
+        <a href="/profile" class="btn btn-outline-primary">Go to profile to start</a>
+    <% end %>
+  </div>
 </div>

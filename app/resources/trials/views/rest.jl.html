@@ -16,4 +16,11 @@
     </div>    
 </div>
 
-<script>ready(getAndStoreAudio)</script>
+<script>
+    ready(getAndStoreAudio)
+    document.addEventListener("keyup", function(e){
+        if(e.which == 13){
+            document.getElementById("continue").click();     
+        }
+    });
+</script>

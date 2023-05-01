@@ -285,18 +285,9 @@ function save_response()
     if n_trials === nothing
         n_trials = findone(Experiment; name = curr_trial.experiment_name).n_trials
     end
-    
-    # new_frac_complete = ((curr_usr_exp.frac_complete * n_trials) + 1) / n_trials
-
-    # Check if new_frac_complete is within tolerance of nearest integer
-    # if isapprox(new_frac_complete, round(Int, new_frac_complete); atol=1e-12)
-    #     new_frac_complete = round(Int, new_frac_complete)
-    #     exp_complete = new_frac_complete == 1 ? true : false
-    # end
 
     # Update
     curr_trial.response = jsonpayload("resp")
-    # curr_usr_exp.frac_complete = new_frac_complete
     curr_usr_exp.trials_complete += 1
 
     # Check if all trials are done
