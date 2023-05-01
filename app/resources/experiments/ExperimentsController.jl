@@ -336,7 +336,10 @@ function manage()
     added_experiments = find(UserExperiment; user_id = user_id)
     unstarted_experiments = [e for e in added_experiments if e.trials_complete == 0]
 
-    n_trials = [findone(Experiment; name = e).n_trials for e in getproperty.(added_experiments, :experiment_name)]
+    n_trials = [
+        findone(Experiment; name = e).n_trials for
+        e in getproperty.(added_experiments, :experiment_name)
+    ]
     counter = 0
 
     html(
@@ -347,7 +350,7 @@ function manage()
         unstarted_experiments,
         user_id,
         counter,
-        n_trials
+        n_trials,
     )
 end
 

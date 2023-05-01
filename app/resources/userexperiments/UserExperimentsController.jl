@@ -150,12 +150,23 @@ function profile()
     authenticated!()
     added_experiments = find(UserExperiment; user_id = current_user_id())
     # Get each experiment for each added experiment
-    n_trials = [findone(Experiment; name = e).n_trials for e in getproperty.(added_experiments, :experiment_name)]
+    n_trials = [
+        findone(Experiment; name = e).n_trials for
+        e in getproperty.(added_experiments, :experiment_name)
+    ]
     user = current_user()
     is_admin = user.is_admin
     username = user.username
     counter = 0
-    html(:userexperiments, :profile; added_experiments, is_admin, username, n_trials, counter)
+    html(
+        :userexperiments,
+        :profile;
+        added_experiments,
+        is_admin,
+        username,
+        n_trials,
+        counter,
+    )
 end
 
 end
