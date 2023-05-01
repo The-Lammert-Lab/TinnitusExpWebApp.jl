@@ -14,6 +14,18 @@ body {
   margin-right: auto;
 }
 
+/* For centered buttons on experiment page */
+.centered-buttons {
+  position: relative;
+  top: 50%;
+  text-align: center;
+  -webkit-transform: translateY(-154px);
+  -moz-transform: translateY(-154px);
+  -ms-transform: translateY(-154px);
+  -o-transform: translateY(-154px);
+  transform: translateY(-154px);
+}
+
 /* copied from https://dev.to/dcodeyt/creating-beautiful-html-tables-with-css-428l so it looks reasonable*/
 .styled-table {
   border-collapse: collapse;

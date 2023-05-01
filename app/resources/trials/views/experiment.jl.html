@@ -4,7 +4,7 @@
     }
 </style>
 
-<div class="container">
+<div class="container vh-100 position-relative">
     <div class="d-flex justify-content-center">
         <h1 class="mt-5">Does this sound resemble your tinnitus?</h1>
     </div>
@@ -18,22 +18,22 @@
         </div>
     </div>
 
-    <div class="vh-100 d-flex align-items-center justify-content-center">
+    <div id="btn-container" class="centered-buttons">
         <div class="row">
             <div class="col-12 text-center">
-                <button class="btn btn-secondary btn-lg" id="yes" name="response" onclick="recordAndPlay('yes'); updateProgress();" disabled=true>Yes (F)</button>
+                <button class="btn btn-secondary btn-lg me-1" id="yes" name="response" onclick="recordAndPlay('yes'); updateProgress();" disabled=true>Yes (F)</button>
 
                 <button class="btn btn-secondary btn-lg" id="no" name="response" onclick="recordAndPlay('no'); updateProgress();" disabled=true>No (J)</button>
             </div>
 
             <div class="col-12 mt-2 text-center">
-                <button class="btn btn-primary btn-lg" id="start" onclick="document.getElementById('1').play(); document.getElementById('yes').setAttribute('class','btn btn-success btn-lg'); document.getElementById('no').setAttribute('class','btn btn-info btn-lg'); this.remove();">Start (Enter)</button>
+                <button class="btn btn-primary btn-lg" id="start" onclick="document.getElementById('1').play(); document.getElementById('yes').setAttribute('class','btn btn-success btn-lg me-1'); document.getElementById('no').setAttribute('class','btn btn-info btn-lg'); this.remove();">Start (Enter)</button>
             </div>
         </div>
     </div>
 
-    <div class="position-relative">
-        <a href="/profile" class="position-absolute bottom-0 end-0 btn btn-outline-secondary">Save and quit</a>
+    <div class="position-absolute bottom-0 end-0 mb-5">
+        <a href="/profile" class="btn btn-outline-secondary">Save and quit</a>
     </div>
 </div>
 
