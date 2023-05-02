@@ -16,7 +16,7 @@ route("/manage", ExperimentsController.manage)
 route("/create", ExperimentsController.create)
 route("/create/get", ExperimentsController.get_stimgen)
 route("/create/save", ExperimentsController.save_exp; method = POST)
-route("/delete", ExperimentsController.delete_exp)
+route("/delete", ExperimentsController.delete_exp; method = POST)
 
 route("/profile", UserExperimentsController.profile)
 route("/add", UserExperimentsController.add_exp; method = POST)

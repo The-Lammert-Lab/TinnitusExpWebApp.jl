@@ -465,14 +465,19 @@ function showToast() {
   }
 }
 
+// Send a request to delete experiment with its name
 function deleteExperiment(form) {
   const formData = new FormData(form);
   axios
-    .get("/delete", {
-      params: {
-        name: formData.get("name"),
-      },
+    .post("/delete", {
+      name: formData.get("name"),
     })
+
+    // .get("/delete", {
+    //   params: {
+    //     name: formData.get("name"),
+    //   },
+    // })
     .then(function (response) {
       sessionStorage.setItem("ToastMsg", response.data);
       window.location.reload();
