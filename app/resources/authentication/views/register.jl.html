@@ -1,7 +1,10 @@
 <% partial("app/layouts/_admin_header.jl.html") %>
 
 <div class="container d-flex justify-content-center align-items-center text-center mb-4">
-  <h1>Register a new user</h1>
+  <div>
+    <h1>Register a new user</h1>
+    $(output_flash())
+  </div>
 </div>
 
 <div class="container d-flex justify-content-center align-items-center">
