@@ -455,26 +455,28 @@ function delete_exp()
     authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
-    ex = findone(Experiment; name = params(:name))
+    name = jsonpayload("name")
+
+    ex = findone(Experiment; name = name)
     if ex === nothing
         return Router.error(
             BAD_REQUEST,
-            """Could not find an experiment with name "$(params(:name))" to delete.""",
+            """Could not find an experiment with name "$(name)" to delete.""",
             MIME"application/json",
         )
     end
 
-    added_ues = find(UserExperiment; experiment_name = params(:name))
+    added_ues = find(UserExperiment; experiment_name = name)
     if !isempty(added_ues)
         return Router.error(
             INTERNAL_ERROR,
-            """Experiment "$(params(:name))" is added to user(s): $(unique(username.(getproperty.(added_ues, :user_id)))). Cannot delete.""",
+            """Experiment "$(name)" is added to user(s): $(unique(username.(getproperty.(added_ues, :user_id)))). Cannot delete.""",
             MIME"application/json",
         )
     end
 
     SearchLight.delete(ex)
-    json("""Experiment "$(params(:name))" deleted.""")
+    json("""Experiment "$(name)" deleted.""")
 end
 
 end
