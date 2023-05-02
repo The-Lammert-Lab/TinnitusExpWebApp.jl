@@ -13,29 +13,49 @@ end
     <div class="card-header fw-bold">About This Study</div>
     <div class="card-body">
       <p>
-        <strong>You are being invited to participate in a research study</strong> because you experience tinnitus. Tinnitus is when you experience ringing or other noises in one or both ears. The noise you hear when you have tinnitus is not caused by an external sound and other people usually cannot hear it.<br>
-        If you have questions or don't understand something, please ask. 
-        Taking part in this research is voluntary and completely up to you. You are free to say no or to leave the research at any time. There will be no penalties or changes in the quality of the health care you receive, and you will not lose any benefits to which you are otherwise entitled.<br>
-        <strong>The main question this study is trying to answer</strong> is whether the tinnitus that individuals experience can be recreated from a series of random sounds.<br>
-        <strong>If you join this research,</strong> you may undergo a comprehensive audiological examination and be asked to listen to a series of randomly generated excerpts of white noise over a period of 2-10 hours. You may also be asked to complete one or more surveys. In addition, we may ask you information about your otologic (ear) medical history or collect information about your otologic history from your medical record.<br>
-        <strong>You may not want to be in this study if you are uncomfortable with:</strong><br>
-        <ul>
-          <li>Talking about or explaining your tinnitus to others</li>
-          <li>Sharing your private information with researchers</li>
-        </ul>
-        <strong>Risks:</strong> There are minimal risks to participating in this study. There is a small risk of breach of confidentiality and a risk of fatigue and the possibility that we will need to schedule tasks over multiple sessions. We will take steps to protect your personal information. You will be assigned a de-identified subject number and all information that is collected will be stored under a de-identified database.<br>
-        <strong>Benefits:</strong> Although there are no direct benefits to you for participating in this study, your participation may help us to gain knowledge that to help patients with tinnitus in the future.<br>
-        <strong>Alternatives:</strong> You do not have to be in this study to receive medical care for your tinnitus or hearing loss. Participating in this study will not change the care that you receive at any medical institution.<br>
-        <strong>Conflict of Interest:</strong> There are no conflicts of interest.
-        </p>
+        <strong>You are being invited to participate in a research study because you experience tinnitus.</strong><br>
+        Tinnitus is when you experience ringing or other noises in one or both ears. The noise you hear when you have
+        tinnitus is not caused by an external sound and other people usually cannot hear it.<br>
+        <br>
+        If you have questions or don't understand something, please ask.
+        Taking part in this research is voluntary and completely up to you. You are free to say no or to leave the
+        research at any time. There will be no penalties or changes in the quality of the health care you receive, and
+        you will not lose any benefits to which you are otherwise entitled.<br>
+        <br>
+        <strong style="font-size: x-large;">Our main question: Can the tinnitus that individuals experience 
+          be recreated from a series of random sounds?</strong>
+      </p>
+      <strong>If you join this research:</strong>
+      <ul>
+        <li>You may undergo a comprehensive audiological examination and be asked to listen to a series of randomly
+          generated excerpts of white noise over a period of 2-10 hours.</li>
+        <li>You may also be asked to complete one or more surveys.</li>
+        <li>We may ask you information about your otologic (ear) medical history or collect information about your
+          otologic history from your medical record.</li>
+      </ul>
+      <strong>You may not want to be in this study if you are uncomfortable with:</strong><br>
+      <ul>
+        <li>Talking about or explaining your tinnitus to others</li>
+        <li>Sharing your private information with researchers</li>
+      </ul>
+      <p>
+        <strong>Risks:</strong> There are minimal risks to participating in this study. There is a small risk of breach
+        of confidentiality and a risk of fatigue and the possibility that we will need to schedule tasks over multiple
+        sessions. We will take steps to protect your personal information. You will be assigned a de-identified subject
+        number and all information that is collected will be stored under a de-identified database.<br>
+        <strong>Benefits:</strong> Although there are no direct benefits to you for participating in this study, your
+        participation may help us to gain knowledge that to help patients with tinnitus in the future.<br>
+        <strong>Alternatives:</strong> You do not have to be in this study to receive medical care for your tinnitus or
+        hearing loss. Participating in this study will not change the care that you receive at any medical
+        institution.<br>
+      </p>
+      <div class="text-center">
+        <% if is_admin===nothing %>
+          <a href="/login" class="btn btn-primary">Log in to start</a>
+          <% elseif !is_admin %>
+            <a href="/profile" class="btn btn-primary">Go to profile to start</a>
+            <% end %>
+      </div>
     </div>
-  </div>
-
-  <div class="text-center mt-3">
-    <% if is_admin === nothing %>
-        <a href="/login" class="btn btn-outline-primary">Log in to start</a>
-    <% elseif !is_admin %>
-        <a href="/profile" class="btn btn-outline-primary">Go to profile to start</a>
-    <% end %>
   </div>
 </div>

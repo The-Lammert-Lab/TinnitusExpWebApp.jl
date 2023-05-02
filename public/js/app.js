@@ -1,9 +1,9 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-// Main protocol logic
+
+// Main protocol logic. Save response and determine next action
 function recordAndPlay(ans) {
   // Interpret response
-
   var val = 0;
   if (ans === "yes") {
     val = 1;
@@ -202,7 +202,7 @@ function restartExperiment(form) {
     });
 } // function
 
-// Post data from experiment to remove to server and refresh page.
+// Post user_id and data from experiment to remove to server and refresh page.
 function removeExperiment(form) {
   const formData = new FormData(form);
   axios
@@ -490,4 +490,13 @@ function deleteExperiment(form) {
         console.log("Error", error.message);
       }
     });
+} // function
+
+//
+function updateNavbarColors() {
+  const pathname = window.location.pathname;
+  const li = document.getElementById(pathname);
+  if (li !== null) {
+    li.setAttribute("class", "nav-link px-2 link-secondary");
+  }
 } // function

@@ -17,7 +17,7 @@
                 <a id="/FAQ" class="nav-link px-2 link-dark" href="/FAQ">FAQ</a>
             </li>
             <li>
-                <a class="nav-link px-2 link-dark" href="/lab">Lab</a>
+                <a id="/lab" class="nav-link px-2 link-dark" href="/lab">Lab</a>
             </li>
         </ul>
         <div class="col-md-3 text-end">
@@ -26,10 +26,4 @@
     </header>
 </div>
 
-<script>
-    const pathname = window.location.pathname;
-    const li = document.getElementById(pathname);
-    if (li !== null) {
-        li.setAttribute("class", "nav-link px-2 link-secondary")
-    };
-</script>
+<script>updateNavbarColors();</script>

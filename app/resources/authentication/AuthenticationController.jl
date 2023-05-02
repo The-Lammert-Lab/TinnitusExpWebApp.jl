@@ -34,7 +34,7 @@ function login()
             redirect("/profile")
         end
     catch ex
-        flash("Authentication failed! ")
+        flash("Username or password is incorrect.")
 
         redirect(:show_login)
     end
