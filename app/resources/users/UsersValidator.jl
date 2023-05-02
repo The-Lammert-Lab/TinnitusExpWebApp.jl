@@ -26,6 +26,9 @@ function no_spaces(field::Symbol, m::T)::ValidationResult where {T<:AbstractMode
     ValidationResult(valid)
 end
 
+# Taken from: https://stackoverflow.com/questions/2053335/what-should-be-the-valid-characters-in-usernames
+# This requires a length of 3 with maximum 32 characters. 
+# It must start with a word character and can have non continuous dots and dashes.
 function basic_regex(field::Symbol, m::T)::ValidationResult where {T<:AbstractModel}
     occursin(r"^\w(?:\w|[.-](?=\w)){2,31}$", getfield(m,field)) || 
         return ValidationResult(invalid, :basic_regex, "has invalid length, characters, or character combinations")
