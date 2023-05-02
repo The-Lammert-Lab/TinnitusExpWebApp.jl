@@ -5,6 +5,7 @@ using SearchLight
 using SearchLight.Validation
 using Logging
 
+using ..Main.UserApp
 using ..Main.UserApp.Users
 using ..Main.UserApp.GenieAuthenticationViewHelper
 
@@ -13,9 +14,9 @@ using GenieAuthentication.GenieSession
 using GenieAuthentication.GenieSession.Flash
 using GenieAuthentication.GenieSessionFileSession
 
-
 function show_login()
-    html(:authentication, :login, context = @__MODULE__)
+    is_admin = current_user() isa Nothing ? nothing : current_user().is_admin
+    html(:authentication, :login; context = @__MODULE__, is_admin)
 end
 
 function login()
@@ -30,10 +31,10 @@ function login()
         if user.is_admin
             redirect("/admin")
         else
-            redirect("/home")
+            redirect("/profile")
         end
     catch ex
-        flash("Authentication failed! ")
+        flash("Username or password is incorrect.")
 
         redirect(:show_login)
     end
@@ -52,7 +53,7 @@ function logout()
 end
 
 function show_register()
-    html(:authentication, :register, context = @__MODULE__)
+    html(:authentication, :register; context = @__MODULE__)
 end
 
 function register()

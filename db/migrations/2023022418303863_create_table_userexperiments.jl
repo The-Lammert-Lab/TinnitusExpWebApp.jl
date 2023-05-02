@@ -8,7 +8,7 @@ function up()
         [
             pk()
             column(:instance, :int)
-            column(:frac_complete, :float)
+            column(:trials_complete, :float)
         ]
     end
 

@@ -22,7 +22,7 @@ function up()
         stimgen_settings = stimgen_settings,
         stimgen_type = stimgen_type,
         n_trials = 50,
-        name = "TestExperiment_2",
+        name = "Test Experiment 2",
     ) |> save!
 
 end

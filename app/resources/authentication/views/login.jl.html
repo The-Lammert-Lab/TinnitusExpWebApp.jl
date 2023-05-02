@@ -1,38 +1,38 @@
-<h1 class="display-3">Login</h1>
+<%
+if is_admin === nothing
+  partial("app/layouts/_generic_header.jl.html")
+elseif is_admin
+  partial("app/layouts/_admin_header.jl.html")
+else
+  partial("app/layouts/_user_header.jl.html")
+end
+%>
 
-<div class="bs-callout bs-callout-primary">
-  <p>Please log in to view experiments.</p>
+<div class="container d-flex justify-content-center text-center mb-4">
+  <div>
+    <h1 class="display-3">Login</h1>
+
+    <div class="bs-callout bs-callout-primary">
+      <p>Log in to view experiments.</p>
+    </div>
+    $(output_flash())
+  </div>
 </div>
 
-<span>$(output_flash())</span>
+<div class="container d-flex justify-content-center">
+  <form class="card p-3 bg-light" method="POST" action="$(linkto(:login))" class="" enctype="multipart/form-data">
+    <div class="form-group mb-2">
+      <label _for="auth_username">Username</label>
+      <input type="text" id="auth_username" name="username" class="form-control" placeholder="User"/>
+    </div>
 
-<form
-  method="POST"
-  action="$(linkto(:login))"
-  class=""
-  enctype="multipart/form-data"
->
-  <div class="form-group">
-    <label _for="auth_username">Username</label>
-    <input
-      type="text"
-      id="auth_username"
-      name="username"
-      class="form-control"
-      placeholder="User"
-    />
-  </div>
+    <div class="form-group mb-2">
+      <label _for="auth_password">Password</label>
+      <input type="password" id="auth_password" name="password" class="form-control" placeholder="Password"/>
+    </div>
 
-  <div class="form-group">
-    <label _for="auth_password">Password</label>
-    <input
-      type="password"
-      id="auth_password"
-      name="password"
-      class="form-control"
-      placeholder="Password"
-    />
-  </div>
-
-  <input type="submit" value="Login" class="btn btn-primary" />
-</form>
+    <div class="form-group">
+      <input type="submit" value="Login" class="btn btn-primary" />
+    </div>
+  </form>
+</div>

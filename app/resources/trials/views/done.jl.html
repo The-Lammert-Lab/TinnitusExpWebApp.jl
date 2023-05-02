@@ -1,6 +1,24 @@
-<body>
-    <div>
-        <strong>Done!</strong>
-        <button type="button" onclick="window.location.href = '/home'">Go Home</button>
+<style>
+    body {
+        background: #dff0f6;
+    }
+</style>
+
+<div class="container vh-100 d-flex align-items-center justify-content-center">
+    <div class="row">
+        <div class="col-12 text-center">
+            <h3>You have completed all trials for this experiment!</h3>
+        </div>
+        <div class="col-12 text-center mt-2">
+            <button id="to-profile" class="btn btn-primary btn-lg" type="button" onclick="window.location.href = '/profile'">Go Home</button>
+        </div>
     </div>
-</body>
+</div>
+
+<script> 
+    document.addEventListener("keyup", function(e) {
+        if (e.which == 13) {
+            document.getElementById("to-profile").click();
+        }
+    }); 
+</script>

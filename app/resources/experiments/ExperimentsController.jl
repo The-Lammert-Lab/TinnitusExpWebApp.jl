@@ -112,11 +112,11 @@ Returns JSON response of requested experiment's fields and status for all users.
     parameters in natural language form, excluding :id and :settings_hash.
 
     - :user_data => :value, which holds a vector of dictionaries, each containing
-    username, instance, and frac_complete for every UserExperiment with requested experiment.
+    username, instance, and trials_complete for every UserExperiment with requested experiment.
 """
 function view_exp()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     ex = findone(Experiment; name = params(:name))
     if ex === nothing
@@ -142,11 +142,13 @@ function view_exp()
             cache[ae.user_id] = username
         end
 
+        n_trials = findone(Experiment; name = ae.experiment_name).n_trials
+
         # Add dictionary to user_data
         user_data[ind] = Dict(
             :username => username,
             :instance => ae.instance,
-            :frac_complete => ae.frac_complete,
+            :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
         )
     end
 
@@ -192,7 +194,7 @@ Returns Vector{NamedTuple} corresponding to each non-stimgen field in a generic 
 """
 function get_exp_fields()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     ex = Experiment()
     fnames = fieldnames(typeof(ex))
@@ -230,7 +232,7 @@ end
 
 function get_exp_fields(ex::E) where {E<:Experiment}
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     fnames = fieldnames(typeof(ex))
     exclude = [
@@ -278,7 +280,7 @@ Returns Vector{NamedTuple} corresponding to each field in the stimgen struct `s`
 """
 function get_stimgen_fields(s::SG) where {SG<:Stimgen}
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     fnames = fieldnames(typeof(s))
     exclude = [:bin_probs, :distribution, :distribution_filepath]
@@ -316,7 +318,7 @@ end
 
 function admin()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     experiments = all(Experiment)
     users = find(User; is_admin = false)
@@ -326,13 +328,19 @@ end
 
 function manage()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     user_id = findone(User; username = params(:username)).id
 
     experiments = all(Experiment)
     added_experiments = find(UserExperiment; user_id = user_id)
-    unstarted_experiments = [e for e in added_experiments if e.frac_complete == 0]
+    unstarted_experiments = [e for e in added_experiments if e.trials_complete == 0]
+
+    n_trials = [
+        findone(Experiment; name = e).n_trials for
+        e in getproperty.(added_experiments, :experiment_name)
+    ]
+    counter = 0
 
     html(
         :experiments,
@@ -341,12 +349,14 @@ function manage()
         experiments,
         unstarted_experiments,
         user_id,
+        counter,
+        n_trials,
     )
 end
 
 function create()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     full_types = _subtypes(Stimgen)
     stimgen_types = Vector{String}(undef, length(full_types))
@@ -443,7 +453,7 @@ end
 
 function delete_exp()
     authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/home")))
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     ex = findone(Experiment; name = params(:name))
     if ex === nothing

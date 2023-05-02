@@ -1,79 +1,83 @@
-<style media="screen">
-    * {
-        margin: 0;
-        padding: 0;
-        border: none;
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    html,
+<style>
     body {
-        height: 100%;
-    }
-
-    body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
         background: #dff0f6;
-    }
-
-    button {
-        font-family: 'Open Sans', sans-serif;
-        font-size: 1.5rem;
-        color: #fff;
-        background: #034d85;
-        padding: 1.1rem 3.4rem;
-        border-radius: .2rem;
-        transition: opacity .2s;
-    }
-
-    button:hover {
-        cursor: pointer;
-        background: #053056;
     }
 </style>
 
-<body>
-    <div>
-        <!-- Create and label each stim wav file (base64 encoded) -->
-        <% if !from_rest
-            for_each(stimuli) do stim
-                counter += 1 
-        %> 
-                <audio 
-                    id="$counter" 
-                    name="stimulus" 
-                    onended="document.getElementById('yes').disabled=false; 
-                        document.getElementById('no').disabled=false;
-                        this.remove();" 
-                    src="data:audio/x-wav;base64,$(stim)"
-                    preload="auto">
-                </audio>
-            <% end 
-            else %>
-                <!-- Generate audio elements with JS (after first block)-->
-                <script> getAudioFromStorage(); </script>
-            <% end %>
-
-        <button id="yes" onclick="recordAndPlay('yes');" disabled=true>Yes! (f)</button>
-        <button id="no" onclick="recordAndPlay('no');" disabled=true>No! (j)</button>
-        <button id="start" onclick="document.getElementById('1').play(); this.disabled=true;">Start! (Enter)</button>
+<div class="container vh-100 position-relative">
+    <div class="d-flex justify-content-center">
+        <h1 class="mt-5">Does this sound resemble your tinnitus?</h1>
     </div>
 
-    <script type="text/javascript">
-        // f - 70, j - 74, enter - 13
-        document.addEventListener("keyup", function(e){
-            if(e.which == 70){
-                document.getElementById("yes").click();     
-            }
-            else if(e.which == 74){
-                document.getElementById("no").click();
-            }
-            else if(e.which == 13){
-                document.getElementById("start").click();
-            }
-        });
+    <div class="row">
+        <div class="col-4 offset-4 mt-4">
+            <label id="block-info" class="label label-default" for="prog-bar"></label>
+            <div class="progress" id="prog-bar">
+                <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="btn-container" class="centered-buttons">
+        <div class="row">
+            <div class="col-12 text-center">
+                <button class="btn btn-secondary btn-lg me-1" id="yes" name="response" onclick="recordAndPlay('yes'); updateProgress();" disabled=true>Yes (F)</button>
+
+                <button class="btn btn-secondary btn-lg" id="no" name="response" onclick="recordAndPlay('no'); updateProgress();" disabled=true>No (J)</button>
+            </div>
+
+            <div class="col-12 mt-2 text-center">
+                <button class="btn btn-primary btn-lg" id="start" onclick="document.getElementById('1').play(); document.getElementById('yes').setAttribute('class','btn btn-success btn-lg me-1'); document.getElementById('no').setAttribute('class','btn btn-info btn-lg'); this.remove();">Start (Enter)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-absolute bottom-0 end-0 mb-5">
+        <a href="/profile" class="btn btn-outline-secondary">Save and quit</a>
+    </div>
+</div>
+
+<% if !from_rest [
+for_each(stimuli) do stim
+    counter += 1 
+%> 
+    <audio 
+        id="$counter" 
+        name="stimulus" 
+        onended="document.getElementById('yes').disabled=false; 
+            document.getElementById('no').disabled=false;
+            this.remove();" 
+        src="data:audio/wav;base64,$(stim)"
+        preload="auto">
+    </audio>
+<% end %>
+<script>
+    sessionStorage.setItem("remaining_blocks", $(remaining_blocks));
+    sessionStorage.setItem("current_block", 1);
+</script>
+<% ] else %>
+    <script>
+        getAudioFromStorage();
+        const current_block = parseInt(sessionStorage.getItem("current_block")) + 1;
+        sessionStorage.setItem("current_block", current_block);
     </script>
-</body>
+<% end %>
+
+<script type="text/javascript">
+    document.getElementById("block-info").innerHTML = "Block " + sessionStorage.getItem("current_block") + " of " + sessionStorage.getItem("remaining_blocks")
+
+    // f - 70, j - 74, enter - 13
+    document.addEventListener("keyup", function(e){
+        if(e.which == 70){
+            document.getElementById("yes").click();     
+        }
+        else if(e.which == 74){
+            document.getElementById("no").click();
+        }
+        else if(e.which == 13){
+            document.getElementById("start").click();
+        }
+    });
+
+    ready(sessionStorage.setItem("init_n_stimuli", document.getElementsByName("stimulus").length));
+</script>

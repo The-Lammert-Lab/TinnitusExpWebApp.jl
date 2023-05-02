@@ -1,12 +1,13 @@
-<h1 id="header1">Create an experiment!</h1>
-<% partial("app/layouts/_logout.jl.html") %>
+<% partial("app/layouts/_admin_header.jl.html") %>
 
-<span id="dock"></span>
+<div class="container">
+    <div class="text-center">
+        <h1>Create an experiment</h1>
+    </div>
 
-<div>
-    <form id="exptype-form">
-        <label>Stimulus Type:</label>
-        <select name="type" id="type-ddl">
+    <form class="d-flex align-items-center justify-content-center mt-3" id="exptype-form">
+        <label class="my-1 me-2" for="type-ddl">Stimulus Type:</label>
+        <select class="form-select my-1 me-sm-2 w-auto" name="type" id="type-ddl">
             <option value="default">Select a type</option>
             <% for_each(stimgen_types) do s 
                 if s == type %>
@@ -16,66 +17,70 @@
                 <% end
             end %>
         </select>
-        <input id="exptype-submit" type="submit" value="Choose" disabled>
+        <button class="btn btn-primary my-1" id="exptype-submit" type="submit" disabled>Choose</button>
     </form>
-</div>
 
-<div>
-    <form id="create-form">
-        <table class="styled-table">
-            <thead>
-                <tr>
-                    <th>Field</th>
-                    <th>Value</th>
-                </tr>
-            </thead>
-            <tbody id="experiment-settings">
-                <% for_each(exp_fields) do f %>
+    <div class="d-flex justify-content-center">
+        <form id="create-form">
+            <table class="styled-table">
+                <thead>
                     <tr>
-                        <td>$(f.label)</td>
-                        <td> 
-                            <% if f.step === nothing %> 
-                                <input type="$(f.type)" name="experiment.$(f.name)" value="$(f.value)" required> 
-                            <% else %>
-                                <input type="$(f.type)" step="$(f.step)" name="experiment.$(f.name)" value="$(f.value)" required> 
-                            <% end %>
-                        </td>
+                        <th>Field</th>
+                        <th>Value</th>
                     </tr>
-                <% end %>
-            </tbody>
-            <tbody id="stimgen-settings">
-                <% if stimgen_fields !== nothing 
-                    for_each(stimgen_fields) do s %>
+                </thead>
+                <tbody id="experiment-settings">
+                    <% for_each(exp_fields) do f %>
                         <tr>
-                            <td>$(s.label)</td>
-                            <td> 
-                            <% if s.step === nothing %> 
-                                <input type="$(s.type)" name="stimgen.$(s.name)" value="$(s.value)" required> 
-                            <% else %>
-                                <input type="$(s.type)" step="$(s.step)" name="stimgen.$(s.name)" value="$(s.value)" required> 
-                            <% end %>
+                            <td>$(f.label)</td>
+                            <td>
+                                <% if f.step === nothing %>
+                                    <input type="$(f.type)" name="experiment.$(f.name)" value="$(f.value)" required>
+                                <% else %>
+                                    <input type="$(f.type)" step="$(f.step)" name="experiment.$(f.name)" value="$(f.value)" required>
+                                <% end %>
                             </td>
                         </tr>
-                    <% end 
-                end %>
-            </tbody>
-        </table>
-        <% if type !== nothing [ %>
-            <input id="_type" type="hidden" name="_stimgen-type" value="$(type)">
-            <input id="saveButton" type="submit" value="Save">
-        <% ] else %>
-            <input id="saveButton" type="submit" value="Save" disabled>
-        <% end %>
-    </form>
+                    <% end %>
+                </tbody>
+                <tbody id="stimgen-settings">
+                    <% if stimgen_fields !== nothing
+                        for_each(stimgen_fields) do s %>
+                            <tr>
+                                <td>$(s.label)</td>
+                                <td>
+                                <% if s.step === nothing %>
+                                    <input type="$(s.type)" name="stimgen.$(s.name)" value="$(s.value)" required>
+                                <% else %>
+                                    <input type="$(s.type)" step="$(s.step)" name="stimgen.$(s.name)" value="$(s.value)" required>
+                                <% end %>
+                                </td>
+                            </tr>
+                        <% end
+                    end %>
+                </tbody>
+            </table>
+            <div class="d-flex justify-content-end">
+                <% if type !== nothing [ %>
+                    <input id="_type" type="hidden" name="_stimgen-type" value="$(type)">
+                    <input class="btn btn-primary" id="saveButton" type="submit" value="Save">
+                <% ] else %>
+                    <input class="btn btn-primary" id="saveButton" type="submit" value="Save" disabled>
+                <% end %>
+            </div>
+        </form>
+    </div>
 </div>
 
-<div>
-    <form action="/admin">
-        <input style="margin-top:2px;" type="submit" value="Back to main page"></input>
-    </form>
+<div aria-live="polite" aria-atomic="true" class="toast-container p-3 bottom-0 start-50 translate-middle-x">
+    <div id="Toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Info</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
 </div>
-
-<div id="snackbar"></div>
 
 <script>
     ready(showToast)

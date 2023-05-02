@@ -1,9 +1,17 @@
-<body>
-    <% partial("app/layouts/_logout.jl.html") %>
-    <div>
-        <h1>Home page!</h1>
-    </div>
-    <div>
+<% 
+if is_admin
+    partial("app/layouts/_admin_header.jl.html")
+else
+    partial("app/layouts/_user_header.jl.html")
+end
+%>
+
+<div class="container text-center">
+    <h1>Experiment profile: $(username)</h1>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-center">
         <!-- TODO: Add sort feature -->
         <table class="styled-table">
             <thead>
@@ -15,14 +23,15 @@
                 </tr>
             </thead>
             <tbody>
-            <% for_each(added_experiments) do e %>
+            <% for_each(added_experiments) do e 
+                counter += 1 %>
                 <tr>
                     <td>$(e.experiment_name)</td>
                     <td>$(e.instance)</td>
-                    <td>$(round(Int, 100*e.frac_complete))&percnt;</td>
-                    <%  if e.frac_complete >= 1  %>
+                    <td>$(round(Int, 100*e.trials_complete / n_trials[counter]))&percnt;</td>
+                    <%  if e.trials_complete >= n_trials[counter]  %>
                             <td>None</td>
-                    <%  elseif e.frac_complete > 0  %>
+                    <%  elseif e.trials_complete > 0  %>
                             <td> 
                                 <form style="float:left;" action="/experiment">
                                     <input type="hidden" name="name" value="$(e.experiment_name)">
@@ -46,4 +55,4 @@
             </tbody>
         </table>
     </div>
-</body>
+</div>

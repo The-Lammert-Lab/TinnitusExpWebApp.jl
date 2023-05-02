@@ -1,10 +1,18 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-// Main protocol logic
+
+// Main protocol logic. Save response and determine next action
 function recordAndPlay(ans) {
   // Interpret response
-  // TODO: Make more robust (?)
-  const val = ans === "yes" ? 1 : -1;
+  var val = 0;
+  if (ans === "yes") {
+    val = 1;
+  } else if (ans === "no") {
+    val = -1;
+  } else {
+    window.alert("Unexpected response received. Please restart and try again.");
+    window.location.replace("/profile");
+  }
 
   // Save response
   axios
@@ -16,7 +24,7 @@ function recordAndPlay(ans) {
       const stimuli = document.getElementsByName("stimulus");
 
       // Determine next action (go to done, rest, or play next stimulus)
-      if (parseFloat(response.data.frac_complete.value) >= 1) {
+      if (response.data.exp_complete.value) {
         window.location.replace("/done");
         return;
       } else if (stimuli.length === 0) {
@@ -44,16 +52,30 @@ function recordAndPlay(ans) {
     .catch(function (error) {
       if (error.response) {
         window.alert(error.response.data.error);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       } else if (error.request) {
         window.alert(error.request);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       } else {
         window.alert("Error: " + error.message);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       }
       return;
     });
+} // function
+
+// Update progress bar on the experiment page
+function updateProgress() {
+  const bar = document.getElementsByClassName("progress-bar")[0];
+  const percent =
+    -100 *
+    (
+      document.getElementsByName("stimulus").length /
+        sessionStorage.getItem("init_n_stimuli") -
+      1
+    ).toFixed(2);
+  bar.setAttribute("style", "width: " + percent + "%");
+  bar.setAttribute("aria-valuenow", percent);
 } // function
 
 // Load html audio elements from local storage
@@ -62,7 +84,7 @@ function getAudioFromStorage() {
   const stims = JSON.parse(sessionStorage.getItem("stims"));
   if (stims === null) {
     window.alert("Unable to load stimuli. Click 'OK' to return home.");
-    return window.location.replace("/home");
+    return window.location.replace("/profile");
   }
 
   // Create the elements
@@ -103,25 +125,23 @@ function getAndStoreAudio() {
       name: params.get("name"),
       instance: params.get("instance"),
     })
-    .then(function (stimuli) {
-      sessionStorage.setItem("stims", JSON.stringify(stimuli.data));
+    .then(function (response) {
+      sessionStorage.setItem("stims", JSON.stringify(response.data));
     })
     .then(function () {
       // Only allow continuing once stimuli have been stored.
       document.getElementById("continue").disabled = false;
     })
-    // Debugging purposes.
-    // TODO: Do something meaningful on error
     .catch(function (error) {
       if (error.response) {
         window.alert(error.response.data.error);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       } else if (error.request) {
         window.alert(error.request);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       } else {
         window.alert("Error: " + error.message);
-        window.location.replace("/home");
+        window.location.replace("/profile");
       }
       return;
     });
@@ -182,7 +202,7 @@ function restartExperiment(form) {
     });
 } // function
 
-// Post data from experiment to remove to server and refresh page.
+// Post user_id and data from experiment to remove to server and refresh page.
 function removeExperiment(form) {
   const formData = new FormData(form);
   axios
@@ -250,7 +270,7 @@ function viewExperiment(experiment) {
         let username = document.createTextNode(user_data[element].username);
         let instance = document.createTextNode(user_data[element].instance);
         let perc_complete = document.createTextNode(
-          100 * user_data[element].frac_complete + "%"
+          user_data[element].percent_complete + "%"
         );
         cell1.appendChild(username);
         cell2.appendChild(instance);
@@ -377,6 +397,53 @@ function saveExperiment(form) {
     });
 } // function
 
+function createExpButtons() {
+  const template_submit = document.getElementById("template-submit");
+  const template_input = document.getElementById("template-name");
+  const delete_submit = document.getElementById("delete-submit");
+  const delete_input = document.getElementById("delete-name");
+  if (ddl.value !== "default") {
+    viewExperiment(ddl.value) // Returns a Promise
+      .then((added_to_a_user) => {
+        template_input.setAttribute("value", ddl.value);
+        delete_input.setAttribute("value", ddl.value);
+
+        if (template_submit === null) {
+          let submit = document.createElement("button");
+          submit.setAttribute("id", "template-submit");
+          submit.setAttribute("type", "submit");
+          submit.setAttribute("class", "btn btn-outline-dark");
+          submit.innerHTML = "Create experiment from this template";
+          document
+            .getElementById("create-from-template-form")
+            .appendChild(submit);
+        }
+
+        // Only create delete button if it doesn't exist already and
+        // experiment is not added to any user
+        if (added_to_a_user && delete_submit !== null) {
+          delete_submit.remove();
+        } else if (!added_to_a_user && delete_submit === null) {
+          let submit = document.createElement("button");
+          submit.setAttribute("id", "delete-submit");
+          submit.setAttribute("type", "submit");
+          submit.setAttribute("class", "btn btn-outline-danger");
+          submit.innerHTML = "Delete this experiment";
+          document.getElementById("delete-form").appendChild(submit);
+        }
+      })
+      // Error handled in viewExperiment. This prevents any code from running.
+      .catch((error) => {});
+  } else {
+    document.getElementById("experiment-settings").innerHTML = "";
+    document.getElementById("user-experiment-data").innerHTML = "";
+    template_submit.remove();
+    template_input.setAttribute("value", "");
+    delete_submit.remove();
+    delete_input.setAttribute("value", "");
+  }
+} // function
+
 // $(document).ready replacement for no jQuery.
 function ready(fn) {
   if (document.readyState !== "loading") {
@@ -386,19 +453,17 @@ function ready(fn) {
   document.addEventListener("DOMContentLoaded", fn);
 } // function
 
-// Gets "ToastMsg" from session storage and displays it for 3s if not null.
+// Gets "ToastMsg" from session storage and displays it if not null.
 function showToast() {
   const msg = sessionStorage.getItem("ToastMsg");
   if (msg !== null) {
-    let x = document.getElementById("snackbar");
-    x.innerHTML = msg;
-    x.className = "show";
+    const body = document.getElementsByClassName("toast-body")[0];
+    body.innerHTML = msg;
+    const toast = new bootstrap.Toast(document.getElementById("Toast"));
+    toast.show();
     sessionStorage.clear("ToastMsg");
-    setTimeout(function () {
-      x.className = x.className.replace("show", "");
-    }, 3000);
   }
-} // function
+}
 
 function deleteExperiment(form) {
   const formData = new FormData(form);
@@ -425,4 +490,13 @@ function deleteExperiment(form) {
         console.log("Error", error.message);
       }
     });
+} // function
+
+//
+function updateNavbarColors() {
+  const pathname = window.location.pathname;
+  const li = document.getElementById(pathname);
+  if (li !== null) {
+    li.setAttribute("class", "nav-link px-2 link-secondary");
+  }
 } // function

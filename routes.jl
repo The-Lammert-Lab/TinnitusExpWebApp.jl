@@ -2,8 +2,8 @@ using Genie.Router
 using CharacterizeTinnitus.TrialsController
 using CharacterizeTinnitus.ExperimentsController
 using CharacterizeTinnitus.UserExperimentsController
+using CharacterizeTinnitus.PublicController
 
-route("/", TrialsController.index)
 route("/experiment", TrialsController.experiment)
 route("/rest", TrialsController.rest)
 route("/generate", TrialsController.gen_stim_rest; method = POST)
@@ -18,7 +18,11 @@ route("/create/get", ExperimentsController.get_stimgen)
 route("/create/save", ExperimentsController.save_exp; method = POST)
 route("/delete", ExperimentsController.delete_exp)
 
-route("/home", UserExperimentsController.home)
+route("/profile", UserExperimentsController.profile)
 route("/add", UserExperimentsController.add_exp; method = POST)
 route("/restart", UserExperimentsController.restart_exp; method = POST)
 route("/remove", UserExperimentsController.remove_exp; method = POST)
+
+route("/", PublicController.index)
+route("/FAQ", PublicController.faq)
+route("/lab", PublicController.lab)
