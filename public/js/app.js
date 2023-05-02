@@ -472,12 +472,6 @@ function deleteExperiment(form) {
     .post("/delete", {
       name: formData.get("name"),
     })
-
-    // .get("/delete", {
-    //   params: {
-    //     name: formData.get("name"),
-    //   },
-    // })
     .then(function (response) {
       sessionStorage.setItem("ToastMsg", response.data);
       window.location.reload();
