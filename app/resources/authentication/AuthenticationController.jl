@@ -60,7 +60,7 @@ function register()
     try
         user = User(
             username = params(:username) |> strip,
-            password = params(:password) |> Users.hash_password,
+            password = params(:password),
             is_admin = parse(Bool, params(:is_admin)),
         )
 
@@ -69,6 +69,8 @@ function register()
             flash("Invalid: $(errors_to_string(validator))")
             return redirect(:show_register)
         end
+
+        user.password = Users.hash_password(user.password)
 
         save(user) &&
             flash("""Successfully registered new user: "$(params(:username))". """)
