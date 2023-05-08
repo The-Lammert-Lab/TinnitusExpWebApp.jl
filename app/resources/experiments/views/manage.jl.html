@@ -7,7 +7,7 @@
 
     <div>
         <!-- TODO: Check if action and method are necessary here -->
-        <form class="d-flex align-items-center justify-content-center mt-3" id="add-form" action="/add" method="post">
+        <form class="d-flex align-items-center justify-content-center mt-3" id="add-form" method="post">
             <label class="my-1 me-2">Add experiment:</label>
             <select name="experiment" class="form-select my-1 me-sm-2 w-auto" id="add-experiment">
                 <option value="default" selected>Choose here</option>
@@ -46,7 +46,7 @@
                         <td>$(round(Int, 100*e.trials_complete / n_trials[counter]))&percnt;</td>
                         <%  if e.trials_complete == 0  %>
                             <td>
-                                <form style="float:left;" name="remove-form" method="post">
+                                <form style="float:left;" name="remove-form">
                                     <input type="hidden" name="name" value="$(e.experiment_name)">
                                     <input type="hidden" name="instance" value="$(e.instance)">
                                     <input type="hidden" name="user_id" value="$(user_id)">
