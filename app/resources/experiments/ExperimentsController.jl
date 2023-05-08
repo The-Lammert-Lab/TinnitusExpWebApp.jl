@@ -345,16 +345,22 @@ function admin()
     authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
-    init_limit = 10
+    init_limit = 2
     init_page = 1
+    max_btn_display = 4
 
     experiments = all(Experiment)
     users = get_paginated_amount(User, init_limit, init_page; is_admin = false)
     num_users = count(User; is_admin = false)
 
-    user_table_pages_itr = 1:convert(Int,ceil(num_users / init_limit))
+    max_btn = convert(Int, ceil(num_users / init_limit))
+    if max_btn <= max_btn_display
+        user_table_pages_btns = 1:max_btn
+    else
+        user_table_pages_btns = [range(1,max_btn_display-1)..., "...", max_btn]
+    end
 
-    html(:experiments, :admin; users, experiments, user_table_pages_itr, num_users)
+    html(:experiments, :admin; users, experiments, user_table_pages_btns, num_users, init_limit, init_page)
 end
 
 function manage()

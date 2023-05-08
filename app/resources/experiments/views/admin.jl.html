@@ -88,10 +88,12 @@
             <nav aria-label="User table pagination">
                 <ul id="user-table-nav" class="pagination">
                     <li id="user-table-prev-btn" class="page-item page-link disabled" onclick="updateUserTable('user-table',parseInt(sessionStorage.getItem('user-table-page'))-1);">Previous</li>
-                    <% for_each(user_table_pages_itr) do num 
+                    <% for_each(user_table_pages_btns) do num 
                         if num === 1
                     %>
                             <li name="user-table-nav-num" class="page-item page-link active" onclick="updateUserTable('user-table',$(num));">$(num)</li>
+                        <% elseif num isa AbstractString %>
+                            <li class="page-item page-link">$(num)</li>
                         <% else %>
                             <li name="user-table-nav-num" class="page-item page-link" onclick="updateUserTable('user-table',$(num));">$(num)</li>
                         <% end %>
@@ -116,8 +118,8 @@
 <script>
     ready(showToast)
 
-    sessionStorage.setItem('user-table-page', 1);
-    sessionStorage.setItem('user-table-limit', 10);
+    sessionStorage.setItem('user-table-page', $(init_page));
+    sessionStorage.setItem('user-table-limit', $(init_limit));
     sessionStorage.setItem('user-table-max', $(num_users));
 
     document
@@ -127,6 +129,7 @@
             deleteExperiment(e.target);
         })
 
-    const ddl = document.getElementById("experiment-ddl");
-    ddl.addEventListener("change", createExpButtons);
+    document
+        .getElementById("experiment-ddl")
+        .addEventListener("change", createExpButtons);
 </script>

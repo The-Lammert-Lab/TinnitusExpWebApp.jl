@@ -558,13 +558,13 @@ function updateTableLimit(tbody_id, table_update_fn, limit) {
   // Update nav bar
   const max = sessionStorage.getItem(tbody_id + "-max");
   const nav = document.getElementById(tbody_id + "-nav");
-  const nav_nums = document.getElementsByName(tbody_id + "-nav-num");
+  const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
   const next = document.getElementById(tbody_id + "-next-btn");
   const curr_page = parseInt(sessionStorage.getItem(tbody_id + "-page"));
 
   // Remove old numbers
-  while (nav_nums.length > 0) {
-    nav_nums[0].remove();
+  while (nav_btns.length > 0) {
+    nav_btns[0].remove();
   }
 
   next.remove();
@@ -606,7 +606,7 @@ function updateTablePageBtns(tbody_id, page) {
   }
 
   // Enable or disable next button
-  if (nav_btns.length === parseInt(page)) {
+  if (nav_btns[nav_btns.length - 1].innerHTML == page) {
     next_btn.setAttribute("class", "page-item page-link disabled");
   } else {
     next_btn.setAttribute("class", "page-item page-link");
