@@ -310,10 +310,10 @@ function viewStimgen(form) {
       sg_tbody.innerHTML = "";
 
       // Clear input values in experiment rows b/c all else stays same.
-      const exp_tbody = document.getElementById("experiment-settings");
-      for (let input of exp_tbody.getElementsByTagName("input")) {
-        input.value = "";
-      }
+      // const exp_tbody = document.getElementById("experiment-settings");
+      // for (let input of exp_tbody.getElementsByTagName("input")) {
+      //   input.value = "";
+      // }
       // Build new table
       const sg_data = response.data;
       for (const element in sg_data) {
@@ -397,6 +397,7 @@ function saveExperiment(form) {
     });
 } // function
 
+// Creates from template and delete buttons on admin profile page
 function createExpButtons() {
   const template_submit = document.getElementById("template-submit");
   const template_input = document.getElementById("template-name");
@@ -491,10 +492,130 @@ function deleteExperiment(form) {
     });
 } // function
 
-//
+// Specific function for updating user table on admin profile page
+function updateUserTable(
+  tbody_id,
+  page = sessionStorage.getItem("user-table-page"),
+  limit = sessionStorage.getItem("user-table-limit")
+) {
+  sessionStorage.setItem("user-table-page", page);
+  // Request server for data with which to populate table
+  axios
+    .post("/admin/getpartialdata", {
+      datatype: "User",
+      page: page,
+      limit: limit,
+    })
+    .then(function (response) {
+      updateTablePageBtns(tbody_id, page);
+
+      // Remove existing table rows
+      const tbody = document.getElementById(tbody_id);
+      tbody.innerHTML = "";
+      // Write in new data
+      response.data.forEach((username) => {
+        const row = tbody.insertRow();
+        const cell1 = row.insertCell();
+        const cell2 = row.insertCell();
+
+        const form = document.createElement("form");
+        form.setAttribute("action", "/manage");
+
+        const input = document.createElement("input");
+        input.setAttribute("type", "hidden");
+        input.setAttribute("name", "username");
+        input.setAttribute("value", username);
+        form.appendChild(input);
+
+        const submit = document.createElement("input");
+        submit.setAttribute("type", "submit");
+        submit.setAttribute("value", "Manage");
+        form.appendChild(input);
+        form.appendChild(submit);
+
+        cell1.appendChild(document.createTextNode(username));
+        cell2.appendChild(form);
+      });
+    });
+} // function
+
+// Generic function for updating table length limit
+// Calls the passed `table_update_fn`, which is specific to the table.
+// `table_update_fn` must be passed as a function, not a string.
+function updateTableLimit(tbody_id, table_update_fn, limit) {
+  if (parseInt(limit) < 1) {
+    limit = 1;
+  } else {
+    limit = parseInt(limit);
+  }
+
+  sessionStorage.setItem(tbody_id + "-limit", limit);
+  table_update_fn(
+    tbody_id,
+    parseInt(sessionStorage.getItem(tbody_id + "-page")),
+    limit
+  );
+  // Update nav bar
+  const max = sessionStorage.getItem(tbody_id + "-max");
+  const nav = document.getElementById(tbody_id + "-nav");
+  const nav_nums = document.getElementsByName(tbody_id + "-nav-num");
+  const next = document.getElementById(tbody_id + "-next-btn");
+  const curr_page = parseInt(sessionStorage.getItem(tbody_id + "-page"));
+
+  // Remove old numbers
+  while (nav_nums.length > 0) {
+    nav_nums[0].remove();
+  }
+
+  next.remove();
+  for (let i = 1; i < Math.ceil(max / limit) + 1; i++) {
+    let li = document.createElement("li");
+    li.setAttribute("name", tbody_id + "-nav-num");
+    li.setAttribute("onclick", `${table_update_fn.name}('${tbody_id}',${i})`);
+    li.innerHTML = i.toString();
+    if (i === curr_page) {
+      li.setAttribute("class", "page-item page-link active");
+    } else {
+      li.setAttribute("class", "page-item page-link");
+    }
+    nav.appendChild(li);
+  }
+  nav.appendChild(next);
+} // function
+
+// Generic function to update the enabled/disabled/active status of pagination buttons
+function updateTablePageBtns(tbody_id, page) {
+  const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
+  const prev_btn = document.getElementById(tbody_id + "-prev-btn");
+  const next_btn = document.getElementById(tbody_id + "-next-btn");
+
+  // Update highlighting on nav buttons
+  nav_btns.forEach((li) => {
+    if (li.innerHTML == page) {
+      li.setAttribute("class", "page-item page-link active");
+    } else {
+      li.setAttribute("class", "page-item page-link");
+    }
+  });
+
+  // Enable or disable previous button
+  if (parseInt(page) > 1) {
+    prev_btn.setAttribute("class", "page-item page-link");
+  } else {
+    prev_btn.setAttribute("class", "page-item page-link disabled");
+  }
+
+  // Enable or disable next button
+  if (nav_btns.length === parseInt(page)) {
+    next_btn.setAttribute("class", "page-item page-link disabled");
+  } else {
+    next_btn.setAttribute("class", "page-item page-link");
+  }
+} // function
+
+// Updates the navbar links based on the current page.
 function updateNavbarColors() {
-  const pathname = window.location.pathname;
-  const li = document.getElementById(pathname);
+  const li = document.getElementById(window.location.pathname);
   if (li !== null) {
     li.setAttribute("class", "nav-link px-2 link-secondary");
   }

@@ -12,6 +12,7 @@ route("/save", TrialsController.save_response; method = POST)
 
 route("/admin", ExperimentsController.admin)
 route("/admin/view", ExperimentsController.view_exp)
+route("/admin/getpartialdata", ExperimentsController.get_partial_data; method = POST)
 route("/manage", ExperimentsController.manage)
 route("/create", ExperimentsController.create)
 route("/create/get", ExperimentsController.get_stimgen)

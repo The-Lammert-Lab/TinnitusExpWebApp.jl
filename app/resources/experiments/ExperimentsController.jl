@@ -65,6 +65,10 @@ const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
     "PowerDistribution" => PowerDistribution,
 )
 
+const TYPE_MAPPING = Dict{String,DataType}(
+    "User" => User
+)
+
 """
     _subtypes(type::Type)    
 
@@ -310,6 +314,27 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
     return sg_fields
 end
 
+function get_paginated_amount(m::T, limit::I, page::I; kwargs...) where {T<:DataType, I<:Integer}
+    return find(m; kwargs..., limit = limit |> SQLLimit, offset = (page-1) * limit)
+end
+
+function get_partial_data()
+    # Avoid errors if any payload params come in as a string
+    limit = jsonpayload("limit") isa AbstractString ? parse(Int,jsonpayload("limit")) : jsonpayload("limit")
+    page = jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("limit")) : jsonpayload("page")
+
+    if page < 1
+        page = 1
+    end
+
+    if limit < 1
+        limit = 1
+    end
+
+    users = get_paginated_amount(TYPE_MAPPING[jsonpayload("datatype")], limit, page; is_admin = false)
+    return json(getproperty.(users, :username))
+end
+
 #########################
 
 ## PAGE FUNCTIONS ##
@@ -320,10 +345,16 @@ function admin()
     authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
-    experiments = all(Experiment)
-    users = find(User; is_admin = false)
+    init_limit = 10
+    init_page = 1
 
-    html(:experiments, :admin; users, experiments)
+    experiments = all(Experiment)
+    users = get_paginated_amount(User, init_limit, init_page; is_admin = false)
+    num_users = count(User; is_admin = false)
+
+    user_table_pages_itr = 1:convert(Int,ceil(num_users / init_limit))
+
+    html(:experiments, :admin; users, experiments, user_table_pages_itr, num_users)
 end
 
 function manage()
