@@ -507,7 +507,7 @@ function updateUserTable(
       limit: limit,
     })
     .then(function (response) {
-      updateTablePageBtns(tbody_id, page);
+      updateTableBtnHighlights(tbody_id, page);
 
       // Remove existing table rows
       const tbody = document.getElementById(tbody_id);
@@ -549,42 +549,21 @@ function updateTableLimit(tbody_id, table_update_fn, limit) {
     limit = parseInt(limit);
   }
 
+  // Update limit in session storage
   sessionStorage.setItem(tbody_id + "-limit", limit);
+
+  // Send data to update table function
   table_update_fn(
     tbody_id,
     parseInt(sessionStorage.getItem(tbody_id + "-page")),
     limit
   );
-  // Update nav bar
-  const max = sessionStorage.getItem(tbody_id + "-max");
-  const nav = document.getElementById(tbody_id + "-nav");
-  const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
-  const next = document.getElementById(tbody_id + "-next-btn");
-  const curr_page = parseInt(sessionStorage.getItem(tbody_id + "-page"));
 
-  // Remove old numbers
-  while (nav_btns.length > 0) {
-    nav_btns[0].remove();
-  }
-
-  next.remove();
-  for (let i = 1; i < Math.ceil(max / limit) + 1; i++) {
-    let li = document.createElement("li");
-    li.setAttribute("name", tbody_id + "-nav-num");
-    li.setAttribute("onclick", `${table_update_fn.name}('${tbody_id}',${i})`);
-    li.innerHTML = i.toString();
-    if (i === curr_page) {
-      li.setAttribute("class", "page-item page-link active");
-    } else {
-      li.setAttribute("class", "page-item page-link");
-    }
-    nav.appendChild(li);
-  }
-  nav.appendChild(next);
+  updateTableBtnBar(tbody_id, table_update_fn, limit);
 } // function
 
 // Generic function to update the enabled/disabled/active status of pagination buttons
-function updateTablePageBtns(tbody_id, page) {
+function updateTableBtnHighlights(tbody_id, page) {
   const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
   const prev_btn = document.getElementById(tbody_id + "-prev-btn");
   const next_btn = document.getElementById(tbody_id + "-next-btn");
@@ -612,6 +591,71 @@ function updateTablePageBtns(tbody_id, page) {
     next_btn.setAttribute("class", "page-item page-link");
   }
 } // function
+
+function updateTableBtnBar(tbody_id, table_update_fn, limit) {
+  // Update nav bar
+  const max_data = sessionStorage.getItem(tbody_id + "-max-data");
+  const nav = document.getElementById(tbody_id + "-nav");
+  const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
+  const next_btn = document.getElementById(tbody_id + "-next-btn");
+  const curr_page = parseInt(sessionStorage.getItem(tbody_id + "-page"));
+
+  // Total sequential buttons (num buttons to show in a row)
+  // This seems okay to hardcode in. It won't change with anything.
+  const total_seq_btns = 3;
+
+  // Remove old numbers and next button
+  while (nav_btns.length > 0) {
+    nav_btns[0].remove();
+  }
+  next_btn.remove();
+
+  // Set useful variables
+  const max_btn = Math.ceil(max_data / limit);
+  const min_btn = curr_page % 2 && curr_page > 1 ? curr_page : 1;
+  let btn_itr =
+    min_btn + total_seq_btns < max_btn ? min_btn + total_seq_btns : max_btn + 1;
+
+  // Create and append the new buttons
+  for (let i = min_btn; i < btn_itr; i++) {
+    let li = document.createElement("li");
+    li.setAttribute("name", tbody_id + "-nav-num");
+    li.setAttribute("onclick", `${table_update_fn.name}('${tbody_id}',${i})`);
+    li.innerHTML = i.toString();
+    if (i === curr_page) {
+      li.setAttribute("class", "page-item page-link active");
+    } else {
+      li.setAttribute("class", "page-item page-link");
+    }
+    nav.appendChild(li);
+  }
+
+  // Add "..." and last button
+  if (max_btn > min_btn + total_seq_btns) {
+    const li_ellipsis = document.createElement("li");
+    li_ellipsis.setAttribute("name", tbody_id + "-nav-num");
+    li_ellipsis.setAttribute("class", "page-item page-link");
+    li_ellipsis.innerHTML = "...";
+    nav.appendChild(li_ellipsis);
+
+    const li = document.createElement("li");
+    li.setAttribute("name", tbody_id + "-nav-num");
+    li.setAttribute(
+      "onclick",
+      `${table_update_fn.name}('${tbody_id}',${max_btn})`
+    );
+    li.innerHTML = max_btn.toString();
+    if (max_btn === curr_page) {
+      li.setAttribute("class", "page-item page-link active");
+    } else {
+      li.setAttribute("class", "page-item page-link");
+    }
+    nav.appendChild(li);
+  }
+
+  // Add next button to the end of the numbers
+  nav.appendChild(next_btn);
+}
 
 // Updates the navbar links based on the current page.
 function updateNavbarColors() {

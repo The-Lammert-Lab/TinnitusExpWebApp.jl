@@ -59,8 +59,11 @@
             <div class="d-flex align-items-center justify-content-end">
                 <b><label class="my-1 me-1" for="user-table-limit">Show:</label></b>
                 <select id="user-table-limit" class="form-select w-auto" onchange="updateTableLimit('user-table',updateUserTable,this.value);">
-                    <option value="10">10</option>
+                    <!-- <option value="10">10</option>
                     <option value="25">25</option>
+                    <option value="50">50</option> -->
+                    <option value="1">1</option>
+                    <option value="2">2</option>
                     <option value="50">50</option>
                 </select>
             </div>
@@ -93,7 +96,7 @@
                     %>
                             <li name="user-table-nav-num" class="page-item page-link active" onclick="updateUserTable('user-table',$(num));">$(num)</li>
                         <% elseif num isa AbstractString %>
-                            <li class="page-item page-link">$(num)</li>
+                            <li name="user-table-nav-num" class="page-item page-link">$(num)</li>
                         <% else %>
                             <li name="user-table-nav-num" class="page-item page-link" onclick="updateUserTable('user-table',$(num));">$(num)</li>
                         <% end %>
@@ -120,7 +123,7 @@
 
     sessionStorage.setItem('user-table-page', $(init_page));
     sessionStorage.setItem('user-table-limit', $(init_limit));
-    sessionStorage.setItem('user-table-max', $(num_users));
+    sessionStorage.setItem('user-table-max-data', $(num_users));
 
     document
         .getElementById("delete-form")
