@@ -493,13 +493,12 @@ function deleteExperiment(form) {
 } // function
 
 // Specific function for updating user table on admin profile page
-function updateUserTable(
-  tbody_id,
-  page = sessionStorage.getItem("user-table-page"),
-  limit = sessionStorage.getItem("user-table-limit")
-) {
-  sessionStorage.setItem("user-table-page", page);
+function updateUserTable() {
+  // sessionStorage.setItem("user-table-page", page);
   // Request server for data with which to populate table
+  tbody_id = "user-table";
+  const page = sessionStorage.getItem(tbody_id + "-page");
+  const limit = sessionStorage.getItem(tbody_id + "-limit");
   axios
     .post("/admin/getpartialdata", {
       datatype: "User",
@@ -507,8 +506,6 @@ function updateUserTable(
       limit: limit,
     })
     .then(function (response) {
-      updateTableBtnHighlights(tbody_id, page);
-
       // Remove existing table rows
       const tbody = document.getElementById(tbody_id);
       tbody.innerHTML = "";
@@ -552,14 +549,34 @@ function updateTableLimit(tbody_id, table_update_fn, limit) {
   // Update limit in session storage
   sessionStorage.setItem(tbody_id + "-limit", limit);
 
-  // Send data to update table function
-  table_update_fn(
-    tbody_id,
-    parseInt(sessionStorage.getItem(tbody_id + "-page")),
-    limit
-  );
+  // Invoke table-specific function
+  table_update_fn();
 
-  updateTableBtnBar(tbody_id, table_update_fn, limit);
+  updateTableBtnBar(tbody_id, table_update_fn);
+  updateTableBtnHighlights(
+    tbody_id,
+    sessionStorage.getItem(tbody_id + "-page")
+  );
+} // function
+
+// Generic function for updating table page number
+// Calls the passed `table_update_fn`, which is specific to the table.
+// `table_update_fn` must be passed as a function, not a string.
+function updateTablePage(tbody_id, table_update_fn, page) {
+  if (parseInt(page) < 1) {
+    page = 1;
+  } else {
+    page = parseInt(page);
+  }
+
+  // Update page in session storage
+  sessionStorage.setItem(tbody_id + "-page", page);
+
+  // Invoke table-specific function
+  table_update_fn();
+
+  updateTableBtnBar(tbody_id, table_update_fn);
+  updateTableBtnHighlights(tbody_id, page);
 } // function
 
 // Generic function to update the enabled/disabled/active status of pagination buttons
@@ -592,17 +609,56 @@ function updateTableBtnHighlights(tbody_id, page) {
   }
 } // function
 
-function updateTableBtnBar(tbody_id, table_update_fn, limit) {
+function updateTableBtnBar(tbody_id, table_update_fn) {
   // Update nav bar
   const max_data = sessionStorage.getItem(tbody_id + "-max-data");
   const nav = document.getElementById(tbody_id + "-nav");
   const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
   const next_btn = document.getElementById(tbody_id + "-next-btn");
-  const curr_page = parseInt(sessionStorage.getItem(tbody_id + "-page"));
+  let curr_page = parseInt(sessionStorage.getItem(tbody_id + "-page"));
+  const limit = parseInt(sessionStorage.getItem(tbody_id + "-limit"));
 
   // Total sequential buttons (num buttons to show in a row)
   // This seems okay to hardcode in. It won't change with anything.
   const total_seq_btns = 3;
+
+  // Max page for current limit
+  const max_btn = Math.ceil(max_data / limit);
+
+  // Bool for if new limit was set
+  const is_new_lim =
+    max_btn !== parseInt(nav_btns[nav_btns.length - 1].innerHTML);
+
+  // Don't do anything if first or second button was clicked
+  // Or if all remaining buttons are visible and requested page is within them.
+  if (
+    Array.from(nav_btns, (x) => parseInt(x.innerHTML))
+      .slice(0, 2)
+      .includes(curr_page) &&
+    !is_new_lim
+  ) {
+    return;
+  } else if (
+    nav_btns.length === total_seq_btns + 1 &&
+    curr_page !== parseInt(nav_btns[0].innerHTML) - 1 &&
+    !is_new_lim
+  ) {
+    return;
+  }
+
+  let min_btn;
+  // Reset to 1 if new limit
+  if (is_new_lim) {
+    min_btn = 1;
+    curr_page = 1;
+    sessionStorage.setItem(tbody_id + "-page", curr_page);
+  } else if (curr_page === max_btn) {
+    min_btn = max_btn - total_seq_btns + 1;
+  } else if (curr_page === parseInt(nav_btns[total_seq_btns - 1].innerHTML)) {
+    min_btn = curr_page;
+  } else {
+    min_btn = curr_page - 1;
+  }
 
   // Remove old numbers and next button
   while (nav_btns.length > 0) {
@@ -610,9 +666,6 @@ function updateTableBtnBar(tbody_id, table_update_fn, limit) {
   }
   next_btn.remove();
 
-  // Set useful variables
-  const max_btn = Math.ceil(max_data / limit);
-  const min_btn = curr_page % 2 && curr_page > 1 ? curr_page : 1;
   let btn_itr =
     min_btn + total_seq_btns < max_btn ? min_btn + total_seq_btns : max_btn + 1;
 
@@ -620,7 +673,10 @@ function updateTableBtnBar(tbody_id, table_update_fn, limit) {
   for (let i = min_btn; i < btn_itr; i++) {
     let li = document.createElement("li");
     li.setAttribute("name", tbody_id + "-nav-num");
-    li.setAttribute("onclick", `${table_update_fn.name}('${tbody_id}',${i})`);
+    li.setAttribute(
+      "onclick",
+      `updateTablePage('${tbody_id}',${table_update_fn.name},${i})`
+    );
     li.innerHTML = i.toString();
     if (i === curr_page) {
       li.setAttribute("class", "page-item page-link active");
@@ -642,7 +698,7 @@ function updateTableBtnBar(tbody_id, table_update_fn, limit) {
     li.setAttribute("name", tbody_id + "-nav-num");
     li.setAttribute(
       "onclick",
-      `${table_update_fn.name}('${tbody_id}',${max_btn})`
+      `updateTablePage('${tbody_id}',${table_update_fn.name},${max_btn})`
     );
     li.innerHTML = max_btn.toString();
     if (max_btn === curr_page) {
