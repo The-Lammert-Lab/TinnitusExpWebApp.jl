@@ -506,6 +506,7 @@ function updateUserTable() {
       limit: limit,
     })
     .then(function (response) {
+      console.log(response.data);
       // Remove existing table rows
       const tbody = document.getElementById(tbody_id);
       tbody.innerHTML = "";
@@ -618,7 +619,7 @@ function updateTableBtnBar(tbody_id, table_update_fn) {
   const nav = document.getElementById(tbody_id + "-nav");
   const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
   const next_btn = document.getElementById(tbody_id + "-next-btn");
-  let curr_page = parseInt(sessionStorage.getItem(tbody_id + "-page"));
+  const curr_page = parseInt(sessionStorage.getItem(tbody_id + "-page"));
   const limit = parseInt(sessionStorage.getItem(tbody_id + "-limit"));
 
   // Total sequential buttons (num buttons to show in a row)
@@ -630,10 +631,11 @@ function updateTableBtnBar(tbody_id, table_update_fn) {
 
   // Don't do anything if first or second button was clicked
   // Or if all remaining buttons are visible and requested page is within them.
+  const btn_vals = Array.from(nav_btns, (x) => parseInt(x.innerHTML));
   if (
-    Array.from(nav_btns, (x) => parseInt(x.innerHTML))
-      .slice(0, 2)
-      .includes(curr_page)
+    btn_vals.slice(0, 2).includes(curr_page) ||
+    (!Array.from(nav_btns, (x) => x.innerHTML).includes("...") &&
+      btn_vals.includes(curr_page))
   ) {
     return;
   }
