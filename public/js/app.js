@@ -399,6 +399,7 @@ function saveExperiment(form) {
 
 // Creates from template and delete buttons on admin profile page
 function createExpButtons() {
+  const ddl = document.getElementById("experiment-ddl");
   const template_submit = document.getElementById("template-submit");
   const template_input = document.getElementById("template-name");
   const delete_submit = document.getElementById("delete-submit");
@@ -612,8 +613,10 @@ function updateTableBtnHighlights(tbody_id, page) {
   }
 } // function
 
+// Generic function for updating the button bar on a paginated table
+// Based on the id for table body and its specific update function
 function updateTableBtnBar(tbody_id, table_update_fn) {
-  // Update nav bar
+  // Get useful constants
   const max_data = sessionStorage.getItem(tbody_id + "-max-data");
   const nav = document.getElementById(tbody_id + "-nav");
   const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
@@ -628,6 +631,7 @@ function updateTableBtnBar(tbody_id, table_update_fn) {
   // Max page for current limit
   const max_btn = Math.ceil(max_data / limit);
 
+  // Flag for if limit has changed.
   const is_new_lim =
     max_btn !== parseInt(nav_btns[nav_btns.length - 1].innerHTML);
 
@@ -707,7 +711,7 @@ function updateTableBtnBar(tbody_id, table_update_fn) {
 
   // Add next button to the end of the numbers
   nav.appendChild(next_btn);
-}
+} // function
 
 // Updates the navbar links based on the current page.
 function updateNavbarColors() {
