@@ -42,8 +42,19 @@
             </table>
         </div>
 
-        <div class="col-md" style="margin-top:14px">
-            <table class="table styled-table">
+        <div class="col-md">
+            <div class="d-flex align-items-center justify-content-end">
+                <b><label class="my-1 me-1" for="user-experiment-limit">Show:</label></b>
+                <select id="user-experiment-limit" class="form-select w-auto" onchange="updateTableLimit('user-experiment',updateUserExpTable,this.value);">
+                    <!-- <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option> -->
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            <table class="table styled-table mb-0 mt-0">
                 <thead>
                     <tr>
                         <th>Users</th>
@@ -51,8 +62,14 @@
                         <th>Percent Complete</th>
                     </tr>
                 </thead>
-                <tbody id="user-experiment-data"></tbody>
+                <tbody id="user-experiment"></tbody>
             </table>
+            <nav aria-label="User table pagination">
+                <ul id="user-experiment-nav" class="pagination">
+                    <li id="user-experiment-prev-btn" class="page-item page-link disabled" onclick="updateTablePage('user-experiment',updateUserExpTable,parseInt(sessionStorage.getItem('user-experiment-page'))-1);">Previous</li>
+                    <li id="user-experiment-next-btn" class="page-item page-link disabled" onclick="updateTablePage('user-experiment',updateUserExpTable,parseInt(sessionStorage.getItem('user-experiment-page'))+1);">Next</li>
+                </ul>
+            </nav>
         </div>
 
         <div class="col-md">
@@ -101,7 +118,7 @@
                             <li name="user-table-nav-num" class="page-item page-link" onclick="updateTablePage('user-table',updateUserTable,$(num));">$(num)</li>
                         <% end %>
                     <% end %>
-                  <li id="user-table-next-btn" class="page-item page-link" onclick="updateTablePage('user-table',updateUserTable,parseInt(sessionStorage.getItem('user-table-page'))+1);">Next</li>
+                    <li id="user-table-next-btn" class="page-item page-link" onclick="updateTablePage('user-table',updateUserTable,parseInt(sessionStorage.getItem('user-table-page'))+1);">Next</li>
                 </ul>
             </nav>
         </div>
@@ -117,13 +134,17 @@
         <div class="toast-body"></div>
     </div>
 </div>
-  
+
 <script>
     ready(showToast)
 
     sessionStorage.setItem('user-table-page', $(init_page));
     sessionStorage.setItem('user-table-limit', $(init_limit));
     sessionStorage.setItem('user-table-max-data', $(num_users));
+
+    sessionStorage.setItem('user-experiment-page', $(init_page));
+    sessionStorage.setItem('user-experiment-limit', $(init_limit));
+    sessionStorage.setItem('user-experiment-max-data', $(num_exps));
 
     document
         .getElementById("delete-form")

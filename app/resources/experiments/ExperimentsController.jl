@@ -352,6 +352,7 @@ function admin()
     experiments = all(Experiment)
     users = get_paginated_amount(User, init_limit, init_page; is_admin = false)
     num_users = count(User; is_admin = false)
+    num_exps = 1
 
     max_btn = convert(Int, ceil(num_users / init_limit))
     if max_btn <= max_btn_display
@@ -360,7 +361,7 @@ function admin()
         user_table_pages_btns = [range(1,max_btn_display-1)..., "...", max_btn]
     end
 
-    html(:experiments, :admin; users, experiments, user_table_pages_btns, num_users, init_limit, init_page)
+    html(:experiments, :admin; users, experiments, user_table_pages_btns, num_users, num_exps, init_limit, init_page)
 end
 
 function manage()

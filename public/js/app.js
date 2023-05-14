@@ -259,7 +259,7 @@ function viewExperiment(experiment) {
       // NOTE: use innerHTML to get row value
 
       // Make table with user information for this experiment
-      const user_table = document.getElementById("user-experiment-data");
+      const user_table = document.getElementById("user-experiment");
       user_table.innerHTML = ""; // Delete old table rows
       const user_data = response.data.user_data.value;
       for (const element in user_data) {
@@ -438,7 +438,7 @@ function createExpButtons() {
       .catch((error) => {});
   } else {
     document.getElementById("experiment-settings").innerHTML = "";
-    document.getElementById("user-experiment-data").innerHTML = "";
+    document.getElementById("user-experiment").innerHTML = "";
     template_submit.remove();
     template_input.setAttribute("value", "");
     delete_submit.remove();
