@@ -547,11 +547,14 @@ function updateTableLimit(tbody_id, table_update_fn, limit) {
   }
 
   // Update limit in session storage
+  // Reset page to 1 if new limit
   sessionStorage.setItem(tbody_id + "-limit", limit);
+  sessionStorage.setItem(tbody_id + "-page", 1);
 
   // Invoke table-specific function
   table_update_fn();
 
+  // Update buttons first (new limit changes page)
   updateTableBtnBar(tbody_id, table_update_fn);
   updateTableBtnHighlights(
     tbody_id,
@@ -625,33 +628,19 @@ function updateTableBtnBar(tbody_id, table_update_fn) {
   // Max page for current limit
   const max_btn = Math.ceil(max_data / limit);
 
-  // Bool for if new limit was set
-  const is_new_lim =
-    max_btn !== parseInt(nav_btns[nav_btns.length - 1].innerHTML);
-
   // Don't do anything if first or second button was clicked
   // Or if all remaining buttons are visible and requested page is within them.
   if (
     Array.from(nav_btns, (x) => parseInt(x.innerHTML))
       .slice(0, 2)
-      .includes(curr_page) &&
-    !is_new_lim
-  ) {
-    return;
-  } else if (
-    nav_btns.length === total_seq_btns + 1 &&
-    curr_page !== parseInt(nav_btns[0].innerHTML) - 1 &&
-    !is_new_lim
+      .includes(curr_page)
   ) {
     return;
   }
 
   let min_btn;
-  // Reset to 1 if new limit
-  if (is_new_lim) {
+  if (curr_page === 1) {
     min_btn = 1;
-    curr_page = 1;
-    sessionStorage.setItem(tbody_id + "-page", curr_page);
   } else if (curr_page === max_btn) {
     min_btn = max_btn - total_seq_btns + 1;
   } else if (curr_page === parseInt(nav_btns[total_seq_btns - 1].innerHTML)) {
