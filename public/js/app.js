@@ -506,7 +506,6 @@ function updateUserTable() {
       limit: limit,
     })
     .then(function (response) {
-      console.log(response.data);
       // Remove existing table rows
       const tbody = document.getElementById(tbody_id);
       tbody.innerHTML = "";
@@ -640,6 +639,7 @@ function updateTableBtnBar(tbody_id, table_update_fn) {
     return;
   }
 
+  // Set minimum button
   let min_btn;
   if (curr_page === 1) {
     min_btn = 1;
@@ -657,6 +657,7 @@ function updateTableBtnBar(tbody_id, table_update_fn) {
   }
   next_btn.remove();
 
+  // How many buttons to generate
   let btn_itr =
     min_btn + total_seq_btns < max_btn ? min_btn + total_seq_btns : max_btn + 1;
 

@@ -321,7 +321,7 @@ end
 function get_partial_data()
     # Avoid errors if any payload params come in as a string
     limit = jsonpayload("limit") isa AbstractString ? parse(Int,jsonpayload("limit")) : jsonpayload("limit")
-    page = jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("limit")) : jsonpayload("page")
+    page = jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) : jsonpayload("page")
 
     if page < 1
         page = 1
