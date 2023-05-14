@@ -628,12 +628,16 @@ function updateTableBtnBar(tbody_id, table_update_fn) {
   // Max page for current limit
   const max_btn = Math.ceil(max_data / limit);
 
+  const is_new_lim =
+    max_btn !== parseInt(nav_btns[nav_btns.length - 1].innerHTML);
+
   // Don't do anything if first or second button was clicked
   // Or if all remaining buttons are visible and requested page is within them.
   const btn_vals = Array.from(nav_btns, (x) => parseInt(x.innerHTML));
   if (
-    btn_vals.slice(0, 2).includes(curr_page) ||
-    (!Array.from(nav_btns, (x) => x.innerHTML).includes("...") &&
+    (!is_new_lim && btn_vals.slice(0, 2).includes(curr_page)) ||
+    (!is_new_lim &&
+      !Array.from(nav_btns, (x) => x.innerHTML).includes("...") &&
       btn_vals.includes(curr_page))
   ) {
     return;
