@@ -338,11 +338,13 @@ function get_partial_data()
         limit = 1
     end
 
-    if jsonpayload("type") == "User"
-        users = get_paginated_amount(TYPE_MAPPING[jsonpayload("type")], limit, page; is_admin = false)
+    type_str = jsonpayload("type")
+
+    if type_str == "User"
+        users = get_paginated_amount(TYPE_MAPPING[type_str], limit, page; is_admin = false)
         return json(getproperty.(users, :username))
-    elseif jsonpayload("type") == "UserExperiment"
-        users_with_curr_exp = get_paginated_amount(TYPE_MAPPING[jsonpayload("type")], limit, page; experiment_name = jsonpayload("name"))
+    elseif type_str == "UserExperiment"
+        users_with_curr_exp = get_paginated_amount(TYPE_MAPPING[type_str], limit, page; experiment_name = jsonpayload("name"))
 
         user_data = Vector{Dict{Symbol,Any}}(undef, length(users_with_curr_exp))
         cache = Dict{DbId,String}()
@@ -366,7 +368,7 @@ function get_partial_data()
         end
 
         return json(
-            Dict(:user_data => (:value => user_data)),
+            Dict(:user_data => (:value => user_data), :max_data => (:value => count(TYPE_MAPPING[type_str]; experiment_name = jsonpayload("name")))),
         )        
     end
 end

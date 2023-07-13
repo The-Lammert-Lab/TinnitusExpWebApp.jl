@@ -552,6 +552,10 @@ function updateUserExpTable() {
       name: ddl.value,
     })
     .then(function (response) {
+      sessionStorage.setItem(
+        tbody_id + "-max-data",
+        response.data.max_data.value
+      );
       makeUserExpTable(response.data.user_data.value);
     });
 }
@@ -636,7 +640,7 @@ function updateTableBtnHighlights(tbody_id, page) {
 // Based on the id for table body and its specific update function
 function updateTableBtnBar(tbody_id, table_update_fn) {
   // Get useful constants
-  const max_data = sessionStorage.getItem(tbody_id + "-max-data");
+  const max_data = parseInt(sessionStorage.getItem(tbody_id + "-max-data"));
   const nav = document.getElementById(tbody_id + "-nav");
   const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
   const next_btn = document.getElementById(tbody_id + "-next-btn");
