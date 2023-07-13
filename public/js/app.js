@@ -230,15 +230,35 @@ function removeExperiment(form) {
     });
 } // function
 
+function makeUserExpTable(user_data) {
+  // Make table with user information for this experiment
+  const user_table = document.getElementById("user-experiment");
+  user_table.innerHTML = ""; // Delete old table rows
+  for (const element in user_data) {
+    let row = user_table.insertRow();
+    let cell1 = row.insertCell();
+    let cell2 = row.insertCell();
+    let cell3 = row.insertCell();
+    let username = document.createTextNode(user_data[element].username);
+    let instance = document.createTextNode(user_data[element].instance);
+    let perc_complete = document.createTextNode(
+      user_data[element].percent_complete + "%"
+    );
+    cell1.appendChild(username);
+    cell2.appendChild(instance);
+    cell3.appendChild(perc_complete);
+  }
+}
+
 // Send experiment name to server and build
 // table with settings and table with
 // status of this experiment for all users from response data.
 function viewExperiment(experiment) {
   const result = axios
-    .get("/admin/view", {
-      params: {
-        name: experiment,
-      },
+    .post("/admin/view", {
+      name: experiment,
+      page: sessionStorage.getItem("user-experiment-page"),
+      limit: sessionStorage.getItem("user-experiment-limit"),
     })
     .then(function (response) {
       // Make table for experimental settings
@@ -256,26 +276,9 @@ function viewExperiment(experiment) {
         cell2.appendChild(val);
       }
       // TODO: Sort table
-      // NOTE: use innerHTML to get row value
 
-      // Make table with user information for this experiment
-      const user_table = document.getElementById("user-experiment");
-      user_table.innerHTML = ""; // Delete old table rows
       const user_data = response.data.user_data.value;
-      for (const element in user_data) {
-        let row = user_table.insertRow();
-        let cell1 = row.insertCell();
-        let cell2 = row.insertCell();
-        let cell3 = row.insertCell();
-        let username = document.createTextNode(user_data[element].username);
-        let instance = document.createTextNode(user_data[element].instance);
-        let perc_complete = document.createTextNode(
-          user_data[element].percent_complete + "%"
-        );
-        cell1.appendChild(username);
-        cell2.appendChild(instance);
-        cell3.appendChild(perc_complete);
-      }
+      makeUserExpTable(user_data);
       return user_data.length > 0 ? true : false;
     })
     .catch(function (error) {
@@ -309,11 +312,6 @@ function viewStimgen(form) {
       // Fully delete stimgen rows (do not know what new ones will be added)
       sg_tbody.innerHTML = "";
 
-      // Clear input values in experiment rows b/c all else stays same.
-      // const exp_tbody = document.getElementById("experiment-settings");
-      // for (let input of exp_tbody.getElementsByTagName("input")) {
-      //   input.value = "";
-      // }
       // Build new table
       const sg_data = response.data;
       for (const element in sg_data) {
@@ -439,9 +437,13 @@ function createExpButtons() {
   } else {
     document.getElementById("experiment-settings").innerHTML = "";
     document.getElementById("user-experiment").innerHTML = "";
-    template_submit.remove();
+    if (template_submit !== null) {
+      template_submit.remove();
+    }
     template_input.setAttribute("value", "");
-    delete_submit.remove();
+    if (delete_submit !== null) {
+      delete_submit.remove();
+    }
     delete_input.setAttribute("value", "");
   }
 } // function
@@ -497,12 +499,12 @@ function deleteExperiment(form) {
 function updateUserTable() {
   // sessionStorage.setItem("user-table-page", page);
   // Request server for data with which to populate table
-  tbody_id = "user-table";
+  const tbody_id = "user-table";
   const page = sessionStorage.getItem(tbody_id + "-page");
   const limit = sessionStorage.getItem(tbody_id + "-limit");
   axios
     .post("/admin/getpartialdata", {
-      datatype: "User",
+      type: "User",
       page: page,
       limit: limit,
     })
@@ -536,6 +538,23 @@ function updateUserTable() {
       });
     });
 } // function
+
+function updateUserExpTable() {
+  const tbody_id = "user-experiment";
+  const page = sessionStorage.getItem(tbody_id + "-page");
+  const limit = sessionStorage.getItem(tbody_id + "-limit");
+  const ddl = document.getElementById("experiment-ddl");
+  axios
+    .post("/admin/getpartialdata", {
+      type: "UserExperiment",
+      page: page,
+      limit: limit,
+      name: ddl.value,
+    })
+    .then(function (response) {
+      makeUserExpTable(response.data.user_data.value);
+    });
+}
 
 // Generic function for updating table length limit
 // Calls the passed `table_update_fn`, which is specific to the table.

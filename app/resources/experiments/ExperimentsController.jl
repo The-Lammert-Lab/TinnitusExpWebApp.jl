@@ -66,7 +66,8 @@ const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
 )
 
 const TYPE_MAPPING = Dict{String,DataType}(
-    "User" => User
+    "User" => User,
+    "UserExperiment" => UserExperiment,
 )
 
 """
@@ -122,17 +123,23 @@ function view_exp()
     authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
-    ex = findone(Experiment; name = params(:name))
+    # name = params(:name)
+    name = jsonpayload("name")
+    limit = jsonpayload("limit") isa AbstractString ? parse(Int,jsonpayload("limit")) : jsonpayload("limit")
+    page = jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) : jsonpayload("page")
+
+    ex = findone(Experiment; name = name)
     if ex === nothing
         return Router.error(
             INTERNAL_ERROR,
-            """Could not find an experiment with name "$(params(:name))".""",
+            """Could not find an experiment with name "$(name)".""",
             MIME"application/json",
         )
     end
 
     # Get all user experiments for this experiment
-    added_experiments = find(UserExperiment; experiment_name = params(:name))
+    added_experiments = get_paginated_amount(UserExperiment, limit, page; experiment_name = name)
+    added_experiments = find(UserExperiment; experiment_name = name)
 
     # Make a vector of dicts with data to display
     user_data = Vector{Dict{Symbol,Any}}(undef, length(added_experiments))
@@ -323,16 +330,45 @@ function get_partial_data()
     limit = jsonpayload("limit") isa AbstractString ? parse(Int,jsonpayload("limit")) : jsonpayload("limit")
     page = jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) : jsonpayload("page")
 
-    if page < 1
+    if page < 1 || page === nothing
         page = 1
     end
 
-    if limit < 1
+    if limit < 1 || limit === nothing
         limit = 1
     end
 
-    users = get_paginated_amount(TYPE_MAPPING[jsonpayload("datatype")], limit, page; is_admin = false)
-    return json(getproperty.(users, :username))
+    if jsonpayload("type") == "User"
+        users = get_paginated_amount(TYPE_MAPPING[jsonpayload("type")], limit, page; is_admin = false)
+        return json(getproperty.(users, :username))
+    elseif jsonpayload("type") == "UserExperiment"
+        users_with_curr_exp = get_paginated_amount(TYPE_MAPPING[jsonpayload("type")], limit, page; experiment_name = jsonpayload("name"))
+
+        user_data = Vector{Dict{Symbol,Any}}(undef, length(users_with_curr_exp))
+        cache = Dict{DbId,String}()
+        for (ind, ae) in enumerate(users_with_curr_exp)
+            # Simple memoization 
+            if ae.user_id in keys(cache)
+                username = cache[ae.user_id]
+            else
+                username = findone(User; id = ae.user_id).username
+                cache[ae.user_id] = username
+            end
+    
+            n_trials = findone(Experiment; name = ae.experiment_name).n_trials
+    
+            # Add dictionary to user_data
+            user_data[ind] = Dict(
+                :username => username,
+                :instance => ae.instance,
+                :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
+            )
+        end
+
+        return json(
+            Dict(:user_data => (:value => user_data)),
+        )        
+    end
 end
 
 #########################

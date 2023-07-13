@@ -30,8 +30,8 @@
     </div>
 
     <div class="row">
-        <div class="col-md" style="margin-top:14px">
-            <table class="table styled-table">
+        <div class="col-md" style="margin-top:38px">
+            <table class="table styled-table mt-0">
                 <thead>
                     <tr>
                         <th>Field</th>
@@ -67,6 +67,7 @@
             <nav aria-label="User table pagination">
                 <ul id="user-experiment-nav" class="pagination">
                     <li id="user-experiment-prev-btn" class="page-item page-link disabled" onclick="updateTablePage('user-experiment',updateUserExpTable,parseInt(sessionStorage.getItem('user-experiment-page'))-1);">Previous</li>
+                    <li name="user-experiment-nav-num" class="page-item page-link active" onclick="updateTablePage('user-experiment',updateUserExpTable,1);">1</li>
                     <li id="user-experiment-next-btn" class="page-item page-link disabled" onclick="updateTablePage('user-experiment',updateUserExpTable,parseInt(sessionStorage.getItem('user-experiment-page'))+1);">Next</li>
                 </ul>
             </nav>
@@ -108,9 +109,8 @@
             <nav aria-label="User table pagination">
                 <ul id="user-table-nav" class="pagination">
                     <li id="user-table-prev-btn" class="page-item page-link disabled" onclick="updateTablePage('user-table',updateUserTable,parseInt(sessionStorage.getItem('user-table-page'))-1);">Previous</li>
-                    <% for_each(user_table_pages_btns) do num 
-                        if num === 1
-                    %>
+                    <% for_each(user_table_pages_btns) do num %>
+                        <% if num === 1 %>
                             <li name="user-table-nav-num" class="page-item page-link active" onclick="updateTablePage('user-table',updateUserTable,$(num));">$(num)</li>
                         <% elseif num isa AbstractString %>
                             <li name="user-table-nav-num" class="page-item page-link">$(num)</li>
