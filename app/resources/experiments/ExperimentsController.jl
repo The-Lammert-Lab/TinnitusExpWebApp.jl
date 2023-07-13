@@ -107,6 +107,36 @@ function stimgen_from_json(json::T, name::T) where {T<:AbstractString}
 end
 
 """
+    ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
+
+Converts UserExperiments to dictionary with 
+    username, instance, and percent_complete fields.
+"""
+function ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
+    user_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
+    cache = Dict{DbId,String}()
+    for (ind, ae) in enumerate(UE)
+        # Simple memoization 
+        if ae.user_id in keys(cache)
+            username = cache[ae.user_id]
+        else
+            username = findone(User; id = ae.user_id).username
+            cache[ae.user_id] = username
+        end
+
+        n_trials = findone(Experiment; name = ae.experiment_name).n_trials
+
+        # Add dictionary to user_data
+        user_data[ind] = Dict(
+            :username => username,
+            :instance => ae.instance,
+            :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
+        )
+    end
+    return user_data
+end
+
+"""
     view_exp()
 
 Returns JSON response of requested experiment's fields and status for all users.
@@ -140,28 +170,7 @@ function view_exp()
     # Get all user experiments for this experiment
     added_experiments = get_paginated_amount(UserExperiment, limit, page; experiment_name = name)
     added_experiments = find(UserExperiment; experiment_name = name)
-
-    # Make a vector of dicts with data to display
-    user_data = Vector{Dict{Symbol,Any}}(undef, length(added_experiments))
-    cache = Dict{DbId,String}()
-    for (ind, ae) in enumerate(added_experiments)
-        # Simple memoization 
-        if ae.user_id in keys(cache)
-            username = cache[ae.user_id]
-        else
-            username = findone(User; id = ae.user_id).username
-            cache[ae.user_id] = username
-        end
-
-        n_trials = findone(Experiment; name = ae.experiment_name).n_trials
-
-        # Add dictionary to user_data
-        user_data[ind] = Dict(
-            :username => username,
-            :instance => ae.instance,
-            :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
-        )
-    end
+    user_data = ue2dict(added_experiments)
 
     # Pre-process experiment fields
     exp_data = Dict() # Can't initialize length b/c varying stimgen_settings fields
@@ -345,28 +354,8 @@ function get_partial_data()
         return json(getproperty.(users, :username))
     elseif type_str == "UserExperiment"
         users_with_curr_exp = get_paginated_amount(TYPE_MAPPING[type_str], limit, page; experiment_name = jsonpayload("name"))
-
-        user_data = Vector{Dict{Symbol,Any}}(undef, length(users_with_curr_exp))
-        cache = Dict{DbId,String}()
-        for (ind, ae) in enumerate(users_with_curr_exp)
-            # Simple memoization 
-            if ae.user_id in keys(cache)
-                username = cache[ae.user_id]
-            else
-                username = findone(User; id = ae.user_id).username
-                cache[ae.user_id] = username
-            end
-    
-            n_trials = findone(Experiment; name = ae.experiment_name).n_trials
-    
-            # Add dictionary to user_data
-            user_data[ind] = Dict(
-                :username => username,
-                :instance => ae.instance,
-                :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
-            )
-        end
-
+        user_data = ue2dict(users_with_curr_exp)
+        
         return json(
             Dict(:user_data => (:value => user_data), :max_data => (:value => count(TYPE_MAPPING[type_str]; experiment_name = jsonpayload("name")))),
         )        
@@ -390,7 +379,6 @@ function admin()
     experiments = all(Experiment)
     users = get_paginated_amount(User, init_limit, init_page; is_admin = false)
     num_users = count(User; is_admin = false)
-    num_exps = 1
 
     max_btn = convert(Int, ceil(num_users / init_limit))
     if max_btn <= max_btn_display
@@ -399,7 +387,7 @@ function admin()
         user_table_pages_btns = [range(1,max_btn_display-1)..., "...", max_btn]
     end
 
-    html(:experiments, :admin; users, experiments, user_table_pages_btns, num_users, num_exps, init_limit, init_page)
+    html(:experiments, :admin; users, experiments, user_table_pages_btns, num_users, init_limit, init_page)
 end
 
 function manage()
