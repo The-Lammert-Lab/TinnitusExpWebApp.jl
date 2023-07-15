@@ -22,7 +22,9 @@ Converts UserExperiments to dictionary with
     Slightly different from `ue2dict` in ExperimentsController.
     Distinguished by the module, not the arguments. 
 """
-function ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
+function ue2dict(
+    UE::V,
+) where {V<:Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
     ae_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
     for (ind, ae) in enumerate(UE)
         n_trials = findone(Experiment; name = ae.experiment_name).n_trials
@@ -40,7 +42,7 @@ function ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.
             :name => ae.experiment_name,
             :instance => ae.instance,
             :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
-            :status => status
+            :status => status,
         )
     end
     return ae_data
@@ -176,8 +178,12 @@ end
 
 function get_partial_data()
     # Avoid errors if any payload params come in as a string
-    limit = jsonpayload("limit") isa AbstractString ? parse(Int,jsonpayload("limit")) : jsonpayload("limit")
-    page = jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) : jsonpayload("page")
+    limit =
+        jsonpayload("limit") isa AbstractString ? parse(Int, jsonpayload("limit")) :
+        jsonpayload("limit")
+    page =
+        jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) :
+        jsonpayload("page")
 
     if page < 1 || page === nothing
         page = 1
@@ -188,7 +194,8 @@ function get_partial_data()
     end
 
     if jsonpayload("type") == "UserExperiment"
-        users_with_curr_exp = get_paginated_amount(UserExperiment, limit, page; user_id = current_user_id())
+        users_with_curr_exp =
+            get_paginated_amount(UserExperiment, limit, page; user_id = current_user_id())
         ae_data = ue2dict(users_with_curr_exp)
         return json(ae_data)
     else
@@ -213,14 +220,19 @@ function profile()
     init_page = 1
     max_btn_display = 4
 
-    added_experiments = get_paginated_amount(UserExperiment, init_limit, init_page; user_id = current_user_id())
+    added_experiments = get_paginated_amount(
+        UserExperiment,
+        init_limit,
+        init_page;
+        user_id = current_user_id(),
+    )
     num_aes = count(UserExperiment; user_id = current_user_id())
 
     max_btn = convert(Int, ceil(num_aes / init_limit))
     if max_btn <= max_btn_display
         user_ae_table_pages_btns = 1:max_btn
     else
-        user_ae_table_pages_btns = [range(1,max_btn_display-1)..., "...", max_btn]
+        user_ae_table_pages_btns = [range(1, max_btn_display - 1)..., "...", max_btn]
     end
 
     ae_data = ue2dict(added_experiments)

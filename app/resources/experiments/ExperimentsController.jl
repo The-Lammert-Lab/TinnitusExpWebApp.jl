@@ -108,7 +108,9 @@ end
 Converts UserExperiments to dictionary with 
     username, instance, and percent_complete fields.
 """
-function ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
+function ue2dict(
+    UE::V,
+) where {V<:Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
     user_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
     cache = Dict{DbId,String}()
     for (ind, ae) in enumerate(UE)
@@ -151,8 +153,12 @@ function view_exp()
 
     # name = params(:name)
     name = jsonpayload("name")
-    limit = jsonpayload("limit") isa AbstractString ? parse(Int,jsonpayload("limit")) : jsonpayload("limit")
-    page = jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) : jsonpayload("page")
+    limit =
+        jsonpayload("limit") isa AbstractString ? parse(Int, jsonpayload("limit")) :
+        jsonpayload("limit")
+    page =
+        jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) :
+        jsonpayload("page")
 
     ex = findone(Experiment; name = name)
     if ex === nothing
@@ -164,7 +170,8 @@ function view_exp()
     end
 
     # Get all user experiments for this experiment
-    added_experiments = get_paginated_amount(UserExperiment, limit, page; experiment_name = name)
+    added_experiments =
+        get_paginated_amount(UserExperiment, limit, page; experiment_name = name)
     added_experiments = find(UserExperiment; experiment_name = name)
     user_data = ue2dict(added_experiments)
 
@@ -328,8 +335,12 @@ end
 
 function get_partial_data()
     # Avoid errors if any payload params come in as a string
-    limit = jsonpayload("limit") isa AbstractString ? parse(Int,jsonpayload("limit")) : jsonpayload("limit")
-    page = jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) : jsonpayload("page")
+    limit =
+        jsonpayload("limit") isa AbstractString ? parse(Int, jsonpayload("limit")) :
+        jsonpayload("limit")
+    page =
+        jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) :
+        jsonpayload("page")
 
     if page < 1 || page === nothing
         page = 1
@@ -345,11 +356,22 @@ function get_partial_data()
         users = get_paginated_amount(User, limit, page; is_admin = false)
         return json(getproperty.(users, :username))
     elseif jsonpayload("type") == "UserExperiment"
-        users_with_curr_exp = get_paginated_amount(UserExperiment, limit, page; experiment_name = jsonpayload("name"))
+        users_with_curr_exp = get_paginated_amount(
+            UserExperiment,
+            limit,
+            page;
+            experiment_name = jsonpayload("name"),
+        )
         user_data = ue2dict(users_with_curr_exp)
 
         return json(
-            Dict(:user_data => (:value => user_data), :max_data => (:value => count(UserExperiment; experiment_name = jsonpayload("name")))),
+            Dict(
+                :user_data => (:value => user_data),
+                :max_data => (
+                    :value =>
+                        count(UserExperiment; experiment_name = jsonpayload("name"))
+                ),
+            ),
         )
     end
 end
@@ -376,10 +398,19 @@ function admin()
     if max_btn <= max_btn_display
         user_table_pages_btns = 1:max_btn
     else
-        user_table_pages_btns = [range(1,max_btn_display-1)..., "...", max_btn]
+        user_table_pages_btns = [range(1, max_btn_display - 1)..., "...", max_btn]
     end
 
-    html(:experiments, :admin; users, experiment_names, user_table_pages_btns, num_users, init_limit, init_page)
+    html(
+        :experiments,
+        :admin;
+        users,
+        experiment_names,
+        user_table_pages_btns,
+        num_users,
+        init_limit,
+        init_page,
+    )
 end
 
 function manage()

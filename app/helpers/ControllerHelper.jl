@@ -10,8 +10,13 @@ using SearchLight
 
 export get_paginated_amount
 
-function get_paginated_amount(m::T, limit::I, page::I; kwargs...) where {T<:DataType, I<:Integer}
-    return find(m; kwargs..., limit = limit |> SQLLimit, offset = (page-1) * limit)
+function get_paginated_amount(
+    m::T,
+    limit::I,
+    page::I;
+    kwargs...,
+) where {T<:DataType,I<:Integer}
+    return find(m; kwargs..., limit = limit |> SQLLimit, offset = (page - 1) * limit)
 end
 
 # export STIMGEN_MAPPINGS
