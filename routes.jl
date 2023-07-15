@@ -23,6 +23,7 @@ route("/profile", UserExperimentsController.profile)
 route("/add", UserExperimentsController.add_exp; method = POST)
 route("/restart", UserExperimentsController.restart_exp; method = POST)
 route("/remove", UserExperimentsController.remove_exp; method = POST)
+route("/getpartialdata", UserExperimentsController.get_partial_data; method = POST)
 
 route("/", PublicController.index)
 route("/FAQ", PublicController.faq)

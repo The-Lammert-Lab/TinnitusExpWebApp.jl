@@ -560,6 +560,80 @@ function updateUserExpTable() {
     });
 }
 
+function updateUserAETable() {
+  const tbody_id = "user-ae";
+  const page = sessionStorage.getItem(tbody_id + "-page");
+  const limit = sessionStorage.getItem(tbody_id + "-limit");
+  axios
+    .post("/getpartialdata", {
+      type: "UserExperiment",
+      page: page,
+      limit: limit,
+    })
+    .then(function (response) {
+      // Remove existing table rows
+      const tbody = document.getElementById(tbody_id);
+      tbody.innerHTML = "";
+      // Write in new data
+      for (const element in response.data) {
+        let row = tbody.insertRow();
+        let cell1 = row.insertCell();
+        let cell2 = row.insertCell();
+        let cell3 = row.insertCell();
+        let cell4 = row.insertCell();
+        let name = document.createTextNode(response.data[element].name);
+        let instance = document.createTextNode(response.data[element].instance);
+        let perc_complete = document.createTextNode(
+          response.data[element].percent_complete + "%"
+        );
+
+        cell1.appendChild(name);
+        cell2.appendChild(instance);
+        cell3.appendChild(perc_complete);
+
+        if (response.data[element].status == "completed") {
+          cell4.appendChild(document.createTextNode("None"));
+          continue;
+        }
+
+        let form = document.createElement("form");
+        form.setAttribute("action", "/experiment");
+        form.setAttribute("style", "float:left;");
+
+        let input1 = document.createElement("input");
+        input1.setAttribute("type", "hidden");
+        input1.setAttribute("name", "name");
+        input1.setAttribute("value", response.data[element].name);
+
+        let input2 = document.createElement("input");
+        input2.setAttribute("type", "hidden");
+        input2.setAttribute("name", "instance");
+        input2.setAttribute("value", response.data[element].instance);
+
+        let input3 = document.createElement("input");
+        input3.setAttribute("type", "hidden");
+        input3.setAttribute("name", "from");
+
+        let input_submit = document.createElement("input");
+        input_submit.setAttribute("type", "submit");
+
+        if (response.data[element].status == "started") {
+          input3.setAttribute("value", "continue");
+          input_submit.setAttribute("value", "Continue");
+        } else {
+          input3.setAttribute("value", "start");
+          input_submit.setAttribute("value", "Start");
+        }
+
+        form.appendChild(input1);
+        form.appendChild(input2);
+        form.appendChild(input3);
+        form.appendChild(input_submit);
+        cell4.appendChild(form);
+      }
+    });
+}
+
 // Generic function for updating table length limit
 // Calls the passed `table_update_fn`, which is specific to the table.
 // `table_update_fn` must be passed as a function, not a string.

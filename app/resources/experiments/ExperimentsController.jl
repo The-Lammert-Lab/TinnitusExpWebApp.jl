@@ -6,6 +6,7 @@ using CharacterizeTinnitus.TinnitusReconstructor: Stimgen
 using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Experiments
+using CharacterizeTinnitus.ControllerHelper
 using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
@@ -63,11 +64,6 @@ const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
     "UniformNoiseNoBins" => UniformNoiseNoBins,
     "UniformPriorWeightedSampling" => UniformPriorWeightedSampling,
     "PowerDistribution" => PowerDistribution,
-)
-
-const TYPE_MAPPING = Dict{String,DataType}(
-    "User" => User,
-    "UserExperiment" => UserExperiment,
 )
 
 """
@@ -330,10 +326,6 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
     return sg_fields
 end
 
-function get_paginated_amount(m::T, limit::I, page::I; kwargs...) where {T<:DataType, I<:Integer}
-    return find(m; kwargs..., limit = limit |> SQLLimit, offset = (page-1) * limit)
-end
-
 function get_partial_data()
     # Avoid errors if any payload params come in as a string
     limit = jsonpayload("limit") isa AbstractString ? parse(Int,jsonpayload("limit")) : jsonpayload("limit")
@@ -349,16 +341,16 @@ function get_partial_data()
 
     type_str = jsonpayload("type")
 
-    if type_str == "User"
-        users = get_paginated_amount(TYPE_MAPPING[type_str], limit, page; is_admin = false)
+    if jsonpayload("type") == "User"
+        users = get_paginated_amount(User, limit, page; is_admin = false)
         return json(getproperty.(users, :username))
-    elseif type_str == "UserExperiment"
-        users_with_curr_exp = get_paginated_amount(TYPE_MAPPING[type_str], limit, page; experiment_name = jsonpayload("name"))
+    elseif jsonpayload("type") == "UserExperiment"
+        users_with_curr_exp = get_paginated_amount(UserExperiment, limit, page; experiment_name = jsonpayload("name"))
         user_data = ue2dict(users_with_curr_exp)
-        
+
         return json(
-            Dict(:user_data => (:value => user_data), :max_data => (:value => count(TYPE_MAPPING[type_str]; experiment_name = jsonpayload("name")))),
-        )        
+            Dict(:user_data => (:value => user_data), :max_data => (:value => count(UserExperiment; experiment_name = jsonpayload("name")))),
+        )
     end
 end
 
@@ -376,7 +368,7 @@ function admin()
     init_page = 1
     max_btn_display = 4
 
-    experiments = all(Experiment)
+    experiment_names = getproperty.(all(Experiment), :name)
     users = get_paginated_amount(User, init_limit, init_page; is_admin = false)
     num_users = count(User; is_admin = false)
 
@@ -387,7 +379,7 @@ function admin()
         user_table_pages_btns = [range(1,max_btn_display-1)..., "...", max_btn]
     end
 
-    html(:experiments, :admin; users, experiments, user_table_pages_btns, num_users, init_limit, init_page)
+    html(:experiments, :admin; users, experiment_names, user_table_pages_btns, num_users, init_limit, init_page)
 end
 
 function manage()

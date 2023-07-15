@@ -8,8 +8,8 @@
             <label>View Experiment:</label>
             <select class="form-select" aria-label="Default experiment label" name="experiment" id="experiment-ddl">
                 <option value="default">Experiment</option>
-                <% for_each(experiments) do e %>
-                    <option value="$(e.name)">$(e.name)</option>
+                <% for_each(experiment_names) do e %>
+                    <option value="$(e)">$(e)</option>
                 <% end %>
             </select>
         </div>
