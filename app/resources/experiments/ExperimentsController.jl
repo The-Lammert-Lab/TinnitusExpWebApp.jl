@@ -1,8 +1,8 @@
 module ExperimentsController
 
 using CharacterizeTinnitus
-using CharacterizeTinnitus.TinnitusReconstructor
-using CharacterizeTinnitus.TinnitusReconstructor: Stimgen
+using TinnitusReconstructor
+using TinnitusReconstructor: Stimgen
 using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Experiments
@@ -18,7 +18,6 @@ using SearchLight
 using SearchLight.Validation
 using JSON3
 using OrderedCollections
-
 
 """
     const EXPERIMENT_FIELDS = Dict{Symbol,String}
@@ -48,25 +47,6 @@ const EXPERIMENT_FIELDS = Dict{Symbol,String}(
 )
 
 """
-    const STIMGEN_MAPPINGS = Dict{String,DataType}
-
-Maps stimgen name as string to DataType
-"""
-const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
-    "UniformPrior" => UniformPrior,
-    "GaussianPrior" => GaussianPrior,
-    "Brimijoin" => Brimijoin,
-    "Bernoulli" => Bernoulli,
-    "BrimijoinGaussianSmoothed" => BrimijoinGaussianSmoothed,
-    "GaussianNoise" => GaussianNoise,
-    "UniformNoise" => UniformNoise,
-    "GaussianNoiseNoBins" => GaussianNoiseNoBins,
-    "UniformNoiseNoBins" => UniformNoiseNoBins,
-    "UniformPriorWeightedSampling" => UniformPriorWeightedSampling,
-    "PowerDistribution" => PowerDistribution,
-)
-
-"""
     _subtypes(type::Type)    
 
 Collect all concrete subtypes. 
@@ -86,20 +66,6 @@ function _subtypes!(out, type::Type)
         foreach(T -> _subtypes!(out, T), subtypes(type))
     end
     return out
-end
-
-""" 
-    stimgen_from_json(json::T, name::T) where {T<:AbstractString}
-
-Returns a fully instantiated stimgen type from JSON string of field values and type name.
-"""
-function stimgen_from_json(json::T, name::T) where {T<:AbstractString}
-    j = JSON3.read(json, Dict{Symbol,Any})
-    try
-        map!(x -> Meta.parse(x), values(j))
-    finally
-        return STIMGEN_MAPPINGS[name](; j...)
-    end
 end
 
 """

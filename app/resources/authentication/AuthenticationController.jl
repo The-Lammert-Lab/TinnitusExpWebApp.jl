@@ -47,7 +47,7 @@ end
 function logout()
     deauthenticate(GenieSession.session(params()))
 
-    flash("Good bye! ")
+    flash("Goodbye! ")
 
     redirect(:show_login)
 end
