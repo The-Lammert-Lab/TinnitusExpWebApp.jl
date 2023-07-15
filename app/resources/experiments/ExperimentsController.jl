@@ -1,8 +1,10 @@
 module ExperimentsController
 
 using CharacterizeTinnitus
-using CharacterizeTinnitus.TinnitusReconstructor
-using CharacterizeTinnitus.TinnitusReconstructor: Stimgen
+# using CharacterizeTinnitus.TinnitusReconstructor
+# using CharacterizeTinnitus.TinnitusReconstructor: Stimgen
+using TinnitusReconstructor
+using TinnitusReconstructor: Stimgen
 using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Experiments

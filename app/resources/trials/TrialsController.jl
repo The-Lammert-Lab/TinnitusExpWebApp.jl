@@ -2,8 +2,10 @@ module TrialsController
 
 using CharacterizeTinnitus
 using CharacterizeTinnitus.Trials
-using CharacterizeTinnitus.TinnitusReconstructor
-using CharacterizeTinnitus.TinnitusReconstructor: Stimgen, BinnedStimgen
+# using CharacterizeTinnitus.TinnitusReconstructor
+# using CharacterizeTinnitus.TinnitusReconstructor: Stimgen, BinnedStimgen
+using TinnitusReconstructor
+using TinnitusReconstructor: Stimgen, BinnedStimgen
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
 using Combinatorics
