@@ -4,7 +4,7 @@ import SearchLight: AbstractModel, DbId
 
 using SearchLight
 using CharacterizeTinnitus.ExperimentsValidator
-# using CharacterizeTinnitus.TinnitusReconstructor
+using CharacterizeTinnitus.ControllerHelper
 using TinnitusReconstructor
 using OrderedCollections
 using JSON3
@@ -12,34 +12,6 @@ using SHA
 import SearchLight.Validation: ModelValidator, ValidationRule
 
 export Experiment
-
-const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
-    "UniformPrior" => UniformPrior,
-    "GaussianPrior" => GaussianPrior,
-    "Brimijoin" => Brimijoin,
-    "Bernoulli" => Bernoulli,
-    "BrimijoinGaussianSmoothed" => BrimijoinGaussianSmoothed,
-    "GaussianNoise" => GaussianNoise,
-    "UniformNoise" => UniformNoise,
-    "GaussianNoiseNoBins" => GaussianNoiseNoBins,
-    "UniformNoiseNoBins" => UniformNoiseNoBins,
-    "UniformPriorWeightedSampling" => UniformPriorWeightedSampling,
-    "PowerDistribution" => PowerDistribution,
-)
-
-"""
-    stimgen_from_json(json::AbstractString, name::AbstractString)
-
-Returns a fully instantiated stimgen type from JSON string of field values and type name.
-"""
-function stimgen_from_json(json::AbstractString, name::AbstractString)
-    j = JSON3.read(json, Dict{Symbol,Any})
-    try
-        map!(x -> Meta.parse(x), values(j))
-    finally
-        return STIMGEN_MAPPINGS[name](; j...)
-    end
-end
 
 mutable struct Experiment <: AbstractModel
     id::DbId

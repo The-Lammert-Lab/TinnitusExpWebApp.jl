@@ -2,12 +2,9 @@ module TrialsController
 
 using CharacterizeTinnitus
 using CharacterizeTinnitus.Trials
-# using CharacterizeTinnitus.TinnitusReconstructor
-# using CharacterizeTinnitus.TinnitusReconstructor: Stimgen, BinnedStimgen
-using TinnitusReconstructor
-using TinnitusReconstructor: Stimgen, BinnedStimgen
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
+using CharacterizeTinnitus.ControllerHelper
 using Combinatorics
 using WAV: wavwrite
 using Genie.Renderers, Genie.Renderers.Html
@@ -22,37 +19,11 @@ using JSON3
 using SearchLight
 using SearchLight.Validation
 using SHA
-
-const STIMGEN_MAPPINGS = Dict{String,UnionAll}(
-    "UniformPrior" => UniformPrior,
-    "GaussianPrior" => GaussianPrior,
-    "Brimijoin" => Brimijoin,
-    "Bernoulli" => Bernoulli,
-    "BrimijoinGaussianSmoothed" => BrimijoinGaussianSmoothed,
-    "GaussianNoise" => GaussianNoise,
-    "UniformNoise" => UniformNoise,
-    "GaussianNoiseNoBins" => GaussianNoiseNoBins,
-    "UniformNoiseNoBins" => UniformNoiseNoBins,
-    "UniformPriorWeightedSampling" => UniformPriorWeightedSampling,
-    "PowerDistribution" => PowerDistribution,
-)
+using TinnitusReconstructor
+using TinnitusReconstructor: Stimgen, BinnedStimgen
 
 const IDEAL_BLOCK_SIZE = 8
 const MAX_BLOCK_SIZE = 12
-
-"""
-    stimgen_from_json(json::T, name::T) where {T<:AbstractString}
-
-Returns a fully instantiated stimgen type from JSON string of field values and type name.
-"""
-function stimgen_from_json(json::T, name::T) where {T<:AbstractString}
-    j = JSON3.read(json, Dict{Symbol,Any})
-    try
-        map!(x -> Meta.parse(x), values(j))
-    finally
-        return STIMGEN_MAPPINGS[name](; j...)
-    end
-end
 
 """
     scale_audio(x)
