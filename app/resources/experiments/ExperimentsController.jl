@@ -6,6 +6,7 @@ using CharacterizeTinnitus.TinnitusReconstructor: Stimgen
 using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Experiments
+using CharacterizeTinnitus.ControllerHelper
 using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
@@ -102,38 +103,17 @@ function stimgen_from_json(json::T, name::T) where {T<:AbstractString}
 end
 
 """
-    view_exp()
+    ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
 
-Returns JSON response of requested experiment's fields and status for all users.
-    
-    Response is dictionary containing:
-
-    - :experiment_data => :value, which holds a dictionary of the requested stimgen's 
-    parameters in natural language form, excluding :id and :settings_hash.
-
-    - :user_data => :value, which holds a vector of dictionaries, each containing
-    username, instance, and trials_complete for every UserExperiment with requested experiment.
+Converts UserExperiments to dictionary with 
+    username, instance, and percent_complete fields.
 """
-function view_exp()
-    authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
-
-    ex = findone(Experiment; name = params(:name))
-    if ex === nothing
-        return Router.error(
-            INTERNAL_ERROR,
-            """Could not find an experiment with name "$(params(:name))".""",
-            MIME"application/json",
-        )
-    end
-
-    # Get all user experiments for this experiment
-    added_experiments = find(UserExperiment; experiment_name = params(:name))
-
-    # Make a vector of dicts with data to display
-    user_data = Vector{Dict{Symbol,Any}}(undef, length(added_experiments))
+function ue2dict(
+    UE::V,
+) where {V<:Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
+    user_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
     cache = Dict{DbId,String}()
-    for (ind, ae) in enumerate(added_experiments)
+    for (ind, ae) in enumerate(UE)
         # Simple memoization 
         if ae.user_id in keys(cache)
             username = cache[ae.user_id]
@@ -151,6 +131,49 @@ function view_exp()
             :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
         )
     end
+    return user_data
+end
+
+"""
+    view_exp()
+
+Returns JSON response of requested experiment's fields and status for all users.
+    
+    Response is dictionary containing:
+
+    - :experiment_data => :value, which holds a dictionary of the requested stimgen's 
+    parameters in natural language form, excluding :id and :settings_hash.
+
+    - :user_data => :value, which holds a vector of dictionaries, each containing
+    username, instance, and trials_complete for every UserExperiment with requested experiment.
+"""
+function view_exp()
+    authenticated!()
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
+
+    # name = params(:name)
+    name = jsonpayload("name")
+    limit =
+        jsonpayload("limit") isa AbstractString ? parse(Int, jsonpayload("limit")) :
+        jsonpayload("limit")
+    page =
+        jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) :
+        jsonpayload("page")
+
+    ex = findone(Experiment; name = name)
+    if ex === nothing
+        return Router.error(
+            INTERNAL_ERROR,
+            """Could not find an experiment with name "$(name)".""",
+            MIME"application/json",
+        )
+    end
+
+    # Get all user experiments for this experiment
+    added_experiments =
+        get_paginated_amount(UserExperiment, limit, page; experiment_name = name)
+    added_experiments = find(UserExperiment; experiment_name = name)
+    user_data = ue2dict(added_experiments)
 
     # Pre-process experiment fields
     exp_data = Dict() # Can't initialize length b/c varying stimgen_settings fields
@@ -310,6 +333,49 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
     return sg_fields
 end
 
+function get_partial_data()
+    # Avoid errors if any payload params come in as a string
+    limit =
+        jsonpayload("limit") isa AbstractString ? parse(Int, jsonpayload("limit")) :
+        jsonpayload("limit")
+    page =
+        jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) :
+        jsonpayload("page")
+
+    if page < 1 || page === nothing
+        page = 1
+    end
+
+    if limit < 1 || limit === nothing
+        limit = 1
+    end
+
+    type_str = jsonpayload("type")
+
+    if jsonpayload("type") == "User"
+        users = get_paginated_amount(User, limit, page; is_admin = false)
+        return json(getproperty.(users, :username))
+    elseif jsonpayload("type") == "UserExperiment"
+        users_with_curr_exp = get_paginated_amount(
+            UserExperiment,
+            limit,
+            page;
+            experiment_name = jsonpayload("name"),
+        )
+        user_data = ue2dict(users_with_curr_exp)
+
+        return json(
+            Dict(
+                :user_data => (:value => user_data),
+                :max_data => (
+                    :value =>
+                        count(UserExperiment; experiment_name = jsonpayload("name"))
+                ),
+            ),
+        )
+    end
+end
+
 #########################
 
 ## PAGE FUNCTIONS ##
@@ -320,10 +386,31 @@ function admin()
     authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
-    experiments = all(Experiment)
-    users = find(User; is_admin = false)
+    init_limit = 2
+    init_page = 1
+    max_btn_display = 4
 
-    html(:experiments, :admin; users, experiments)
+    experiment_names = getproperty.(all(Experiment), :name)
+    users = get_paginated_amount(User, init_limit, init_page; is_admin = false)
+    num_users = count(User; is_admin = false)
+
+    max_btn = convert(Int, ceil(num_users / init_limit))
+    if max_btn <= max_btn_display
+        user_table_pages_btns = 1:max_btn
+    else
+        user_table_pages_btns = [range(1, max_btn_display - 1)..., "...", max_btn]
+    end
+
+    html(
+        :experiments,
+        :admin;
+        users,
+        experiment_names,
+        user_table_pages_btns,
+        num_users,
+        init_limit,
+        init_page,
+    )
 end
 
 function manage()

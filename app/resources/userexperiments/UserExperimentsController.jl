@@ -4,6 +4,7 @@ using CharacterizeTinnitus
 using CharacterizeTinnitus.Trials
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
+using CharacterizeTinnitus.ControllerHelper
 using SearchLight
 using SearchLight.Validation
 using Genie.Renderers, Genie.Renderers.Html
@@ -11,6 +12,41 @@ using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using GenieAuthentication
 using Genie.Exceptions
+
+
+"""
+    ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
+
+Converts UserExperiments to dictionary with 
+    username, instance, and percent_complete fields.
+    Slightly different from `ue2dict` in ExperimentsController.
+    Distinguished by the module, not the arguments. 
+"""
+function ue2dict(
+    UE::V,
+) where {V<:Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
+    ae_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
+    for (ind, ae) in enumerate(UE)
+        n_trials = findone(Experiment; name = ae.experiment_name).n_trials
+
+        status = if ae.trials_complete >= n_trials
+            "completed"
+        elseif ae.trials_complete > 0
+            "started"
+        else
+            "unstarted"
+        end
+
+        # Add dictionary to user_data
+        ae_data[ind] = Dict(
+            :name => ae.experiment_name,
+            :instance => ae.instance,
+            :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
+            :status => status,
+        )
+    end
+    return ae_data
+end
 
 function restart_exp()
     authenticated!()
@@ -140,6 +176,37 @@ function add_exp()
     save(ue) && json("""Experiment "$(name)" added to user "$(username(user_id))." """)
 end
 
+function get_partial_data()
+    # Avoid errors if any payload params come in as a string
+    limit =
+        jsonpayload("limit") isa AbstractString ? parse(Int, jsonpayload("limit")) :
+        jsonpayload("limit")
+    page =
+        jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) :
+        jsonpayload("page")
+
+    if page < 1 || page === nothing
+        page = 1
+    end
+
+    if limit < 1 || limit === nothing
+        limit = 1
+    end
+
+    if jsonpayload("type") == "UserExperiment"
+        users_with_curr_exp =
+            get_paginated_amount(UserExperiment, limit, page; user_id = current_user_id())
+        ae_data = ue2dict(users_with_curr_exp)
+        return json(ae_data)
+    else
+        return return Router.error(
+            INTERNAL_ERROR,
+            "Unrecognized request type",
+            MIME"application/json",
+        )
+    end
+end
+
 #########################
 
 ## PAGE FUNCTIONS ##
@@ -148,24 +215,42 @@ end
 
 function profile()
     authenticated!()
-    added_experiments = find(UserExperiment; user_id = current_user_id())
-    # Get each experiment for each added experiment
-    n_trials = [
-        findone(Experiment; name = e).n_trials for
-        e in getproperty.(added_experiments, :experiment_name)
-    ]
+
+    init_limit = 2
+    init_page = 1
+    max_btn_display = 4
+
+    added_experiments = get_paginated_amount(
+        UserExperiment,
+        init_limit,
+        init_page;
+        user_id = current_user_id(),
+    )
+    num_aes = count(UserExperiment; user_id = current_user_id())
+
+    max_btn = convert(Int, ceil(num_aes / init_limit))
+    if max_btn <= max_btn_display
+        user_ae_table_pages_btns = 1:max_btn
+    else
+        user_ae_table_pages_btns = [range(1, max_btn_display - 1)..., "...", max_btn]
+    end
+
+    ae_data = ue2dict(added_experiments)
+
     user = current_user()
     is_admin = user.is_admin
     username = user.username
-    counter = 0
     html(
         :userexperiments,
         :profile;
         added_experiments,
         is_admin,
         username,
-        n_trials,
-        counter,
+        ae_data,
+        num_aes,
+        user_ae_table_pages_btns,
+        init_limit,
+        init_page,
     )
 end
 

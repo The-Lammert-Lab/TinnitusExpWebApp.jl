@@ -11,48 +11,84 @@ end
 </div>
 
 <div class="container">
-    <div class="d-flex justify-content-center">
-        <!-- TODO: Add sort feature -->
-        <table class="styled-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Instance</th>
-                    <th>Percent complete</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-            <% for_each(added_experiments) do e 
-                counter += 1 %>
-                <tr>
-                    <td>$(e.experiment_name)</td>
-                    <td>$(e.instance)</td>
-                    <td>$(round(Int, 100*e.trials_complete / n_trials[counter]))&percnt;</td>
-                    <%  if e.trials_complete >= n_trials[counter]  %>
-                            <td>None</td>
-                    <%  elseif e.trials_complete > 0  %>
-                            <td> 
-                                <form style="float:left;" action="/experiment">
-                                    <input type="hidden" name="name" value="$(e.experiment_name)">
-                                    <input type="hidden" name="instance" value="$(e.instance)">
-                                    <input type="hidden" name="from" value="continue">
-                                    <input type="submit" value="Continue"></input>
-                                </form>
-                            </td>
-                    <%  else  %>
-                            <td>
-                                <form style="float:left;" action="/experiment">
-                                    <input type="hidden" name="name" value="$(e.experiment_name)">
-                                    <input type="hidden" name="instance" value="$(e.instance)">
-                                    <input type="hidden" name="from" value="start">
-                                    <input type="submit" value="Start"></input>
-                                </form>
-                            </td>
-                    <%  end  %>
-                </tr>
-            <% end %>
-            </tbody>
-        </table>
+    <div class="row">
+        <div class="col-md"></div>
+
+        <div class="col-md-auto">
+            <div class="d-flex align-items-center justify-content-end">
+                <b><label class="my-1 me-1" for="user-ae-limit">Show:</label></b>
+                <select id="user-ae-limit" class="form-select w-auto" onchange="updateTableLimit('user-ae',updateUserAETable,this.value);">
+                    <!-- <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option> -->
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            <!-- TODO: Add sort feature -->
+            <table class="table styled-table mb-0 mt-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Instance</th>
+                        <th>Percent complete</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="user-ae">
+                <% for_each(ae_data) do e %>
+                    <tr>
+                        <td>$(e[:name])</td>
+                        <td>$(e[:instance])</td>
+                        <td>$(e[:percent_complete])&percnt;</td>
+                        <%  if e[:status] == "completed" %>
+                                <td>None</td>
+                        <%  elseif e[:status] == "started"  %>
+                                <td>
+                                    <form style="float:left;" action="/experiment">
+                                        <input type="hidden" name="name" value="$(e[:name])">
+                                        <input type="hidden" name="instance" value="$(e[:instance])">
+                                        <input type="hidden" name="from" value="continue">
+                                        <input type="submit" value="Continue"></input>
+                                    </form>
+                                </td>
+                        <%  else  %>
+                                <td>
+                                    <form style="float:left;" action="/experiment">
+                                        <input type="hidden" name="name" value="$(e[:name])">
+                                        <input type="hidden" name="instance" value="$(e[:instance])">
+                                        <input type="hidden" name="from" value="start">
+                                        <input type="submit" value="Start"></input>
+                                    </form>
+                                </td>
+                        <%  end  %>
+                    </tr>
+                <% end %>
+                </tbody>
+            </table>
+            <nav aria-label="Experiment table pagination">
+                <ul id="user-ae-nav" class="pagination">
+                    <li id="user-ae-prev-btn" class="page-item page-link disabled" onclick="updateTablePage('user-ae',updateUserAETable,parseInt(sessionStorage.getItem('user-ae-page'))-1);">Previous</li>
+                    <% for_each(user_ae_table_pages_btns) do num %>
+                        <% if num === 1 %>
+                            <li name="user-ae-nav-num" class="page-item page-link active" onclick="updateTablePage('user-ae',updateUserAETable,$(num));">$(num)</li>
+                        <% elseif num isa AbstractString %>
+                            <li name="user-ae-nav-num" class="page-item page-link">$(num)</li>
+                        <% else %>
+                            <li name="user-ae-nav-num" class="page-item page-link" onclick="updateTablePage('user-ae',updateUserAETable,$(num));">$(num)</li>
+                        <% end %>
+                    <% end %>
+                    <li id="user-ae-next-btn" class="page-item page-link" onclick="updateTablePage('user-ae',updateUserAETable,parseInt(sessionStorage.getItem('user-ae-page'))+1);">Next</li>
+                </ul>
+            </nav>
+        </div>
+        <div class="col-md"></div>
     </div>
 </div>
+
+<script>
+    sessionStorage.setItem('user-ae-page', $(init_page));
+    sessionStorage.setItem('user-ae-limit', $(init_limit));
+    sessionStorage.setItem('user-ae-max-data', $(num_aes));
+</script>

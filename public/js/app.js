@@ -230,15 +230,35 @@ function removeExperiment(form) {
     });
 } // function
 
+function makeUserExpTable(user_data) {
+  // Make table with user information for this experiment
+  const user_table = document.getElementById("user-experiment");
+  user_table.innerHTML = ""; // Delete old table rows
+  for (const element in user_data) {
+    let row = user_table.insertRow();
+    let cell1 = row.insertCell();
+    let cell2 = row.insertCell();
+    let cell3 = row.insertCell();
+    let username = document.createTextNode(user_data[element].username);
+    let instance = document.createTextNode(user_data[element].instance);
+    let perc_complete = document.createTextNode(
+      user_data[element].percent_complete + "%"
+    );
+    cell1.appendChild(username);
+    cell2.appendChild(instance);
+    cell3.appendChild(perc_complete);
+  }
+}
+
 // Send experiment name to server and build
 // table with settings and table with
 // status of this experiment for all users from response data.
 function viewExperiment(experiment) {
   const result = axios
-    .get("/admin/view", {
-      params: {
-        name: experiment,
-      },
+    .post("/admin/view", {
+      name: experiment,
+      page: sessionStorage.getItem("user-experiment-page"),
+      limit: sessionStorage.getItem("user-experiment-limit"),
     })
     .then(function (response) {
       // Make table for experimental settings
@@ -256,26 +276,9 @@ function viewExperiment(experiment) {
         cell2.appendChild(val);
       }
       // TODO: Sort table
-      // NOTE: use innerHTML to get row value
 
-      // Make table with user information for this experiment
-      const user_table = document.getElementById("user-experiment-data");
-      user_table.innerHTML = ""; // Delete old table rows
       const user_data = response.data.user_data.value;
-      for (const element in user_data) {
-        let row = user_table.insertRow();
-        let cell1 = row.insertCell();
-        let cell2 = row.insertCell();
-        let cell3 = row.insertCell();
-        let username = document.createTextNode(user_data[element].username);
-        let instance = document.createTextNode(user_data[element].instance);
-        let perc_complete = document.createTextNode(
-          user_data[element].percent_complete + "%"
-        );
-        cell1.appendChild(username);
-        cell2.appendChild(instance);
-        cell3.appendChild(perc_complete);
-      }
+      makeUserExpTable(user_data);
       return user_data.length > 0 ? true : false;
     })
     .catch(function (error) {
@@ -309,11 +312,6 @@ function viewStimgen(form) {
       // Fully delete stimgen rows (do not know what new ones will be added)
       sg_tbody.innerHTML = "";
 
-      // Clear input values in experiment rows b/c all else stays same.
-      const exp_tbody = document.getElementById("experiment-settings");
-      for (let input of exp_tbody.getElementsByTagName("input")) {
-        input.value = "";
-      }
       // Build new table
       const sg_data = response.data;
       for (const element in sg_data) {
@@ -397,7 +395,9 @@ function saveExperiment(form) {
     });
 } // function
 
+// Creates from template and delete buttons on admin profile page
 function createExpButtons() {
+  const ddl = document.getElementById("experiment-ddl");
   const template_submit = document.getElementById("template-submit");
   const template_input = document.getElementById("template-name");
   const delete_submit = document.getElementById("delete-submit");
@@ -436,10 +436,14 @@ function createExpButtons() {
       .catch((error) => {});
   } else {
     document.getElementById("experiment-settings").innerHTML = "";
-    document.getElementById("user-experiment-data").innerHTML = "";
-    template_submit.remove();
+    document.getElementById("user-experiment").innerHTML = "";
+    if (template_submit !== null) {
+      template_submit.remove();
+    }
     template_input.setAttribute("value", "");
-    delete_submit.remove();
+    if (delete_submit !== null) {
+      delete_submit.remove();
+    }
     delete_input.setAttribute("value", "");
   }
 } // function
@@ -491,10 +495,324 @@ function deleteExperiment(form) {
     });
 } // function
 
-//
+// Specific function for updating user table on admin profile page
+function updateUserTable() {
+  // sessionStorage.setItem("user-table-page", page);
+  // Request server for data with which to populate table
+  const tbody_id = "user-table";
+  const page = sessionStorage.getItem(tbody_id + "-page");
+  const limit = sessionStorage.getItem(tbody_id + "-limit");
+  axios
+    .post("/admin/getpartialdata", {
+      type: "User",
+      page: page,
+      limit: limit,
+    })
+    .then(function (response) {
+      // Remove existing table rows
+      const tbody = document.getElementById(tbody_id);
+      tbody.innerHTML = "";
+      // Write in new data
+      response.data.forEach((username) => {
+        const row = tbody.insertRow();
+        const cell1 = row.insertCell();
+        const cell2 = row.insertCell();
+
+        const form = document.createElement("form");
+        form.setAttribute("action", "/manage");
+
+        const input = document.createElement("input");
+        input.setAttribute("type", "hidden");
+        input.setAttribute("name", "username");
+        input.setAttribute("value", username);
+        form.appendChild(input);
+
+        const submit = document.createElement("input");
+        submit.setAttribute("type", "submit");
+        submit.setAttribute("value", "Manage");
+        form.appendChild(input);
+        form.appendChild(submit);
+
+        cell1.appendChild(document.createTextNode(username));
+        cell2.appendChild(form);
+      });
+    });
+} // function
+
+function updateUserExpTable() {
+  const tbody_id = "user-experiment";
+  const page = sessionStorage.getItem(tbody_id + "-page");
+  const limit = sessionStorage.getItem(tbody_id + "-limit");
+  const ddl = document.getElementById("experiment-ddl");
+  axios
+    .post("/admin/getpartialdata", {
+      type: "UserExperiment",
+      page: page,
+      limit: limit,
+      name: ddl.value,
+    })
+    .then(function (response) {
+      sessionStorage.setItem(
+        tbody_id + "-max-data",
+        response.data.max_data.value
+      );
+      makeUserExpTable(response.data.user_data.value);
+    });
+}
+
+function updateUserAETable() {
+  const tbody_id = "user-ae";
+  const page = sessionStorage.getItem(tbody_id + "-page");
+  const limit = sessionStorage.getItem(tbody_id + "-limit");
+  axios
+    .post("/getpartialdata", {
+      type: "UserExperiment",
+      page: page,
+      limit: limit,
+    })
+    .then(function (response) {
+      // Remove existing table rows
+      const tbody = document.getElementById(tbody_id);
+      tbody.innerHTML = "";
+      // Write in new data
+      for (const element in response.data) {
+        let row = tbody.insertRow();
+        let cell1 = row.insertCell();
+        let cell2 = row.insertCell();
+        let cell3 = row.insertCell();
+        let cell4 = row.insertCell();
+        let name = document.createTextNode(response.data[element].name);
+        let instance = document.createTextNode(response.data[element].instance);
+        let perc_complete = document.createTextNode(
+          response.data[element].percent_complete + "%"
+        );
+
+        cell1.appendChild(name);
+        cell2.appendChild(instance);
+        cell3.appendChild(perc_complete);
+
+        if (response.data[element].status == "completed") {
+          cell4.appendChild(document.createTextNode("None"));
+          continue;
+        }
+
+        let form = document.createElement("form");
+        form.setAttribute("action", "/experiment");
+        form.setAttribute("style", "float:left;");
+
+        let input1 = document.createElement("input");
+        input1.setAttribute("type", "hidden");
+        input1.setAttribute("name", "name");
+        input1.setAttribute("value", response.data[element].name);
+
+        let input2 = document.createElement("input");
+        input2.setAttribute("type", "hidden");
+        input2.setAttribute("name", "instance");
+        input2.setAttribute("value", response.data[element].instance);
+
+        let input3 = document.createElement("input");
+        input3.setAttribute("type", "hidden");
+        input3.setAttribute("name", "from");
+
+        let input_submit = document.createElement("input");
+        input_submit.setAttribute("type", "submit");
+
+        if (response.data[element].status == "started") {
+          input3.setAttribute("value", "continue");
+          input_submit.setAttribute("value", "Continue");
+        } else {
+          input3.setAttribute("value", "start");
+          input_submit.setAttribute("value", "Start");
+        }
+
+        form.appendChild(input1);
+        form.appendChild(input2);
+        form.appendChild(input3);
+        form.appendChild(input_submit);
+        cell4.appendChild(form);
+      }
+    });
+}
+
+// Generic function for updating table length limit
+// Calls the passed `table_update_fn`, which is specific to the table.
+// `table_update_fn` must be passed as a function, not a string.
+function updateTableLimit(tbody_id, table_update_fn, limit) {
+  if (parseInt(limit) < 1) {
+    limit = 1;
+  } else {
+    limit = parseInt(limit);
+  }
+
+  // Update limit in session storage
+  // Reset page to 1 if new limit
+  sessionStorage.setItem(tbody_id + "-limit", limit);
+  sessionStorage.setItem(tbody_id + "-page", 1);
+
+  // Invoke table-specific function
+  table_update_fn();
+
+  // Update buttons first (new limit changes page)
+  updateTableBtnBar(tbody_id, table_update_fn);
+  updateTableBtnHighlights(
+    tbody_id,
+    sessionStorage.getItem(tbody_id + "-page")
+  );
+} // function
+
+// Generic function for updating table page number
+// Calls the passed `table_update_fn`, which is specific to the table.
+// `table_update_fn` must be passed as a function, not a string.
+function updateTablePage(tbody_id, table_update_fn, page) {
+  if (parseInt(page) < 1) {
+    page = 1;
+  } else {
+    page = parseInt(page);
+  }
+
+  // Update page in session storage
+  sessionStorage.setItem(tbody_id + "-page", page);
+
+  // Invoke table-specific function
+  table_update_fn();
+
+  updateTableBtnBar(tbody_id, table_update_fn);
+  updateTableBtnHighlights(tbody_id, page);
+} // function
+
+// Generic function to update the enabled/disabled/active status of pagination buttons
+function updateTableBtnHighlights(tbody_id, page) {
+  const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
+  const prev_btn = document.getElementById(tbody_id + "-prev-btn");
+  const next_btn = document.getElementById(tbody_id + "-next-btn");
+
+  // Update highlighting on nav buttons
+  nav_btns.forEach((li) => {
+    if (li.innerHTML == page) {
+      li.setAttribute("class", "page-item page-link active");
+    } else {
+      li.setAttribute("class", "page-item page-link");
+    }
+  });
+
+  // Enable or disable previous button
+  if (parseInt(page) > 1) {
+    prev_btn.setAttribute("class", "page-item page-link");
+  } else {
+    prev_btn.setAttribute("class", "page-item page-link disabled");
+  }
+
+  // Enable or disable next button
+  if (nav_btns[nav_btns.length - 1].innerHTML == page) {
+    next_btn.setAttribute("class", "page-item page-link disabled");
+  } else {
+    next_btn.setAttribute("class", "page-item page-link");
+  }
+} // function
+
+// Generic function for updating the button bar on a paginated table
+// Based on the id for table body and its specific update function
+function updateTableBtnBar(tbody_id, table_update_fn) {
+  // Get useful constants
+  const max_data = parseInt(sessionStorage.getItem(tbody_id + "-max-data"));
+  const nav = document.getElementById(tbody_id + "-nav");
+  const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
+  const next_btn = document.getElementById(tbody_id + "-next-btn");
+  const curr_page = parseInt(sessionStorage.getItem(tbody_id + "-page"));
+  const limit = parseInt(sessionStorage.getItem(tbody_id + "-limit"));
+
+  // Total sequential buttons (num buttons to show in a row)
+  // This seems okay to hardcode in. It won't change with anything.
+  const total_seq_btns = 3;
+
+  // Max page for current limit
+  const max_btn = Math.ceil(max_data / limit);
+
+  // Flag for if limit has changed.
+  const is_new_lim =
+    max_btn !== parseInt(nav_btns[nav_btns.length - 1].innerHTML);
+
+  // Don't do anything if first or second button was clicked
+  // Or if all remaining buttons are visible and requested page is within them.
+  const btn_vals = Array.from(nav_btns, (x) => parseInt(x.innerHTML));
+  if (
+    (!is_new_lim && btn_vals.slice(0, 2).includes(curr_page)) ||
+    (!is_new_lim &&
+      !Array.from(nav_btns, (x) => x.innerHTML).includes("...") &&
+      btn_vals.includes(curr_page))
+  ) {
+    return;
+  }
+
+  // Set minimum button
+  let min_btn;
+  if (curr_page === 1) {
+    min_btn = 1;
+  } else if (curr_page === max_btn) {
+    min_btn = max_btn - total_seq_btns + 1;
+  } else if (curr_page === parseInt(nav_btns[total_seq_btns - 1].innerHTML)) {
+    min_btn = curr_page;
+  } else {
+    min_btn = curr_page - 1;
+  }
+
+  // Remove old numbers and next button
+  while (nav_btns.length > 0) {
+    nav_btns[0].remove();
+  }
+  next_btn.remove();
+
+  // How many buttons to generate
+  let btn_itr =
+    min_btn + total_seq_btns < max_btn ? min_btn + total_seq_btns : max_btn + 1;
+
+  // Create and append the new buttons
+  for (let i = min_btn; i < btn_itr; i++) {
+    let li = document.createElement("li");
+    li.setAttribute("name", tbody_id + "-nav-num");
+    li.setAttribute(
+      "onclick",
+      `updateTablePage('${tbody_id}',${table_update_fn.name},${i})`
+    );
+    li.innerHTML = i.toString();
+    if (i === curr_page) {
+      li.setAttribute("class", "page-item page-link active");
+    } else {
+      li.setAttribute("class", "page-item page-link");
+    }
+    nav.appendChild(li);
+  }
+
+  // Add "..." and last button
+  if (max_btn > min_btn + total_seq_btns) {
+    const li_ellipsis = document.createElement("li");
+    li_ellipsis.setAttribute("name", tbody_id + "-nav-num");
+    li_ellipsis.setAttribute("class", "page-item page-link");
+    li_ellipsis.innerHTML = "...";
+    nav.appendChild(li_ellipsis);
+
+    const li = document.createElement("li");
+    li.setAttribute("name", tbody_id + "-nav-num");
+    li.setAttribute(
+      "onclick",
+      `updateTablePage('${tbody_id}',${table_update_fn.name},${max_btn})`
+    );
+    li.innerHTML = max_btn.toString();
+    if (max_btn === curr_page) {
+      li.setAttribute("class", "page-item page-link active");
+    } else {
+      li.setAttribute("class", "page-item page-link");
+    }
+    nav.appendChild(li);
+  }
+
+  // Add next button to the end of the numbers
+  nav.appendChild(next_btn);
+} // function
+
+// Updates the navbar links based on the current page.
 function updateNavbarColors() {
-  const pathname = window.location.pathname;
-  const li = document.getElementById(pathname);
+  const li = document.getElementById(window.location.pathname);
   if (li !== null) {
     li.setAttribute("class", "nav-link px-2 link-secondary");
   }
