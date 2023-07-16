@@ -199,7 +199,7 @@ function get_partial_data()
         ae_data = ue2dict(users_with_curr_exp)
         return json(ae_data)
     else
-        return return Router.error(
+        return Router.error(
             INTERNAL_ERROR,
             "Unrecognized request type",
             MIME"application/json",
@@ -226,7 +226,9 @@ function profile()
         init_page;
         user_id = current_user_id(),
     )
-    num_aes = count(UserExperiment; user_id = current_user_id())
+    num_aes =
+        count(UserExperiment; user_id = current_user_id()) > 0 ?
+        count(UserExperiment; user_id = current_user_id()) : 1
 
     max_btn = convert(Int, ceil(num_aes / init_limit))
     if max_btn <= max_btn_display
