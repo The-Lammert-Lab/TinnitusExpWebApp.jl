@@ -257,7 +257,7 @@ function viewExperiment(experiment) {
   const result = axios
     .post("/admin/view", {
       name: experiment,
-      page: sessionStorage.getItem("user-experiment-page"),
+      page: 1,
       limit: sessionStorage.getItem("user-experiment-limit"),
     })
     .then(function (response) {
@@ -275,10 +275,25 @@ function viewExperiment(experiment) {
         cell1.appendChild(field);
         cell2.appendChild(val);
       }
-      // TODO: Sort table
-
+      // Update the table of users with this experiment
+      const tbody_id = "user-experiment";
       const user_data = response.data.user_data.value;
+
+      // Update table max data number for new experiment
+      sessionStorage.setItem(
+        tbody_id + "-max-data",
+        response.data.max_data.value
+      );
+
+      // Reset page to 1
+      sessionStorage.setItem(tbody_id + "-page", 1);
+
+      // Run update functions
       makeUserExpTable(user_data);
+      updateTableBtnBar(tbody_id, updateUserExpTable);
+      updateTableBtnHighlights(tbody_id);
+
+      // Return added to user flag for use in createExpButtons()
       return user_data.length > 0 ? true : false;
     })
     .catch(function (error) {
@@ -435,8 +450,16 @@ function createExpButtons() {
       // Error handled in viewExperiment. This prevents any code from running.
       .catch((error) => {});
   } else {
+    // If default ddl value selected, clear tables and reset values
     document.getElementById("experiment-settings").innerHTML = "";
     document.getElementById("user-experiment").innerHTML = "";
+    sessionStorage.setItem("user-experiment-max-data", 1);
+    sessionStorage.setItem("user-experiment-page", 1);
+
+    // Run update functions
+    updateTableBtnBar("user-experiment", updateUserExpTable);
+    updateTableBtnHighlights("user-experiment");
+
     if (template_submit !== null) {
       template_submit.remove();
     }
@@ -654,10 +677,7 @@ function updateTableLimit(tbody_id, table_update_fn, limit) {
 
   // Update buttons first (new limit changes page)
   updateTableBtnBar(tbody_id, table_update_fn);
-  updateTableBtnHighlights(
-    tbody_id,
-    sessionStorage.getItem(tbody_id + "-page")
-  );
+  updateTableBtnHighlights(tbody_id);
 } // function
 
 // Generic function for updating table page number
@@ -677,14 +697,15 @@ function updateTablePage(tbody_id, table_update_fn, page) {
   table_update_fn();
 
   updateTableBtnBar(tbody_id, table_update_fn);
-  updateTableBtnHighlights(tbody_id, page);
+  updateTableBtnHighlights(tbody_id);
 } // function
 
 // Generic function to update the enabled/disabled/active status of pagination buttons
-function updateTableBtnHighlights(tbody_id, page) {
+function updateTableBtnHighlights(tbody_id) {
   const nav_btns = document.getElementsByName(tbody_id + "-nav-num");
   const prev_btn = document.getElementById(tbody_id + "-prev-btn");
   const next_btn = document.getElementById(tbody_id + "-next-btn");
+  const page = sessionStorage.getItem(tbody_id + "-page");
 
   // Update highlighting on nav buttons
   nav_btns.forEach((li) => {

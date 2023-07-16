@@ -117,7 +117,6 @@ function view_exp()
     authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
-    # name = params(:name)
     name = jsonpayload("name")
     limit =
         jsonpayload("limit") isa AbstractString ? parse(Int, jsonpayload("limit")) :
@@ -138,7 +137,6 @@ function view_exp()
     # Get all user experiments for this experiment
     added_experiments =
         get_paginated_amount(UserExperiment, limit, page; experiment_name = name)
-    added_experiments = find(UserExperiment; experiment_name = name)
     user_data = ue2dict(added_experiments)
 
     # Pre-process experiment fields
@@ -169,8 +167,16 @@ function view_exp()
         end
     end
 
+    max_data =
+        count(UserExperiment; experiment_name = name) > 0 ?
+        count(UserExperiment; experiment_name = name) : 1
+
     return json(
-        Dict(:experiment_data => (:value => exp_data), :user_data => (:value => user_data)),
+        Dict(
+            :experiment_data => (:value => exp_data),
+            :user_data => (:value => user_data),
+            :max_data => (:value => max_data),
+        ),
     )
 end
 
@@ -316,8 +322,6 @@ function get_partial_data()
         limit = 1
     end
 
-    type_str = jsonpayload("type")
-
     if jsonpayload("type") == "User"
         users = get_paginated_amount(User, limit, page; is_admin = false)
         return json(getproperty.(users, :username))
@@ -330,14 +334,12 @@ function get_partial_data()
         )
         user_data = ue2dict(users_with_curr_exp)
 
+        max_data =
+            count(UserExperiment; experiment_name = jsonpayload("name")) > 0 ?
+            count(UserExperiment; experiment_name = jsonpayload("name")) : 1
+
         return json(
-            Dict(
-                :user_data => (:value => user_data),
-                :max_data => (
-                    :value =>
-                        count(UserExperiment; experiment_name = jsonpayload("name"))
-                ),
-            ),
+            Dict(:user_data => (:value => user_data), :max_data => (:value => max_data)),
         )
     end
 end
@@ -358,7 +360,7 @@ function admin()
 
     experiment_names = getproperty.(all(Experiment), :name)
     users = get_paginated_amount(User, init_limit, init_page; is_admin = false)
-    num_users = count(User; is_admin = false)
+    num_users = count(User; is_admin = false) > 0 ? count(User; is_admin = false) : 1
 
     max_btn = convert(Int, ceil(num_users / init_limit))
     if max_btn <= max_btn_display
