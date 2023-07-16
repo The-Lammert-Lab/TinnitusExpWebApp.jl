@@ -306,6 +306,9 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
 end
 
 function get_partial_data()
+    authenticated!()
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
+
     # Avoid errors if any payload params come in as a string
     limit =
         jsonpayload("limit") isa AbstractString ? parse(Int, jsonpayload("limit")) :

@@ -518,6 +518,36 @@ function deleteExperiment(form) {
     });
 } // function
 
+function deleteUser() {
+  // This function is only called from "/manage?username=",
+  // so user to delete is in search params.
+  const params = new URLSearchParams(window.location.search);
+  axios
+    .post("/manage/delete", {
+      username: params.get("username"),
+    })
+    .then(function (response) {
+      // If successful, go back to admin page and show confirmation message.
+      sessionStorage.setItem("ToastMsg", response.data);
+      window.location.replace("/admin");
+    })
+    .catch(function (error) {
+      if (error.response) {
+        // Request made and server responded
+        window.alert(error.response.data);
+        window.location.reload();
+      } else if (error.request) {
+        // The request was made but no response was received
+        window.alert(error.request);
+        window.location.reload();
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        window.alert("Error", error.message);
+        window.location.reload();
+      }
+    });
+} // function
+
 // Specific function for updating user table on admin profile page
 function updateUserTable() {
   // sessionStorage.setItem("user-table-page", page);

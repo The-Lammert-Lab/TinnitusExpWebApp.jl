@@ -1,8 +1,18 @@
 <% partial("app/layouts/_admin_header.jl.html") %>
 
 <div class="container">
-    <div class="row text-center">
-        <h1>Manage User: $(params(:username))</h1>
+    <div class="row">
+        <div class="col-md"></div>
+        <div class="col-md-auto">
+            <h1>Manage User: $(params(:username))</h1>
+        </div>
+        <% if isempty(added_experiments) %>
+            <div class="col-md text-end">
+                <button id="delete-user-btn" type="submit" class="btn btn-outline-danger">Delete user</button>
+            </div>
+        <% else %>
+            <div class="col-md"></div>
+        <% end %>
     </div>
 
     <div>
@@ -109,6 +119,17 @@
             }
         }
     });
+
+    const delete_user_btn = document.getElementById("delete-user-btn");
+    if (delete_user_btn !== null) {
+        delete_user_btn.addEventListener("click", function(e) {
+            e.preventDefault();
+            const ans = confirm("Are you sure you want to delete this user? This action cannot be undone.")
+            if (ans) {    
+                deleteUser();
+            }
+        });
+    }
 
     const select = document.getElementById("add-experiment");
     const submitButton = document.getElementById("add-submit");

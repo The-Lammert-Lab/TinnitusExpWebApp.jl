@@ -177,6 +177,8 @@ function add_exp()
 end
 
 function get_partial_data()
+    authenticated!()
+
     # Avoid errors if any payload params come in as a string
     limit =
         jsonpayload("limit") isa AbstractString ? parse(Int, jsonpayload("limit")) :
