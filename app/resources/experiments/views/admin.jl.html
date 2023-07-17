@@ -138,12 +138,14 @@
 <script>
     ready(showToast)
 
-    sessionStorage.setItem('user-table-page', $(init_page));
-    sessionStorage.setItem('user-table-limit', $(init_limit));
-    sessionStorage.setItem('user-table-max-data', $(num_users));
+    ready(() => {
+        sessionStorage.setItem('user-table-page', $(init_page));
+        sessionStorage.setItem('user-table-limit', $(init_limit));
+        sessionStorage.setItem('user-table-max-data', $(num_users));
 
-    sessionStorage.setItem('user-experiment-page', $(init_page));
-    sessionStorage.setItem('user-experiment-limit', $(init_limit));
+        sessionStorage.setItem('user-experiment-page', $(init_page));
+        sessionStorage.setItem('user-experiment-limit', $(init_limit));
+    });
 
     document
         .getElementById("delete-form")

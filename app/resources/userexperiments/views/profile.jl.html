@@ -86,7 +86,9 @@ end
 </div>
 
 <script>
-    sessionStorage.setItem('user-ae-page', $(init_page));
-    sessionStorage.setItem('user-ae-limit', $(init_limit));
-    sessionStorage.setItem('user-ae-max-data', $(num_aes));
+    ready(() => {
+        sessionStorage.setItem('user-ae-page', $(init_page));
+        sessionStorage.setItem('user-ae-limit', $(init_limit));
+        sessionStorage.setItem('user-ae-max-data', $(num_aes));  
+    })
 </script>
