@@ -11,8 +11,7 @@ end
 </div>
 
 <div class="container">
-    <div class="row">
-        <div class="col-md"></div>
+    <div class="row d-flex justify-content-center">
 
         <div class="col-md-auto">
             <div class="d-flex align-items-center justify-content-end">
@@ -83,12 +82,13 @@ end
                 </ul>
             </nav>
         </div>
-        <div class="col-md"></div>
     </div>
 </div>
 
 <script>
-    sessionStorage.setItem('user-ae-page', $(init_page));
-    sessionStorage.setItem('user-ae-limit', $(init_limit));
-    sessionStorage.setItem('user-ae-max-data', $(num_aes));
+    ready(() => {
+        sessionStorage.setItem('user-ae-page', $(init_page));
+        sessionStorage.setItem('user-ae-limit', $(init_limit));
+        sessionStorage.setItem('user-ae-max-data', $(num_aes));  
+    })
 </script>

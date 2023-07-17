@@ -384,34 +384,6 @@ function admin()
     )
 end
 
-function manage()
-    authenticated!()
-    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
-
-    user_id = findone(User; username = params(:username)).id
-
-    experiments = all(Experiment)
-    added_experiments = find(UserExperiment; user_id = user_id)
-    unstarted_experiments = [e for e in added_experiments if e.trials_complete == 0]
-
-    n_trials = [
-        findone(Experiment; name = e).n_trials for
-        e in getproperty.(added_experiments, :experiment_name)
-    ]
-    counter = 0
-
-    html(
-        :experiments,
-        :manage;
-        added_experiments,
-        experiments,
-        unstarted_experiments,
-        user_id,
-        counter,
-        n_trials,
-    )
-end
-
 function create()
     authenticated!()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))

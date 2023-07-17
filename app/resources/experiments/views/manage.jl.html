@@ -6,7 +6,7 @@
         <div class="col-md-auto">
             <h1>Manage User: $(params(:username))</h1>
         </div>
-        <% if isempty(added_experiments) %>
+        <% if isempty(ae_data) %>
             <div class="col-md text-end">
                 <button id="delete-user-btn" type="submit" class="btn btn-outline-danger">Delete user</button>
             </div>
@@ -15,7 +15,7 @@
         <% end %>
     </div>
 
-    <div>
+    <div class="row">
         <!-- TODO: Check if action and method are necessary here -->
         <form class="d-flex align-items-center justify-content-center mt-3" id="add-form" method="post">
             <label class="my-1 me-2">Add experiment:</label>
@@ -30,15 +30,29 @@
                         <% end %>
                 <% end %>
             </select>
-            <input type="hidden" name="user_id" value="$(user_id)">
+            <input type="hidden" name="username" value="$(username)">
             <input id="add-submit" class="btn btn-primary" type="submit" value="Add" disabled>
         </form>
     </div>
 
     <div class="row d-flex justify-content-center">
         <div class="col-md-auto">
+
+            <div>
+                <div class="d-flex align-items-center justify-content-end mt-2">
+                    <b><label class="my-1 me-1" for="manage-user-ae-limit">Show:</label></b>
+                    <select id="manage-user-ae-limit" class="form-select w-auto" onchange="updateTableLimit('manage-user-ae',updateManageUserAETable,this.value);">
+                        <!-- <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option> -->
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="50">50</option>
+                </select>
+            </div>
+
             <!-- TODO: Add sort feature -->
-            <table class="styled-table">
+            <table class="table styled-table mb-0 mt-0">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -47,41 +61,55 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="userexperiment-tbody">
-                <% for_each(added_experiments) do e 
-                    counter += 1 %>
+                
+                <tbody id="manage-user-ae">
+                    <% for_each(ae_data) do e %>
                     <tr>
-                        <td>$(e.experiment_name)</td>
-                        <td>$(e.instance)</td>
-                        <td>$(round(Int, 100*e.trials_complete / n_trials[counter]))&percnt;</td>
-                        <%  if e.trials_complete == 0  %>
+                        <td>$(e[:name])</td>
+                        <td>$(e[:instance])</td>
+                        <td>$(e[:percent_complete])&percnt;</td>
+                        <%  if e[:status] == "completed" %>
+                                <td>None</td>
+                        <%  elseif e[:status] == "started"  %>
+                            <td> 
+                                <form style="float:left;" name="restart-form">
+                                    <input type="hidden" name="name" value="$(e[:name])">
+                                    <input type="hidden" name="instance" value="$(e[:instance])">
+                                    <input type="hidden" name="username" value="$(username)">
+                                    <input type="submit" value="Restart"></input>
+                                </form>
+                            </td>
+                        <%  else  %>
                             <td>
                                 <form style="float:left;" name="remove-form">
-                                    <input type="hidden" name="name" value="$(e.experiment_name)">
-                                    <input type="hidden" name="instance" value="$(e.instance)">
-                                    <input type="hidden" name="user_id" value="$(user_id)">
+                                    <input type="hidden" name="name" value="$(e[:name])">
+                                    <input type="hidden" name="instance" value="$(e[:instance])">
+                                    <input type="hidden" name="username" value="$(username)">
                                     <input type="submit" value="Remove"></input>
                                 </form>
                             </td>
-                        <%  elseif !(
-                                e.experiment_name in getproperty.(unstarted_experiments, :experiment_name)
-                            ) && e.trials_complete < n_trials[counter]
-                        %>
-                                <td> 
-                                    <form style="float:left;" name="restart-form">
-                                        <input type="hidden" name="name" value="$(e.experiment_name)">
-                                        <input type="hidden" name="instance" value="$(e.instance)">
-                                        <input type="hidden" name="user_id" value="$(user_id)">
-                                        <input type="submit" value="Restart"></input>
-                                    </form>
-                                </td>
-                        <%  else  %>
-                            <td>None</td>
                         <%  end  %>
                     </tr>
                 <% end %>
                 </tbody>
             </table>
+
+            <nav aria-label="Experiment table pagination">
+                <ul id="manage-user-ae-nav" class="pagination">
+                    <li id="manage-user-ae-prev-btn" class="page-item page-link disabled" onclick="updateTablePage('manage-user-ae',updateManageUserAETable,parseInt(sessionStorage.getItem('manage-user-ae-page'))-1);">Previous</li>
+                    <% for_each(table_pages_btns) do num %>
+                        <% if num === 1 %>
+                            <li name="manage-user-ae-nav-num" class="page-item page-link active" onclick="updateTablePage('manage-user-ae',updateManageUserAETable,$(num));">$(num)</li>
+                        <% elseif num isa AbstractString %>
+                            <li name="manage-user-ae-nav-num" class="page-item page-link">$(num)</li>
+                        <% else %>
+                            <li name="manage-user-ae-nav-num" class="page-item page-link" onclick="updateTablePage('manage-user-ae',updateManageUserAETable,$(num));">$(num)</li>
+                        <% end %>
+                    <% end %>
+                    <li id="manage-user-ae-next-btn" class="page-item page-link" onclick="updateTablePage('manage-user-ae',updateManageUserAETable,parseInt(sessionStorage.getItem('manage-user-ae-page'))+1);">Next</li>
+                </ul>
+            </nav>
+
         </div>
     </div>
 
@@ -98,8 +126,13 @@
 </div>
 
 <script>
-    ready(showToast)
-
+    ready(showToast);
+    ready(() => {
+        sessionStorage.setItem('manage-user-ae-page', $(init_page));
+        sessionStorage.setItem('manage-user-ae-limit', $(init_limit));
+        sessionStorage.setItem('manage-user-ae-max-data', $(num_aes));
+    });
+    
     // Post add or remove request
     document.addEventListener("submit", function(e) {
         if (e.target.getAttribute("id") == "add-form") { // using id because only ever one

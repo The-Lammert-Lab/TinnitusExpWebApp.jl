@@ -4,6 +4,7 @@ using CharacterizeTinnitus
 using CharacterizeTinnitus.Trials
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
+using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.ControllerHelper
 using SearchLight
 using SearchLight.Validation
@@ -54,7 +55,7 @@ function restart_exp()
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
-    user_id = parse(Int, jsonpayload("user_id"))
+    user_id = findone(User; username = jsonpayload("username")).id
 
     # Check if there is another of same experiment with no trials done.
     existing_unstarted =
@@ -97,7 +98,7 @@ function remove_exp()
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
-    user_id = parse(Int, jsonpayload("user_id"))
+    user_id = findone(User; username = jsonpayload("username")).id
 
     trials = find(Trial; experiment_name = name, instance = instance, user_id = user_id)
 
@@ -135,7 +136,7 @@ function add_exp()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     name = jsonpayload("experiment")
-    user_id = parse(Int, jsonpayload("user_id"))
+    user_id = findone(User; username = jsonpayload("username")).id
 
     curr_user_exps = find(UserExperiment; experiment_name = name, user_id = user_id)
 
@@ -195,10 +196,17 @@ function get_partial_data()
         limit = 1
     end
 
+    # If a specific username is given (called from /manage), use that.
+    user_id = try
+        findone(User; username = jsonpayload("username")).id
+    catch
+        current_user_id()
+    end
+
     if jsonpayload("type") == "UserExperiment"
-        users_with_curr_exp =
-            get_paginated_amount(UserExperiment, limit, page; user_id = current_user_id())
-        ae_data = ue2dict(users_with_curr_exp)
+        added_experiments =
+            get_paginated_amount(UserExperiment, limit, page; user_id = user_id)
+        ae_data = ue2dict(added_experiments)
         return json(ae_data)
     else
         return Router.error(

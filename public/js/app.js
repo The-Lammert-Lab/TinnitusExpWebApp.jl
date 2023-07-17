@@ -150,10 +150,11 @@ function getAndStoreAudio() {
 // Send user_id and name of experiment to add to server
 function addExperiment(form) {
   const formData = new FormData(form);
+  const params = new URLSearchParams(window.location.search);
   axios
     .post("/add", {
       experiment: formData.get("experiment"),
-      user_id: formData.get("user_id"),
+      username: params.get("username"),
     })
     .then(function (response) {
       sessionStorage.setItem("ToastMsg", response.data);
@@ -177,11 +178,12 @@ function addExperiment(form) {
 // Post data from experiment to restart to server and refresh page.
 function restartExperiment(form) {
   const formData = new FormData(form);
+  const params = new URLSearchParams(window.location.search);
   axios
     .post("/restart", {
       name: formData.get("name"),
       instance: formData.get("instance"),
-      user_id: formData.get("user_id"),
+      username: params.get("username"),
     })
     .then(function (response) {
       sessionStorage.setItem("ToastMsg", response.data);
@@ -205,11 +207,12 @@ function restartExperiment(form) {
 // Post user_id and data from experiment to remove to server and refresh page.
 function removeExperiment(form) {
   const formData = new FormData(form);
+  const params = new URLSearchParams(window.location.search);
   axios
     .post("/remove", {
       name: formData.get("name"),
       instance: formData.get("instance"),
-      user_id: formData.get("user_id"),
+      username: params.get("username"),
     })
     .then(function (response) {
       sessionStorage.setItem("ToastMsg", response.data);
@@ -683,6 +686,82 @@ function updateUserAETable() {
         form.appendChild(input3);
         form.appendChild(input_submit);
         cell4.appendChild(form);
+      }
+    });
+}
+
+function updateManageUserAETable() {
+  const tbody_id = "manage-user-ae";
+  const page = sessionStorage.getItem(tbody_id + "-page");
+  const limit = sessionStorage.getItem(tbody_id + "-limit");
+  const params = new URLSearchParams(window.location.search);
+  axios
+    .post("/getpartialdata", {
+      type: "UserExperiment",
+      page: page,
+      limit: limit,
+      username: params.get("username"),
+    })
+    .then(function (response) {
+      // Remove existing table rows
+      const tbody = document.getElementById(tbody_id);
+      tbody.innerHTML = "";
+      // Write in new data
+      for (const element in response.data) {
+        let row = tbody.insertRow();
+        let cell1 = row.insertCell();
+        let cell2 = row.insertCell();
+        let cell3 = row.insertCell();
+        let cell4 = row.insertCell();
+        let name = document.createTextNode(response.data[element].name);
+        let instance = document.createTextNode(response.data[element].instance);
+        let perc_complete = document.createTextNode(
+          response.data[element].percent_complete + "%"
+        );
+
+        cell1.appendChild(name);
+        cell2.appendChild(instance);
+        cell3.appendChild(perc_complete);
+
+        if (response.data[element].status == "completed") {
+          cell4.appendChild(document.createTextNode("None"));
+          continue;
+        } else {
+          let input1 = document.createElement("input");
+          input1.setAttribute("type", "hidden");
+          input1.setAttribute("name", "name");
+          input1.setAttribute("value", response.data[element].name);
+
+          let input2 = document.createElement("input");
+          input2.setAttribute("type", "hidden");
+          input2.setAttribute("name", "instance");
+          input2.setAttribute("value", response.data[element].instance);
+
+          let input3 = document.createElement("input");
+          input3.setAttribute("type", "hidden");
+          input3.setAttribute("name", "username");
+          input3.setAttribute("value", params.get("username"));
+
+          let input_submit = document.createElement("input");
+          input_submit.setAttribute("type", "submit");
+
+          let form = document.createElement("form");
+          form.setAttribute("style", "float:left;");
+
+          if (response.data[element].status == "started") {
+            form.setAttribute("name", "restart-form");
+            input_submit.setAttribute("value", "Restart");
+          } else {
+            form.setAttribute("name", "remove-form");
+            input_submit.setAttribute("value", "Remove");
+          }
+
+          form.appendChild(input1);
+          form.appendChild(input2);
+          form.appendChild(input3);
+          form.appendChild(input_submit);
+          cell4.appendChild(form);
+        }
       }
     });
 }
