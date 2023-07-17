@@ -5,46 +5,13 @@ using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.ControllerHelper
+using CharacterizeTinnitus.UserExperimentsController: ue2dict
 using SearchLight
 using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using GenieAuthentication
 using Genie.Exceptions
-
-"""
-    ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
-
-Converts UserExperiments to dictionary with 
-    username, instance, and percent_complete fields.
-    Slightly different from `ue2dict` in ExperimentsController.
-    Distinguished by the module, not the arguments. 
-"""
-function ue2dict(
-    UE::V,
-) where {V<:Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
-    ae_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
-    for (ind, ae) in enumerate(UE)
-        n_trials = findone(Experiment; name = ae.experiment_name).n_trials
-
-        status = if ae.trials_complete >= n_trials
-            "completed"
-        elseif ae.trials_complete > 0
-            "started"
-        else
-            "unstarted"
-        end
-
-        # Add dictionary to user_data
-        ae_data[ind] = Dict(
-            :name => ae.experiment_name,
-            :instance => ae.instance,
-            :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
-            :status => status,
-        )
-    end
-    return ae_data
-end
 
 function delete_user()
     authenticated!()
@@ -99,14 +66,10 @@ function manage()
         table_pages_btns = [range(1, max_btn_display - 1)..., "...", max_btn]
     end
 
-    unstarted_experiments = [e for e in find(UserExperiment; user_id = user_id) if e.trials_complete == 0]
+    unstarted_experiments =
+        [e for e in find(UserExperiment; user_id = user_id) if e.trials_complete == 0]
 
-    ae_disp = get_paginated_amount(
-        UserExperiment,
-        init_limit,
-        init_page;
-        user_id = user_id,
-    )
+    ae_disp = get_paginated_amount(UserExperiment, init_limit, init_page; user_id = user_id)
     ae_data = ue2dict(ae_disp)
 
     html(

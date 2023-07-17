@@ -197,7 +197,7 @@ function get_partial_data()
     end
 
     # If a specific username is given (called from /manage), use that.
-    user_id = try 
+    user_id = try
         findone(User; username = jsonpayload("username")).id
     catch
         current_user_id()
