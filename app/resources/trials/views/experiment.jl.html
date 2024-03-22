@@ -13,7 +13,8 @@
         <div class="col-4 offset-4 mt-4">
             <label id="block-info" class="label label-default" for="prog-bar"></label>
             <div class="progress" id="prog-bar">
-                <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0"
+                    aria-valuemax="100"></div>
             </div>
         </div>
     </div>
@@ -21,14 +22,41 @@
     <div id="btn-container" class="centered-buttons">
         <div class="row">
             <div class="col-12 text-center">
-                <button class="btn btn-secondary btn-lg me-1" id="yes" name="response" onclick="recordAndPlay('yes'); updateProgress();" disabled=true>Yes (F)</button>
+                <button class="btn btn-secondary btn-lg me-1" id="yes" name="response"
+                    onclick="recordAndPlay('yes'); updateProgress();" disabled=true>Yes (F)</button>
 
-                <button class="btn btn-secondary btn-lg" id="no" name="response" onclick="recordAndPlay('no'); updateProgress();" disabled=true>No (J)</button>
+                <button class="btn btn-secondary btn-lg" id="no" name="response"
+                    onclick="recordAndPlay('no'); updateProgress();" disabled=true>No (J)</button>
             </div>
 
             <div class="col-12 mt-2 text-center">
-                <button class="btn btn-primary btn-lg" id="start" onclick="document.getElementById('1').play(); document.getElementById('yes').setAttribute('class','btn btn-success btn-lg me-1'); document.getElementById('no').setAttribute('class','btn btn-info btn-lg'); this.remove();">Start (Enter)</button>
+                <button class="btn btn-primary btn-lg" id="start"
+                    onclick="playTargetandFirstStimulus(); document.getElementById('yes').setAttribute('class','btn btn-success btn-lg me-1'); document.getElementById('no').setAttribute('class','btn btn-info btn-lg'); this.remove();">Start
+                    (Enter)</button>
             </div>
+
+            <script>
+                function playTargetandFirstStimulus() {
+                    const targetSound = document.getElementById('target_sound');
+                    // Check if the target audio tag exists
+                    if (targetSound) {
+                        // Ax experiment: Play target sound first
+                        setTimeout(() => {
+                            targetSound.play();
+
+                            targetSound.onended = () => {
+                                setTimeout(() => {
+                                    document.getElementById('1').play();
+                                }, 300);
+                            };
+                        }, 300);
+                    }
+                    else {
+                        // Non-Ax experiment: Play stimulus directly
+                        document.getElementById('1').play();
+                    }
+                }
+            </script>
         </div>
     </div>
 
@@ -37,47 +65,47 @@
     </div>
 </div>
 
-<% if !from_rest [
-for_each(stimuli) do stim
-    counter += 1 
-%> 
-    <audio 
-        id="$counter" 
-        name="stimulus" 
-        onended="document.getElementById('yes').disabled=false; 
-            document.getElementById('no').disabled=false;
-            this.remove();" 
-        src="data:audio/wav;base64,$(stim)"
-        preload="auto">
+
+<% if target_sound_path !="" %>
+    <audio id="target_sound" name="target" onended="document.getElementById('yes').disabled=false; 
+            document.getElementById('no').disabled=false;" src="$target_sound_path" preload="auto">
     </audio>
-<% end %>
-<script>
-    sessionStorage.setItem("remaining_blocks", $(remaining_blocks));
-    sessionStorage.setItem("current_block", 1);
-</script>
-<% ] else %>
-    <script>
-        getAudioFromStorage();
-        const current_block = parseInt(sessionStorage.getItem("current_block")) + 1;
-        sessionStorage.setItem("current_block", current_block);
-    </script>
-<% end %>
+    <% end %>
 
-<script type="text/javascript">
-    document.getElementById("block-info").innerHTML = "Block " + sessionStorage.getItem("current_block") + " of " + sessionStorage.getItem("remaining_blocks")
+        <% if !from_rest [ for_each(stimuli) do stim counter +=1 %>
 
-    // f - 70, j - 74, enter - 13
-    document.addEventListener("keyup", function(e){
-        if(e.which == 70){
-            document.getElementById("yes").click();     
-        }
-        else if(e.which == 74){
-            document.getElementById("no").click();
-        }
-        else if(e.which == 13){
-            document.getElementById("start").click();
-        }
-    });
+            <audio id="$counter" name="stimulus" onended="document.getElementById('yes').disabled=false; 
+            document.getElementById('no').disabled=false;
+            this.remove();" src="data:audio/wav;base64,$(stim)" preload="auto">
+            </audio>
+            <% end %>
+                <script>
+                    sessionStorage.setItem("remaining_blocks", $(remaining_blocks));
+                    sessionStorage.setItem("current_block", 1);
+                </script>
+                <% ] else %>
+                    <script>
+                        getAudioFromStorage();
+                        const current_block = parseInt(sessionStorage.getItem("current_block")) + 1;
+                        sessionStorage.setItem("current_block", current_block);
+                    </script>
+                    <% end %>
 
-    ready(sessionStorage.setItem("init_n_stimuli", document.getElementsByName("stimulus").length));
-</script>
+                        <script type="text/javascript">
+                            document.getElementById("block-info").innerHTML = "Block " + sessionStorage.getItem("current_block") + " of " + sessionStorage.getItem("remaining_blocks")
+
+                            // f - 70, j - 74, enter - 13
+                            document.addEventListener("keyup", function (e) {
+                                if (e.which == 70) {
+                                    document.getElementById("yes").click();
+                                }
+                                else if (e.which == 74) {
+                                    document.getElementById("no").click();
+                                }
+                                else if (e.which == 13) {
+                                    document.getElementById("start").click();
+                                }
+                            });
+
+                            ready(sessionStorage.setItem("init_n_stimuli", document.getElementsByName("stimulus").length));
+                        </script>
