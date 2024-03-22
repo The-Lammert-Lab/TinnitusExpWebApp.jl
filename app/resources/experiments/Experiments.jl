@@ -19,15 +19,17 @@ mutable struct Experiment <: AbstractModel
     stimgen_type::String
     n_trials::Int
     name::String
+    target_sound::String
     settings_hash::String
 
     # Inner constructor to force consistency in settings_hash
     function Experiment(;
-        id::DbId = DbId(),
-        stimgen_settings::AbstractString = "",
-        stimgen_type::AbstractString = "",
-        n_trials::Int = 0,
-        name::AbstractString = "",
+        id::DbId=DbId(),
+        stimgen_settings::AbstractString="",
+        stimgen_type::AbstractString="",
+        n_trials::Int=0,
+        name::AbstractString="",
+        target_sound::AbstractString="",
     )
         # Reconstruct the stimgen obj to make sure settings are valid and hash is consistent
         if !isempty(stimgen_settings)
@@ -47,7 +49,7 @@ mutable struct Experiment <: AbstractModel
                 ) |> JSON3.write
         end
         settings_hash = hash_settings(stimgen_settings)
-        return new(id, stimgen_settings, stimgen_type, n_trials, name, settings_hash)
+        return new(id, stimgen_settings, stimgen_type, n_trials, name, target_sound, settings_hash)
     end
 end
 

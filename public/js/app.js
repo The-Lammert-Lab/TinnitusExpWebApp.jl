@@ -5,6 +5,7 @@
 function recordAndPlay(ans) {
   // Interpret response
   var val = 0;
+  var ax = false;
   if (ans === "yes") {
     val = 1;
   } else if (ans === "no") {
@@ -40,10 +41,33 @@ function recordAndPlay(ans) {
       } else {
         // Get the next audio element (prev. was deleted)
         const curr_id = Math.min(parseInt(stimuli[0].id));
-        // 300ms delay then play sound
-        setTimeout(() => {
-          document.getElementById(curr_id).play();
-        }, 300);
+
+        // check if AX experiment or not
+        const targetSound = document.getElementById('target_sound');
+        if (targetSound) {
+          ax = true;
+        }
+
+        if (ax === false) {
+          // Play the next audio after a delay of 300ms
+          setTimeout(() => {
+            document.getElementById(curr_id).play();
+          }, 300);
+        }
+        else {
+          // Play the target audio after a delay of 300ms if AX-Experiment
+          setTimeout(() => {
+            targetSound.play();
+
+            // When the target audio ends, play the curr_id audio
+            targetSound.onended = () => {
+              setTimeout(() => {
+                document.getElementById(curr_id).play();
+              }, 300);
+            };
+          }, 300);
+        }
+
         // Disallow answer while the sound plays
         document.getElementById("yes").disabled = true;
         document.getElementById("no").disabled = true;
@@ -174,6 +198,19 @@ function addExperiment(form) {
       return;
     });
 } // function
+
+/**
+ * If the Experiment is AX (toggle true), only then it displays option to select the target sound.
+ */
+function toggleTargetSound() {
+  const toggle = document.getElementById("ax-toggle");
+  const targetSoundRow = document.getElementById("target-sound-row");
+  if (toggle.checked) {
+    targetSoundRow.style.display = "table-row";
+  } else {
+    targetSoundRow.style.display = "none";
+  }
+}
 
 // Post data from experiment to restart to server and refresh page.
 function restartExperiment(form) {

@@ -35,6 +35,7 @@ const EXPERIMENT_FIELDS = Dict{Symbol,String}(
     :stimgen_type => "Stimgen type",
     :n_trials => "Number of trials",
     :name => "Experiment name",
+    :target_sound => "Target sound",
     :n_bins_filled_mean => "Mean of Gaussian for filled bins",
     :n_bins_filled_var => "Variance of Gaussian for filled bins",
     :bin_prob => "Probability of a bin being filles",
@@ -165,7 +166,11 @@ function view_exp()
             end
         else
             if field in keys(EXPERIMENT_FIELDS)
-                exp_data[EXPERIMENT_FIELDS[field]] = getproperty(experiment, field)
+                if isempty(getproperty(experiment, field))
+                    exp_data[EXPERIMENT_FIELDS[field]] = "N/A"
+                else
+                    exp_data[EXPERIMENT_FIELDS[field]] = getproperty(experiment, field)
+                end
             else # Do not skip field if no natural language version written.
                 exp_data[field] = getproperty(experiment, field)
             end
@@ -206,6 +211,7 @@ function get_exp_fields()
         :bin_probs,
         :distribution,
         :distribution_filepath,
+        :target_sound,
     ]
 
     exp_inds = findall(!in(exclude), fnames)
@@ -243,6 +249,7 @@ function get_exp_fields(ex::E) where {E<:Experiment}
         :bin_probs,
         :distribution,
         :distribution_filepath,
+        :target_sound,
     ]
 
     exp_inds = findall(!in(exclude), fnames)
@@ -394,11 +401,8 @@ function create()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     full_types = _subtypes(Stimgen)
-    stimgen_types = Vector{String}(undef, length(full_types))
-    [
-        stimgen_types[ind] = split.(type, '.')[end][end] for
-        (ind, type) in enumerate(eachrow(string.(full_types)))
-    ]
+
+    stimgen_types = last.(split.(string.(full_types), '.'))
 
     # From template experiment or not
     if haskey(params(), :template) && !isempty(params(:template))
@@ -415,6 +419,7 @@ function create()
         stimgen_fields = nothing
         type = nothing
     end
+
 
     html(:experiments, :create; stimgen_types, exp_fields, stimgen_fields, type)
 end
