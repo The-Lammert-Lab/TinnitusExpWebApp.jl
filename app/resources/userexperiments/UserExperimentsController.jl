@@ -6,6 +6,8 @@ using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.ControllerHelper
+using WAV: wavwrite
+using Base64
 using SearchLight
 using SearchLight.Validation
 using Genie.Renderers, Genie.Renderers.Html
@@ -13,6 +15,9 @@ using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using GenieAuthentication
 using Genie.Exceptions
+using GenieSession
+using TinnitusReconstructor
+using TinnitusReconstructor: binnedrepr2wav
 
 
 """
@@ -215,6 +220,79 @@ function get_partial_data()
             MIME"application/json",
         )
     end
+end
+
+# renders HTML page which sets mult and binrange for resynthesis per user per experiment
+function adjust_resynth()
+    authenticated!()
+
+    curr_usr_exp = findone(
+        UserExperiment;
+        experiment_name=params(:name),
+        instance=params(:instance),
+        user_id=current_user_id(),
+    )
+
+    # get current mult and binrange values
+    curr_mult = curr_usr_exp.mult
+    curr_binrange = curr_usr_exp.binrange
+
+    html(:userexperiments, :adjustResynth; curr_mult, curr_binrange)
+end
+
+function play_adjusted_audio()
+    authenticated!()
+    # Extract the mult and binrange values
+    mult = parse(Float64, params(:JSON_PAYLOAD)["mult"])
+    binrange = parse(Float64, params(:JSON_PAYLOAD)["binrange"])
+
+    name = params(:name)
+    instance = params(:instance)
+    user_id = current_user_id()
+
+    e = findone(Experiment; name=name)
+    stimgen = stimgen_from_json(e.stimgen_settings, e.stimgen_type)
+
+    all_trials = find(Trial; experiment_name=name, instance=instance, user_id=user_id)
+
+    for (index, stimulus) in enumerate(all_trials)
+        all_trials[index].stimulus = all_trials[index].stimulus[2:end-1]
+    end
+
+    responses = getproperty.(all_trials, :response)
+    stimuli = [parse.(Float64, split(trial.stimulus, ",")) for trial in all_trials]
+
+    recon = TinnitusReconstructor.gs(responses, stack(stimuli)')
+
+    adjusted_resynth, = binnedrepr2wav(stimgen, recon, mult, binrange)
+
+    buf = Base.IOBuffer()
+    wavwrite(adjusted_resynth, buf; Fs=44100.0)
+    adjusted_wav_file = base64encode(take!(buf))
+    close(buf)
+
+    return json(adjusted_wav_file)
+end
+
+function save_mult_and_binrange()
+    # Parse the mult and binrange values from the JSON payload
+    mult = parse(Float64, params(:JSON_PAYLOAD)["mult"])
+    binrange = parse(Float64, params(:JSON_PAYLOAD)["binrange"])
+
+    # Find the UserExperiment with the specified experiment name, instance, and user id
+    curr_usr_exp = findone(
+        UserExperiment;
+        experiment_name=params(:name),
+        instance=params(:instance),
+        user_id=current_user_id(),
+    )
+
+    # Update the mult and binrange values
+    curr_usr_exp.mult = mult
+    curr_usr_exp.binrange = binrange
+
+    # Save the changes
+    save(curr_usr_exp)
 end
 
 #########################
