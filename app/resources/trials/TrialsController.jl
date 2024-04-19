@@ -212,7 +212,6 @@ function experiment()
     # Validate that name refers to a real Experiment
     # Validaton of the trials is done during save.
     experiment = findone(Experiment; name=params(:name))
-    println("Experiment details: ", experiment)
     if isnothing(experiment)
         return Router.error(
             INTERNAL_ERROR,
@@ -229,13 +228,7 @@ function experiment()
         from_rest = false
         stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
 
-        if experiment.target_sound == ""
-            # Non-Ax Experiment
-            target_sound_path = ""
-        else
-            # Ax Experiment
-            target_sound_path = TARGET_SOUND_MAP[experiment.target_sound]
-        end
+        target_sound_path = experiment.target_sound == "" ? "" : TARGET_SOUND_MAP[experiment.target_sound]
 
         if isempty(stimuli)
             throw(ExceptionalResponse(redirect("/profile")))
@@ -243,8 +236,6 @@ function experiment()
             # Var for labelling audio elements
             counter = 0
             GenieSession.set!(:current_block, curr_block)
-            println("Experiment target sound", experiment.target_sound)
-            println("Remaining blocks", remaining_blocks)
 
             html(:trials, :experiment; stimuli, counter, from_rest, remaining_blocks, target_sound_path)
         end
