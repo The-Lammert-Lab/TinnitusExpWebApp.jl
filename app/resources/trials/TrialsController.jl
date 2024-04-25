@@ -212,7 +212,6 @@ function experiment()
     # Validate that name refers to a real Experiment
     # Validaton of the trials is done during save.
     experiment = findone(Experiment; name=params(:name))
-    println("Experiment details: ", experiment)
     if isnothing(experiment)
         return Router.error(
             INTERNAL_ERROR,
@@ -243,8 +242,6 @@ function experiment()
             # Var for labelling audio elements
             counter = 0
             GenieSession.set!(:current_block, curr_block)
-            println("Experiment target sound", experiment.target_sound)
-            println("Remaining blocks", remaining_blocks)
 
             html(:trials, :experiment; stimuli, counter, from_rest, remaining_blocks, target_sound_path)
         end
