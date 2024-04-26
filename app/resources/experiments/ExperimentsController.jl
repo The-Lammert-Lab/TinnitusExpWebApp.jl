@@ -84,17 +84,17 @@ function ue2dict(
         if ae.user_id in keys(cache)
             username = cache[ae.user_id]
         else
-            username = findone(User; id = ae.user_id).username
+            username = findone(User; id=ae.user_id).username
             cache[ae.user_id] = username
         end
 
-        n_trials = findone(Experiment; name = ae.experiment_name).n_trials
+        n_trials = findone(Experiment; name=ae.experiment_name).n_trials
 
         # Add dictionary to user_data
         user_data[ind] = Dict(
             :username => username,
             :instance => ae.instance,
-            :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
+            :percent_complete => round(100 * ae.trials_complete / n_trials; digits=2),
         )
     end
     return user_data
@@ -125,8 +125,9 @@ function view_exp()
         jsonpayload("page") isa AbstractString ? parse(Int, jsonpayload("page")) :
         jsonpayload("page")
 
-    ex = findone(Experiment; name = name)
-    if ex === nothing
+    experiment = findone(Experiment; name=name)
+
+    if experiment === nothing
         return Router.error(
             INTERNAL_ERROR,
             """Could not find an experiment with name "$(name)".""",
@@ -136,19 +137,23 @@ function view_exp()
 
     # Get all user experiments for this experiment
     added_experiments =
-        get_paginated_amount(UserExperiment, limit, page; experiment_name = name)
+        get_paginated_amount(UserExperiment, limit, page; experiment_name=name)
     user_data = ue2dict(added_experiments)
 
-    # Pre-process experiment fields
-    exp_data = Dict() # Can't initialize length b/c varying stimgen_settings fields
+    # Can't initialize length b/c varying stimgen_settings fields
+    # Making exp_data a OrderedDict, to keep "Experiement Name" field at the top.
+    exp_data = OrderedDict{String,Any}(EXPERIMENT_FIELDS[:name] => name)
     skip_fields = [:id, :settings_hash]
     skip_settings = [:bin_probs, :distribution, :distribution_filepath]
-    for field in fieldnames(typeof(ex))
-        if field in skip_fields
+
+    experiment_fields = fieldnames(typeof(experiment))
+
+    for field in experiment_fields
+        if field in skip_fields || field == :name
             continue
         elseif field == :stimgen_settings
             # Loop over :stimgen_settings field, which is JSON of stimgen.
-            settings = JSON3.read(getproperty(ex, field))
+            settings = JSON3.read(getproperty(experiment, field))
             for setting in keys(settings)
                 if setting in skip_settings
                     continue
@@ -160,16 +165,16 @@ function view_exp()
             end
         else
             if field in keys(EXPERIMENT_FIELDS)
-                exp_data[EXPERIMENT_FIELDS[field]] = getproperty(ex, field)
+                exp_data[EXPERIMENT_FIELDS[field]] = getproperty(experiment, field)
             else # Do not skip field if no natural language version written.
-                exp_data[field] = getproperty(ex, field)
+                exp_data[field] = getproperty(experiment, field)
             end
         end
     end
 
     max_data =
-        count(UserExperiment; experiment_name = name) > 0 ?
-        count(UserExperiment; experiment_name = name) : 1
+        count(UserExperiment; experiment_name=name) > 0 ?
+        count(UserExperiment; experiment_name=name) : 1
 
     return json(
         Dict(
@@ -219,7 +224,7 @@ function get_exp_fields()
         lab = field in keys(EXPERIMENT_FIELDS) ? EXPERIMENT_FIELDS[field] : field
 
         exp_fields[ind] =
-            (name = field, label = lab, type = input_type, value = "", step = step)
+            (name=field, label=lab, type=input_type, value="", step=step)
     end
 
     return exp_fields
@@ -256,11 +261,11 @@ function get_exp_fields(ex::E) where {E<:Experiment}
         lab = field in keys(EXPERIMENT_FIELDS) ? EXPERIMENT_FIELDS[field] : field
 
         exp_fields[ind] = (
-            name = field,
-            label = lab,
-            type = input_type,
-            value = getproperty(ex, field),
-            step = step,
+            name=field,
+            label=lab,
+            type=input_type,
+            value=getproperty(ex, field),
+            step=step,
         )
     end
 
@@ -295,11 +300,11 @@ function get_stimgen_fields(s::SG) where {SG<:Stimgen}
         lab = field in keys(EXPERIMENT_FIELDS) ? EXPERIMENT_FIELDS[field] : field
 
         sg_fields[ind] = (
-            name = field,
-            label = lab,
-            type = input_type,
-            value = getproperty(s, field),
-            step = step,
+            name=field,
+            label=lab,
+            type=input_type,
+            value=getproperty(s, field),
+            step=step,
         )
     end
     return sg_fields
@@ -326,20 +331,20 @@ function get_partial_data()
     end
 
     if jsonpayload("type") == "User"
-        users = get_paginated_amount(User, limit, page; is_admin = false)
+        users = get_paginated_amount(User, limit, page; is_admin=false)
         return json(getproperty.(users, :username))
     elseif jsonpayload("type") == "UserExperiment"
         users_with_curr_exp = get_paginated_amount(
             UserExperiment,
             limit,
             page;
-            experiment_name = jsonpayload("name"),
+            experiment_name=jsonpayload("name"),
         )
         user_data = ue2dict(users_with_curr_exp)
 
         max_data =
-            count(UserExperiment; experiment_name = jsonpayload("name")) > 0 ?
-            count(UserExperiment; experiment_name = jsonpayload("name")) : 1
+            count(UserExperiment; experiment_name=jsonpayload("name")) > 0 ?
+            count(UserExperiment; experiment_name=jsonpayload("name")) : 1
 
         return json(
             Dict(:user_data => (:value => user_data), :max_data => (:value => max_data)),
@@ -362,8 +367,8 @@ function admin()
     max_btn_display = 4
 
     experiment_names = getproperty.(all(Experiment), :name)
-    users = get_paginated_amount(User, init_limit, init_page; is_admin = false)
-    num_users = count(User; is_admin = false) > 0 ? count(User; is_admin = false) : 1
+    users = get_paginated_amount(User, init_limit, init_page; is_admin=false)
+    num_users = count(User; is_admin=false) > 0 ? count(User; is_admin=false) : 1
 
     max_btn = convert(Int, ceil(num_users / init_limit))
     if max_btn <= max_btn_display
@@ -397,7 +402,7 @@ function create()
 
     # From template experiment or not
     if haskey(params(), :template) && !isempty(params(:template))
-        ex = findone(Experiment; name = params(:template))
+        ex = findone(Experiment; name=params(:template))
         if ex === nothing
             return redirect("/create")
         end
@@ -426,7 +431,7 @@ function save_exp()
     sg_data = jsonpayload("stimgen")
     sg_type = jsonpayload("stimgen_type")
 
-    ex = Experiment(; stimgen_settings = sg_data, stimgen_type = sg_type)
+    ex = Experiment(; stimgen_settings=sg_data, stimgen_type=sg_type)
 
     # Add fields to experiment.
     for field in eachindex(exp_data)
@@ -450,9 +455,9 @@ function save_exp()
     # Check for identical experiments
     identical_exp = findone(
         Experiment;
-        settings_hash = ex.settings_hash,
-        stimgen_type = sg_type,
-        n_trials = ex.n_trials,
+        settings_hash=ex.settings_hash,
+        stimgen_type=sg_type,
+        n_trials=ex.n_trials,
     )
 
     if identical_exp !== nothing
@@ -465,7 +470,7 @@ function save_exp()
 
     # Check that ex.n_trials is not within ± `pm` n_trials of existing, otherwise identical experiments.
     same_sg_exps =
-        find(Experiment; settings_hash = ex.settings_hash, stimgen_type = sg_type)
+        find(Experiment; settings_hash=ex.settings_hash, stimgen_type=sg_type)
 
     pm = 100
     for val in getproperty.(same_sg_exps, :n_trials)
@@ -487,7 +492,7 @@ function delete_exp()
 
     name = jsonpayload("name")
 
-    ex = findone(Experiment; name = name)
+    ex = findone(Experiment; name=name)
     if ex === nothing
         return Router.error(
             BAD_REQUEST,
@@ -496,7 +501,7 @@ function delete_exp()
         )
     end
 
-    added_ues = find(UserExperiment; experiment_name = name)
+    added_ues = find(UserExperiment; experiment_name=name)
     if !isempty(added_ues)
         return Router.error(
             INTERNAL_ERROR,

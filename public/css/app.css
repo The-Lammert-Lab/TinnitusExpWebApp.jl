@@ -58,3 +58,25 @@ body {
 .styled-table tbody tr:last-of-type {
   border-bottom: 2px solid #009879;
 }
+
+.sortable-table th {
+  cursor: pointer;
+}
+
+.sortable-table .th-sort-asc::after {
+  content: "\25b4";
+}
+
+.sortable-table .th-sort-desc::after {
+  content: "\25be";
+}
+
+.sortable-table .th-sort-asc::after,
+.sortable-table .th-sort-desc::after {
+  margin-left: 5px;
+}
+
+.sortable-table .th-sort-asc,
+.sortable-table .th-sort-desc {
+  background: rgba(0, 0, 0, 0.1);
+}

@@ -1,160 +1,173 @@
 <% partial("app/layouts/_admin_header.jl.html") %>
 
-<div class="container">
-    <h1>Admin profile</h1>
+    <div class="container">
+        <h1>Admin profile</h1>
 
-    <div class="row">
-        <div class="col-md-auto mb-2">
-            <label>View Experiment:</label>
-            <select class="form-select" aria-label="Default experiment label" name="experiment" id="experiment-ddl">
-                <option value="default">Experiment</option>
-                <% for_each(experiment_names) do e %>
-                    <option value="$(e)">$(e)</option>
-                <% end %>
-            </select>
-        </div>
-    </div>
-
-    <div class="row mt-2">
-        <div class="col-md-auto">
-            <form class="form-group" id="create-from-template-form" action="/create">
-                <input id="template-name" type="hidden" name="template" value="">
-            </form>
-        </div>
-
-        <div class="col-md-auto">
-            <form class="form-group" id="delete-form">
-                <input id="delete-name" type="hidden" name="name" value="">
-            </form>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md" style="margin-top:38px">
-            <table class="table styled-table mt-0">
-                <thead>
-                    <tr>
-                        <th>Field</th>
-                        <th>Value</th>
-                    </tr>
-                </thead>
-                <tbody id="experiment-settings"></tbody>
-            </table>
-        </div>
-
-        <div class="col-md">
-            <div class="d-flex align-items-center justify-content-end">
-                <b><label class="my-1 me-1" for="user-experiment-limit">Show:</label></b>
-                <select id="user-experiment-limit" class="form-select w-auto" onchange="updateTableLimit('user-experiment',updateUserExpTable,this.value);">
-                    <!-- <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option> -->
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="50">50</option>
-                </select>
-            </div>
-            <table class="table styled-table mb-0 mt-0">
-                <thead>
-                    <tr>
-                        <th>Users</th>
-                        <th>Instance</th>
-                        <th>Percent Complete</th>
-                    </tr>
-                </thead>
-                <tbody id="user-experiment"></tbody>
-            </table>
-            <nav aria-label="User table pagination">
-                <ul id="user-experiment-nav" class="pagination">
-                    <li id="user-experiment-prev-btn" class="page-item page-link disabled" onclick="updateTablePage('user-experiment',updateUserExpTable,parseInt(sessionStorage.getItem('user-experiment-page'))-1);">Previous</li>
-                    <li name="user-experiment-nav-num" class="page-item page-link active" onclick="updateTablePage('user-experiment',updateUserExpTable,1);">1</li>
-                    <li id="user-experiment-next-btn" class="page-item page-link disabled" onclick="updateTablePage('user-experiment',updateUserExpTable,parseInt(sessionStorage.getItem('user-experiment-page'))+1);">Next</li>
-                </ul>
-            </nav>
-        </div>
-
-        <div class="col-md">
-            <div class="d-flex align-items-center justify-content-end">
-                <b><label class="my-1 me-1" for="user-table-limit">Show:</label></b>
-                <select id="user-table-limit" class="form-select w-auto" onchange="updateTableLimit('user-table',updateUserTable,this.value);">
-                    <!-- <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option> -->
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="50">50</option>
-                </select>
-            </div>
-            <table class="table styled-table mb-0 mt-0">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="user-table">
-                    <% for_each(users) do user %>
-                        <tr>
-                            <td>$(user.username)</td>
-                            <td>
-                                <form action="/manage">
-                                    <input type="hidden" name="username" value="$(user.username)">
-                                    <input type="submit" value="Manage"></input>
-                                </form>
-                            </td>
-                        </tr>
-                    <% end %>
-                </tbody>
-            </table>
-            <nav aria-label="User table pagination">
-                <ul id="user-table-nav" class="pagination">
-                    <li id="user-table-prev-btn" class="page-item page-link disabled" onclick="updateTablePage('user-table',updateUserTable,parseInt(sessionStorage.getItem('user-table-page'))-1);">Previous</li>
-                    <% for_each(user_table_pages_btns) do num %>
-                        <% if num === 1 %>
-                            <li name="user-table-nav-num" class="page-item page-link active" onclick="updateTablePage('user-table',updateUserTable,$(num));">$(num)</li>
-                        <% elseif num isa AbstractString %>
-                            <li name="user-table-nav-num" class="page-item page-link">$(num)</li>
-                        <% else %>
-                            <li name="user-table-nav-num" class="page-item page-link" onclick="updateTablePage('user-table',updateUserTable,$(num));">$(num)</li>
+        <div class="row">
+            <div class="col-md-auto mb-2">
+                <label>View Experiment:</label>
+                <select class="form-select" aria-label="Default experiment label" name="experiment" id="experiment-ddl">
+                    <option value="default">Experiment</option>
+                    <% for_each(experiment_names) do e %>
+                        <option value="$(e)">$(e)</option>
                         <% end %>
-                    <% end %>
-                    <li id="user-table-next-btn" class="page-item page-link" onclick="updateTablePage('user-table',updateUserTable,parseInt(sessionStorage.getItem('user-table-page'))+1);">Next</li>
-                </ul>
-            </nav>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-md-auto">
+                <form class="form-group" id="create-from-template-form" action="/create">
+                    <input id="template-name" type="hidden" name="template" value="">
+                </form>
+            </div>
+
+            <div class="col-md-auto">
+                <form class="form-group" id="delete-form">
+                    <input id="delete-name" type="hidden" name="name" value="">
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md" style="margin-top:38px">
+                <table class="table styled-table mt-0">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="experiment-settings"></tbody>
+                </table>
+            </div>
+
+            <div class="col-md">
+                <div class="d-flex align-items-center justify-content-end">
+                    <b><label class="my-1 me-1" for="user-experiment-limit">Show:</label></b>
+                    <select id="user-experiment-limit" class="form-select w-auto"
+                        onchange="updateTableLimit('user-experiment',updateUserExpTable,this.value);">
+                        <!-- <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option> -->
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <table class="table styled-table mb-0 mt-0 sortable-table">
+                    <thead>
+                        <tr>
+                            <th>Users</th>
+                            <th>Instance</th>
+                            <th>Percent Complete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-experiment"></tbody>
+                </table>
+                <nav aria-label="User table pagination">
+                    <ul id="user-experiment-nav" class="pagination">
+                        <li id="user-experiment-prev-btn" class="page-item page-link disabled"
+                            onclick="updateTablePage('user-experiment',updateUserExpTable,parseInt(sessionStorage.getItem('user-experiment-page'))-1);">
+                            Previous</li>
+                        <li name="user-experiment-nav-num" class="page-item page-link active"
+                            onclick="updateTablePage('user-experiment',updateUserExpTable,1);">1</li>
+                        <li id="user-experiment-next-btn" class="page-item page-link disabled"
+                            onclick="updateTablePage('user-experiment',updateUserExpTable,parseInt(sessionStorage.getItem('user-experiment-page'))+1);">
+                            Next</li>
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="col-md">
+                <div class="d-flex align-items-center justify-content-end">
+                    <b><label class="my-1 me-1" for="user-table-limit">Show:</label></b>
+                    <select id="user-table-limit" class="form-select w-auto"
+                        onchange="updateTableLimit('user-table',updateUserTable,this.value);">
+                        <!-- <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option> -->
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <table class="table styled-table mb-0 mt-0">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table">
+                        <% for_each(users) do user %>
+                            <tr>
+                                <td>$(user.username)</td>
+                                <td>
+                                    <form action="/manage">
+                                        <input type="hidden" name="username" value="$(user.username)">
+                                        <input type="submit" value="Manage"></input>
+                                    </form>
+                                </td>
+                            </tr>
+                            <% end %>
+                    </tbody>
+                </table>
+                <nav aria-label="User table pagination">
+                    <ul id="user-table-nav" class="pagination">
+                        <li id="user-table-prev-btn" class="page-item page-link disabled"
+                            onclick="updateTablePage('user-table',updateUserTable,parseInt(sessionStorage.getItem('user-table-page'))-1);">
+                            Previous</li>
+                        <% for_each(user_table_pages_btns) do num %>
+                            <% if num===1 %>
+                                <li name="user-table-nav-num" class="page-item page-link active"
+                                    onclick="updateTablePage('user-table',updateUserTable,$(num));">$(num)</li>
+                                <% elseif num isa AbstractString %>
+                                    <li name="user-table-nav-num" class="page-item page-link">$(num)</li>
+                                    <% else %>
+                                        <li name="user-table-nav-num" class="page-item page-link"
+                                            onclick="updateTablePage('user-table',updateUserTable,$(num));">$(num)</li>
+                                        <% end %>
+                                            <% end %>
+                                                <li id="user-table-next-btn" class="page-item page-link"
+                                                    onclick="updateTablePage('user-table',updateUserTable,parseInt(sessionStorage.getItem('user-table-page'))+1);">
+                                                    Next</li>
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
-</div>
 
-<div aria-live="polite" aria-atomic="true" class="toast-container p-3 bottom-0 start-50 translate-middle-x">
-    <div id="Toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <strong class="me-auto">Info</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    <div aria-live="polite" aria-atomic="true" class="toast-container p-3 bottom-0 start-50 translate-middle-x">
+        <div id="Toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Info</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body"></div>
         </div>
-        <div class="toast-body"></div>
     </div>
-</div>
 
-<script>
-    ready(showToast)
+    <script>
+        ready(showToast)
 
-    ready(() => {
-        sessionStorage.setItem('user-table-page', $(init_page));
-        sessionStorage.setItem('user-table-limit', $(init_limit));
-        sessionStorage.setItem('user-table-max-data', $(num_users));
+        ready(() => {
+            sessionStorage.setItem('user-table-page', $(init_page));
+            sessionStorage.setItem('user-table-limit', $(init_limit));
+            sessionStorage.setItem('user-table-max-data', $(num_users));
 
-        sessionStorage.setItem('user-experiment-page', $(init_page));
-        sessionStorage.setItem('user-experiment-limit', $(init_limit));
-    });
+            sessionStorage.setItem('user-experiment-page', $(init_page));
+            sessionStorage.setItem('user-experiment-limit', $(init_limit));
+        });
 
-    document
-        .getElementById("delete-form")
-        .addEventListener("submit", function(e) {
-            e.preventDefault();
-            deleteExperiment(e.target);
-        })
+        document
+            .getElementById("delete-form")
+            .addEventListener("submit", function (e) {
+                e.preventDefault();
+                deleteExperiment(e.target);
+            })
 
-    document
-        .getElementById("experiment-ddl")
-        .addEventListener("change", createExpButtons);
-</script>
+        document
+            .getElementById("experiment-ddl")
+            .addEventListener("change", createExpButtons);
+    </script>
