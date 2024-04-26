@@ -28,7 +28,7 @@ function ue2dict(
 ) where {V<:Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
     ae_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
     for (ind, ae) in enumerate(UE)
-        n_trials = findone(Experiment; name = ae.experiment_name).n_trials
+        n_trials = findone(Experiment; name=ae.experiment_name).n_trials
 
         status = if ae.trials_complete >= n_trials
             "completed"
@@ -42,7 +42,7 @@ function ue2dict(
         ae_data[ind] = Dict(
             :name => ae.experiment_name,
             :instance => ae.instance,
-            :percent_complete => round(100 * ae.trials_complete / n_trials; digits = 2),
+            :percent_complete => round(100 * ae.trials_complete / n_trials; digits=2),
             :status => status,
         )
     end
@@ -55,11 +55,11 @@ function restart_exp()
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
-    user_id = findone(User; username = jsonpayload("username")).id
+    user_id = findone(User; username=jsonpayload("username")).id
 
     # Check if there is another of same experiment with no trials done.
     existing_unstarted =
-        find(UserExperiment; experiment_name = name, user_id = user_id, trials_complete = 0)
+        find(UserExperiment; experiment_name=name, user_id=user_id, trials_complete=0)
     if !isempty(existing_unstarted)
         return Router.error(
             INTERNAL_ERROR,
@@ -70,9 +70,9 @@ function restart_exp()
 
     experiment = findone(
         UserExperiment;
-        experiment_name = name,
-        instance = instance,
-        user_id = user_id,
+        experiment_name=name,
+        instance=instance,
+        user_id=user_id,
     )
 
     if experiment === nothing
@@ -83,7 +83,7 @@ function restart_exp()
         )
     end
 
-    trials = find(Trial; experiment_name = name, instance = instance, user_id = user_id)
+    trials = find(Trial; experiment_name=name, instance=instance, user_id=user_id)
 
     experiment.trials_complete = 0
     save(experiment) && SearchLight.delete.(trials)
@@ -98,9 +98,9 @@ function remove_exp()
 
     name = jsonpayload("name")
     instance = jsonpayload("instance")
-    user_id = findone(User; username = jsonpayload("username")).id
+    user_id = findone(User; username=jsonpayload("username")).id
 
-    trials = find(Trial; experiment_name = name, instance = instance, user_id = user_id)
+    trials = find(Trial; experiment_name=name, instance=instance, user_id=user_id)
 
     if !isempty(trials)
         return Router.error(
@@ -112,9 +112,9 @@ function remove_exp()
 
     ue = findone(
         UserExperiment;
-        experiment_name = name,
-        instance = instance,
-        user_id = user_id,
+        experiment_name=name,
+        instance=instance,
+        user_id=user_id,
     )
 
     if ue === nothing
@@ -136,9 +136,9 @@ function add_exp()
     current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
 
     name = jsonpayload("experiment")
-    user_id = findone(User; username = jsonpayload("username")).id
+    user_id = findone(User; username=jsonpayload("username")).id
 
-    curr_user_exps = find(UserExperiment; experiment_name = name, user_id = user_id)
+    curr_user_exps = find(UserExperiment; experiment_name=name, user_id=user_id)
 
     # Check request validity (can't add experiment if unstarted already exists)
     if any(i -> i == 0, getproperty.(curr_user_exps, :trials_complete))
@@ -158,10 +158,10 @@ function add_exp()
 
     # Create
     ue = UserExperiment(;
-        user_id = user_id,
-        experiment_name = name,
-        instance = new_instance,
-        trials_complete = 0,
+        user_id=user_id,
+        experiment_name=name,
+        instance=new_instance,
+        trials_complete=0,
     )
 
     # Validate
@@ -198,14 +198,14 @@ function get_partial_data()
 
     # If a specific username is given (called from /manage), use that.
     user_id = try
-        findone(User; username = jsonpayload("username")).id
+        findone(User; username=jsonpayload("username")).id
     catch
         current_user_id()
     end
 
     if jsonpayload("type") == "UserExperiment"
         added_experiments =
-            get_paginated_amount(UserExperiment, limit, page; user_id = user_id)
+            get_paginated_amount(UserExperiment, limit, page; user_id=user_id)
         ae_data = ue2dict(added_experiments)
         return json(ae_data)
     else
@@ -234,11 +234,11 @@ function profile()
         UserExperiment,
         init_limit,
         init_page;
-        user_id = current_user_id(),
+        user_id=current_user_id(),
     )
     num_aes =
-        count(UserExperiment; user_id = current_user_id()) > 0 ?
-        count(UserExperiment; user_id = current_user_id()) : 1
+        count(UserExperiment; user_id=current_user_id()) > 0 ?
+        count(UserExperiment; user_id=current_user_id()) : 1
 
     max_btn = convert(Int, ceil(num_aes / init_limit))
     if max_btn <= max_btn_display

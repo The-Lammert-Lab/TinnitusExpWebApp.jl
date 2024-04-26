@@ -25,6 +25,16 @@ using TinnitusReconstructor: Stimgen, BinnedStimgen
 const IDEAL_BLOCK_SIZE = 8
 const MAX_BLOCK_SIZE = 12
 
+# Map of target sounds to their corresponding filenames
+const TARGET_SOUND_MAP = Dict(
+    "tea_kettle" => "media/audio/target_sounds/ATA_Tinnitus_Tea_Kettle_Tone_1sec.wav",
+    "static" => "media/audio/target_sounds/ATA_Tinnitus_Static_Tone_1sec.wav",
+    "screeching" => "media/audio/target_sounds/ATA_Tinnitus_Screeching_Tone_1sec.wav",
+    "roaring" => "media/audio/target_sounds/ATA_Tinnitus_Roaring_Tone_1sec.wav",
+    "electric" => "media/audio/target_sounds/ATA_Tinnitus_Electric_Tone_1sec.wav",
+    "buzzing" => "media/audio/target_sounds/ATA_Tinnitus_Buzzing_Tone_1sec.wav"
+)
+
 """
     scale_audio(x)
 
@@ -57,13 +67,13 @@ function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:BinnedStimgen,I<:Integer
     stimuli_matrix, Fs, _, binned_repr_matrix = generate_stimuli_matrix(s, n_trials)
 
     # Scale all columns
-    scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims = 1)
+    scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims=1)
 
     # Save base64 encoded wav files to stimuli vector of strings
     stimuli = Vector{String}(undef, size(scaled_stimuli, 2))
     for (ind, stimulus) in enumerate(eachcol(scaled_stimuli))
         buf = Base.IOBuffer()
-        wavwrite(stimulus, buf; Fs = Fs)
+        wavwrite(stimulus, buf; Fs=Fs)
         stimuli[ind] = base64encode(take!(buf))
         close(buf)
     end
@@ -75,13 +85,13 @@ function gen_b64_stimuli(s::SG, n_trials::I) where {SG<:Stimgen,I<:Integer}
     stimuli_matrix, Fs, spect_matrix, _ = generate_stimuli_matrix(s, n_trials)
 
     # Scale all columns
-    scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims = 1)
+    scaled_stimuli = mapslices(scale_audio, stimuli_matrix; dims=1)
 
     # Save base64 encoded wav files to stimuli vector of strings
     stimuli = Vector{String}(undef, size(scaled_stimuli, 2))
     for (ind, stimulus) in enumerate(eachcol(scaled_stimuli))
         buf = Base.IOBuffer()
-        wavwrite(stimulus, buf; Fs = Fs)
+        wavwrite(stimulus, buf; Fs=Fs)
         stimuli[ind] = base64encode(take!(buf))
         close(buf)
     end
@@ -108,15 +118,15 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
     instance = parse(Int, getindex(parameters, :instance))
 
     # Get experiment info and create stimgen struct
-    e = findone(Experiment; name = getindex(parameters, :name))
+    e = findone(Experiment; name=getindex(parameters, :name))
     stimgen = stimgen_from_json(e.stimgen_settings, e.stimgen_type)
 
     # Decide on n_trials using existing data
     current_trials = find(
         Trial;
-        experiment_name = e.name,
-        instance = instance,
-        user_id = current_user_id(),
+        experiment_name=e.name,
+        instance=instance,
+        user_id=current_user_id(),
     )
 
     remaining_trials = e.n_trials - length(current_trials)
@@ -136,10 +146,10 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:Symbol,W}
     # Make array of Trial structs
     block = [
         Trial(;
-            stimulus = JSON3.write(stim),
-            user_id = current_user_id(),
-            experiment_name = e.name,
-            instance = instance,
+            stimulus=JSON3.write(stim),
+            user_id=current_user_id(),
+            experiment_name=e.name,
+            instance=instance,
         ) for stim in eachcol(stim_rep_to_save)
     ]
 
@@ -150,15 +160,15 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
     instance = parse(Int, getindex(parameters, "instance"))
 
     # Get experiment info and create stimgen struct
-    e = findone(Experiment; name = getindex(parameters, "name"))
+    e = findone(Experiment; name=getindex(parameters, "name"))
     stimgen = stimgen_from_json(e.stimgen_settings, e.stimgen_type)
 
     # Decide on n_trials using existing data
     current_trials = find(
         Trial;
-        experiment_name = e.name,
-        instance = instance,
-        user_id = current_user_id(),
+        experiment_name=e.name,
+        instance=instance,
+        user_id=current_user_id(),
     )
 
     remaining_trials = e.n_trials - length(current_trials)
@@ -178,10 +188,10 @@ function gen_stim_and_block(parameters::Dict{S,W}) where {S<:AbstractString,W}
     # Make array of Trial structs
     block = [
         Trial(;
-            stimulus = JSON3.write(stim),
-            user_id = current_user_id(),
-            experiment_name = e.name,
-            instance = instance,
+            stimulus=JSON3.write(stim),
+            user_id=current_user_id(),
+            experiment_name=e.name,
+            instance=instance,
         ) for stim in eachcol(stim_rep_to_save)
     ]
 
@@ -194,13 +204,14 @@ end
 
 #########################
 
+
 function experiment()
     authenticated!()
     # Params = :name, :instance, :from
 
     # Validate that name refers to a real Experiment
     # Validaton of the trials is done during save.
-    experiment = findone(Experiment; name = params(:name))
+    experiment = findone(Experiment; name=params(:name))
     if isnothing(experiment)
         return Router.error(
             INTERNAL_ERROR,
@@ -216,13 +227,23 @@ function experiment()
     else
         from_rest = false
         stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
+
+        if experiment.target_sound == ""
+            # Non-Ax Experiment
+            target_sound_path = ""
+        else
+            # Ax Experiment
+            target_sound_path = TARGET_SOUND_MAP[experiment.target_sound]
+        end
+
         if isempty(stimuli)
             throw(ExceptionalResponse(redirect("/profile")))
         else
             # Var for labelling audio elements
             counter = 0
             GenieSession.set!(:current_block, curr_block)
-            html(:trials, :experiment; stimuli, counter, from_rest, remaining_blocks)
+
+            html(:trials, :experiment; stimuli, counter, from_rest, remaining_blocks, target_sound_path)
         end
     end
 end
@@ -241,7 +262,7 @@ function save_response()
             INTERNAL_ERROR,
             "Could not save response.",
             MIME"application/json";
-            error_info = "Current block in session returned nothing.",
+            error_info="Current block in session returned nothing.",
         )
     end
 
@@ -249,14 +270,14 @@ function save_response()
 
     curr_usr_exp = findone(
         UserExperiment;
-        experiment_name = curr_trial.experiment_name,
-        instance = curr_trial.instance,
-        user_id = current_user_id(),
+        experiment_name=curr_trial.experiment_name,
+        instance=curr_trial.instance,
+        user_id=current_user_id(),
     )
 
     n_trials = GenieSession.get!(:n_trials, nothing)
     if n_trials === nothing
-        n_trials = findone(Experiment; name = curr_trial.experiment_name).n_trials
+        n_trials = findone(Experiment; name=curr_trial.experiment_name).n_trials
     end
 
     # Update

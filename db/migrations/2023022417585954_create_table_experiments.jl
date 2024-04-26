@@ -12,6 +12,7 @@ function up()
                 :stimgen_type => :string,
                 :n_trials => :int,
                 :name => :string,
+                :target_sound => :string,
                 :settings_hash => :string,
             ])
         ]
