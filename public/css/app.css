@@ -133,3 +133,15 @@ input[type="checkbox"]:checked+.slider {
 input[type="checkbox"]:checked+.slider:before {
   transform: translateX(26px);
 }
+
+.adjust-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 450px;
+  max-height: 450px;
+  width: 100%;
+  border-radius: 12px;
+  background-color: #fff;
+
+}

@@ -228,13 +228,7 @@ function experiment()
         from_rest = false
         stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
 
-        if experiment.target_sound == ""
-            # Non-Ax Experiment
-            target_sound_path = ""
-        else
-            # Ax Experiment
-            target_sound_path = TARGET_SOUND_MAP[experiment.target_sound]
-        end
+        target_sound_path = experiment.target_sound == "" ? "" : TARGET_SOUND_MAP[experiment.target_sound]
 
         if isempty(stimuli)
             throw(ExceptionalResponse(redirect("/profile")))

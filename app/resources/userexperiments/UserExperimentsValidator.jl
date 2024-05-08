@@ -23,8 +23,8 @@ function unique_for_usr_and_exp(
     obj = findone(
         typeof(m);
         NamedTuple(field => getfield(m, field))...,
-        experiment_name = getfield(m, :experiment_name),
-        user_id = getfield(m, :user_id),
+        experiment_name=getfield(m, :experiment_name),
+        user_id=getfield(m, :user_id),
     )
     if (obj !== nothing && !ispersisted(m))
         return ValidationResult(
@@ -60,5 +60,7 @@ function dbid_is_not_nothing(field::Symbol, m::T)::ValidationResult where {T<:Ab
 
     ValidationResult(valid)
 end
+
+# TODO: Add validation rules for mult and binrange fields
 
 end

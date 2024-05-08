@@ -1,0 +1,166 @@
+<script src="https://kit.fontawesome.com/820a0178a4.js"
+    crossorigin="anonymous"></script>
+<style>
+    body {
+        background: #dff0f6;
+    }
+
+    .adjust {
+        width: 200px;
+
+    }
+
+    .adjust-box-buttons {
+        font-size: 18px;
+        font-weight: 400;
+        width: 142px;
+        color: #fff;
+        padding: 14px 22px;
+        border: none;
+        background: #0052ff;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-left: 14px;
+        margin-top: 20px;
+    }
+
+    .adjust-box-buttons:hover {
+        background-color: #265df2;
+    }
+
+    .adjust-box {
+        font-size: 18px;
+        font-weight: 400;
+        position: fixed;
+        width: 370px;
+        left: 50%;
+        top: 50%;
+        padding: 27px 17px;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #to-listening-task {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        background-color: #1bcc3f;
+        color: #ffffff; 
+        margin-bottom: 18px; 
+        margin-right: 18px; 
+        border: None;
+        padding: 10px 20px 10px 20px;
+        font-size: 20px; 
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+</style>
+
+<div
+    class="container vh-100 d-flex align-items-center justify-content-center">
+    <div class="adjust-box">
+
+        <span>Mult: <span id="multValue">$curr_mult</span></span>
+
+        <input class="adjust" id="multSlider" type="range" min="0"
+            max="1" step="0.001" value="$curr_mult">
+        <br>
+        <span>Binrange: <span id="binrangeValue">$curr_binrange</span></span>
+        <input class="adjust" id="binrangeSlider" type="range" min="0"
+            max="100" value="$curr_binrange">
+
+        <div>
+            <button class="adjust-box-buttons" id="playSound" type="button">Play
+                Sound</button>
+            <button class="adjust-box-buttons" id="saveMultAndBinrange"
+                type="button">Save</button>
+        </div>
+    </div>
+    <button id="to-listening-task" class="btn btn-primary btn-lg"
+        type="button"
+        style="display: none;">
+        Next <i class="fas fa-arrow-right"></i>
+    </button>
+</div>
+<audio id="adjusted_audio" name="resynth_wav" src preload="auto"></audio>
+
+<script>
+    // Logic to show the sliders' value on the screen
+    // Get the sliders
+    const multSlider = document.getElementById('multSlider'),
+        binrangeSlider = document.getElementById('binrangeSlider');
+
+    // Get the elements to display the slider values
+    const multValueElement = document.getElementById('multValue'),
+        binrangeValueElement = document.getElementById('binrangeValue');
+
+    // Add event listeners to update the displayed values when sliders are changed
+    multSlider.addEventListener('input', function() {
+        multValueElement.textContent = this.value;
+    });
+
+    binrangeSlider.addEventListener('input', function() {
+        binrangeValueElement.textContent = this.value;
+    });
+
+    let playButton = document.getElementById('playSound');
+    let SaveButton = document.getElementById('saveMultAndBinrange');
+
+    playButton.onclick = function() {
+        let multValue = multSlider.value;
+        let binrangeValue = binrangeSlider.value;
+        
+        const params = new URLSearchParams(window.location.search);
+
+        const url = '/getAdjustedResynthAudio?' + params.toString() + '&mult=' + multValue + '&binrange=' + binrangeValue;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ mult: multValue, binrange: binrangeValue }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+            document.getElementById('adjusted_audio').src = 'data:audio/wav;base64,' + data;
+            document.getElementById('adjusted_audio').play();
+        });
+    }
+
+    SaveButton.onclick = function() {
+        let multValue = multSlider.value;
+        let binrangeValue = binrangeSlider.value;
+        
+        const params = new URLSearchParams(window.location.search);
+
+        const url = '/saveMultandBinrange?' + params.toString() + '&mult=' + multValue + '&binrange=' + binrangeValue;
+
+        // Create a POST request to the URL
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ mult: multValue, binrange: binrangeValue })
+        })
+        .then(response => {
+            // Handle response
+            if (response.ok) {
+                // Response is successful
+                console.log('Data saved successfully!');
+            } else {
+                // Response failed
+                console.error('Failed to save data:', response.statusText);
+            }
+            document.getElementById('to-listening-task').style.display = 'block';
+        })
+        .catch(error => {
+            // network errors
+            console.error('Error occurred while saving data:', error);
+        });
+  
+    }
+</script>

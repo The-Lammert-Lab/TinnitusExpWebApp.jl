@@ -9,6 +9,8 @@ function up()
             pk()
             column(:instance, :int)
             column(:trials_complete, :float)
+            column(:mult, :float)
+            column(:binrange, :int)
         ]
     end
 

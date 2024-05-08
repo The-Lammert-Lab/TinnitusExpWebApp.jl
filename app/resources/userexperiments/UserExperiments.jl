@@ -15,6 +15,8 @@ export UserExperiment
     experiment_name::String = ""
     instance::Integer = 1
     trials_complete::Integer = 0
+    mult::Float64 = 0.01
+    binrange::Int = 60
 end
 
 SearchLight.Validation.validator(::Type{UserExperiment}) = ModelValidator([

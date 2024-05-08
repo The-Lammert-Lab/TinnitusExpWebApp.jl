@@ -1,6 +1,41 @@
+<script src="https://kit.fontawesome.com/820a0178a4.js"
+    crossorigin="anonymous"></script>
+<script>
+    function redirectToAdjustResynth() {
+        const params = new URLSearchParams(window.location.search);
+        window.location.replace(
+          "/adjustResynth?" +
+          "name=" +
+          params.get("name") +
+          "&instance=" +
+          params.get("instance")
+        );
+    }
+</script>
 <style>
     body {
         background: #dff0f6;
+    }
+
+    .next-button {
+            position: fixed;
+            bottom: 30px; 
+            right: 30px; 
+        }
+
+    #to-adjust-resynth {
+        background-color: #1bcc3f;
+        color: #ffffff; 
+        border: none; 
+        padding: 10px 20px 10px 20px;
+        font-size: 20px; 
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    #to-adjust-resynth:hover {
+        background-color: #19a735; /* Adjust hover color as desired */
     }
 </style>
 
@@ -10,15 +45,13 @@
             <h3>You have completed all trials for this experiment!</h3>
         </div>
         <div class="col-12 text-center mt-2">
-            <button id="to-profile" class="btn btn-primary btn-lg" type="button" onclick="window.location.href = '/profile'">Go Home</button>
+
+            <button id="to-adjust-resynth" class="btn btn-primary btn-lg"
+                type="button"
+                onclick="redirectToAdjustResynth()">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+
         </div>
     </div>
 </div>
-
-<script> 
-    document.addEventListener("keyup", function(e) {
-        if (e.which == 13) {
-            document.getElementById("to-profile").click();
-        }
-    }); 
-</script>

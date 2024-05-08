@@ -26,7 +26,14 @@ function recordAndPlay(ans) {
 
       // Determine next action (go to done, rest, or play next stimulus)
       if (response.data.exp_complete.value) {
-        window.location.replace("/done");
+        const params = new URLSearchParams(window.location.search);
+        window.location.replace(
+          "/done?" +
+          "name=" +
+          params.get("name") +
+          "&instance=" +
+          params.get("instance")
+        );
         return;
       } else if (stimuli.length === 0) {
         const params = new URLSearchParams(window.location.search);
