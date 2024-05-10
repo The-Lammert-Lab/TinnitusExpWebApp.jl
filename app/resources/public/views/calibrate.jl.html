@@ -1,0 +1,40 @@
+<%
+partial("app/layouts/_user_header.jl.html")
+%>
+<div class="container text-center">
+    <h1>Calibrate</h1>
+
+    <div class="form-group" style="margin-top: 50px;">
+        <input type="number" class="form-control"
+            placeholder="Enter your input"
+            style="width: 200px; margin: 0 auto;"
+            disabled>
+
+        <div style="margin-top: 20px; ">
+            <div
+                style="margin-top: 20px; display: flex; justify-content: center;">
+                <button type="button" class="btn btn-primary"
+                    style="margin-right: 20px; width: 120px;"
+                    onclick="playSound()">Play Sound</button>
+                <button type="button" class="btn btn-success"
+                    style="width: 120px;" onclick="save()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<audio id="pure_tone"
+src="data:audio/wav;base64,$pure_tone_wav" preload="auto"></audio>
+</audio>
+<script>
+    function playSound() {
+        document.querySelector('input').disabled = false;
+        pure_tone = document.getElementById('pure_tone');
+        pure_tone.play();
+    }
+
+    function save() {
+        var inputValue = document.querySelector('input').value;
+        const params = new URLSearchParams(window.location.search);
+        sessionStorage.setItem('calibrate_value', inputValue);
+    }
+</script>

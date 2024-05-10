@@ -1,3 +1,22 @@
+<style>
+        #to-calibrate {
+        background-color: #1bcc3f;
+        color: #ffffff; 
+        margin-bottom: 18px; 
+        margin-right: 18px; 
+        border: None;
+        padding: 10px 20px 10px 20px;
+        font-size: 17px; 
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    #to-calibrate:hover {
+        background-color: #27ab41;
+    }
+</style>
+
 <% 
 if is_admin
     partial("app/layouts/_admin_header.jl.html")
@@ -83,6 +102,7 @@ end
             </nav>
         </div>
     </div>
+    <button class="btn btn-primary position-fixed bottom-0 end-0 m-3" id="to-calibrate" onclick="calibrate()">Calibrate</button>
 </div>
 
 <script>
@@ -91,4 +111,8 @@ end
         sessionStorage.setItem('user-ae-limit', $(init_limit));
         sessionStorage.setItem('user-ae-max-data', $(num_aes));  
     })
+
+    function calibrate() {
+        window.location.href = "/calibrate";
+    }
 </script>
