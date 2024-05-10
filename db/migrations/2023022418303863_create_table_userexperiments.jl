@@ -10,8 +10,7 @@ function up()
             column(:instance, :int)
             column(:trials_complete, :float)
             column(:mult, :float)
-            column(:binrange, :int)
-        ]
+            column(:binrange, :int)]
     end
 
     add_index(:userexperiments, :instance)

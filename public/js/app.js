@@ -1044,3 +1044,106 @@ function updateNavbarColors() {
     li.setAttribute("class", "nav-link px-2 link-secondary");
   }
 } // function
+
+/**
+ * Redirects the user to the Likert Questions page.
+ * Constructs the URL with the experiment name and instance parameters from the current URL.
+ */
+function redirectToLikertQuestions() {
+  const params = new URLSearchParams(window.location.search);
+  window.location.replace(
+    "/likertQuestions?" +
+    "name=" +
+    params.get("name") +
+    "&instance=" +
+    params.get("instance")
+  );
+}
+
+// flag is set till the user has rated the sound. when the user save the rating the flag will be unset
+let flag = 0;
+let cnt = 0;
+const ids = [0, 1, 2]; // 0 is white noise, 1 is standard resynth, 2 is adjusted resynth
+let played = [];
+let randomID;
+
+/**
+ * Plays a random sound based on the current state of the flag variable.
+ * If flag is 0, it selects a random sound from the ids array and plays it.
+ * If flag is 1, it plays the previously selected sound again.
+ */
+function playRandomSound() {
+  if (flag == 0) {
+    console.log("flag == 0");
+
+    do {
+      randomID = ids[Math.floor(Math.random() * ids.length)];
+    } while (played.includes(randomID));
+
+    document.getElementById(randomID).play();
+    played.push(randomID);
+
+    flag = 1;
+    cnt = cnt + 1;
+  } else {
+    document.getElementById(randomID).play();
+  }
+}
+
+function onSave() {
+  flag = 0;
+  document.getElementById('saveRating').disabled = true;
+
+  if (cnt == 3) played = [];
+
+  let selectedValue = document.querySelector('input[name="l"]:checked').value;
+
+  if (selectedValue === null) {
+    alert("Please select a rating before saving.");
+    document.getElementById('saveRating').disabled = false;
+    return;
+  }
+
+  document.querySelectorAll('input[name="l"]').forEach(input => {
+    input.checked = false;
+  });
+  const params = new URLSearchParams(window.location.search);
+  let audio_type;
+
+  if (randomID === 0) {
+    audio_type = "white_noise";
+  }
+  else if (randomID === 1) {
+    audio_type = "standard_resynth";
+  }
+  else {
+    audio_type = "adjusted_resynth";
+  }
+
+  const url = '/saveLikertRating?' + params.toString() + '&rating=' + selectedValue + '&audio_type=' + audio_type;
+  // Create a POST request to the URL
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ rating: selectedValue, audio_type: audio_type })
+  })
+    .then(response => {
+      // Handle response
+      if (response.ok) {
+        // Response is successful
+        console.log('Data saved successfully!');
+      } else {
+        // Response failed
+        console.error('Failed to save data:', response.statusText);
+      }
+    })
+    .catch(error => {
+      // network errors
+      console.error('Error occurred while saving data:', error);
+    });
+
+  if (cnt == 6) { alert("You have rated all the sounds. Thank you for your participation."); return; }
+
+}

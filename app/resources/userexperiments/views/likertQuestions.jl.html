@@ -1,0 +1,113 @@
+<script src="https://kit.fontawesome.com/820a0178a4.js"
+    crossorigin="anonymous"></script>
+<style>
+    body {
+        background: #dff0f6;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    h3 {
+        color: #333;
+    }
+
+    .likert {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 50px;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    }
+
+    .likert label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 14px;
+        color: #666;
+        flex: 1;
+        text-align: center;
+    }
+
+    .likert label span {
+        margin-top: 10px;
+    }
+
+    .likert label input {
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: #ddd;
+        border-radius: 50%;
+        position: relative;
+    }
+
+    .likert label input:checked {
+        background: #007BFF;
+    }
+
+    .likert label input:checked::after {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: 10px;
+        height: 10px;
+        background: #fff;
+        border-radius: 50%;
+    }
+</style>
+
+<audio id="0" name="white_noise_wav"
+    src="data:audio/wav;base64,$(white_noise_wav)" preload="auto">
+</audio>
+    
+<audio id="1" name="standard_resynth_wav"
+    src="data:audio/wav;base64,$(standard_resynth_wav)" preload="auto">
+</audio>
+
+<audio id="2" name="adjusted_resynth_wav"
+    src="data:audio/wav;base64,$(adjusted_resynth_wav)" preload="auto">
+</audio>
+
+
+<div class="container vh-100 d-flex justify-content-center">
+    <div class="row">
+        <div class="col-12 text-center">
+
+            <h3 style="margin-top: 150px;">Indicate your answer to the following
+                statement using the rating scale:</h3>
+            <h3>"This sounds like my tinnitus."</h3>
+
+            <div class="likert">
+                <label><input name="l" type="radio" value="1" /><span>Strongly
+                        Disagree</span></label>
+                <label><input name="l" type="radio"
+                        value="2" /><span>Disagree</span></label>
+                <label><input name="l" type="radio" value="3" /><span>Somewhat
+                        Disagree</span></label>
+                <label><input name="l" type="radio" value="4" /><span>Neither
+                        agree or disagree</span></label>
+                <label><input name="l" type="radio" value="5" /><span>Somewhat
+                        agree</span></label>
+                <label><input name="l" type="radio"
+                        value="6" /><span>Agree</span></label>
+                <label><input name="l" type="radio" value="7" /><span>Strongly
+                        agree</span></label>
+            </div>
+            <div class="col-12">
+                <div class="d-flex justify-content-between"></div>
+                    <button id="play-random-sound" class="btn btn-primary btn-lg" type="button" onclick="playRandomSound(); document.getElementById('saveRating').disabled = false;" style="margin-top: 50px; width: 170px;">Play Sound</button>
+
+                    <button id="saveRating" class="btn btn-primary btn-lg" type="button" onclick="onSave()" style="margin-top: 50px; margin-left: 20px;width: 170px; background-color: #1bcc3f; border-color: #1bcc3f;" disabled>Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
