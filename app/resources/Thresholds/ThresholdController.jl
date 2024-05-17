@@ -30,13 +30,10 @@ end
 function get_pure_tone()
     curr_freq_index = parse(Int, params(:curr_freq_index)) + 1
     curr_dB = parse(Int, params(:curr_dB))
-    println("curr_dB: ", curr_dB)
 
     gain = 10^(curr_dB / 20)
 
     freq = freqs[curr_freq_index]
-    println("freq index: ", curr_freq_index)
-    println("freq: ", freq)
 
     curr_tone = pure_tone(freq, 0.5, 44100)
 
@@ -58,13 +55,8 @@ function save_threshold()
     authenticated!()
 
     curr_freq_index = parse(Int, params(:curr_freq_index)) + 1
-    println(typeof(params(:cant_hear)))
-    println("cant_hear: ", params(:cant_hear))
-
     threshold = params(:cant_hear) == "true" ? nothing : parse(Float64, params(:curr_dB))
-
     user_id = current_user_id()
-    println("ind: ", curr_freq_index)
 
     save(Threshold(user_id=user_id, freq=freqs[curr_freq_index], threshold=threshold))
     return json("success")
