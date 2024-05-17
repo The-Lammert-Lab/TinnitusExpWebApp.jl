@@ -5,6 +5,7 @@ using CharacterizeTinnitus.UserExperimentsController
 using CharacterizeTinnitus.UsersController
 using CharacterizeTinnitus.PublicController
 using CharacterizeTinnitus.RatingsController
+using CharacterizeTinnitus.ThresholdController
 
 route("/experiment", TrialsController.experiment)
 route("/rest", TrialsController.rest)
@@ -39,3 +40,7 @@ route("/", PublicController.index)
 route("/FAQ", PublicController.faq)
 route("/lab", PublicController.lab)
 route("/calibrate", PublicController.calibrate)
+
+route("/thresholdDetermination", ThresholdController.threshold_determination)
+route("/getPureTone", ThresholdController.get_pure_tone; method=POST)
+route("/saveThreshold", ThresholdController.save_threshold; method=POST)
