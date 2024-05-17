@@ -1,5 +1,6 @@
 <script src="https://kit.fontawesome.com/820a0178a4.js"
-    crossorigin="anonymous"></script>
+    crossorigin="anonymous">
+</script>
 <style>
     body {
         background: #dff0f6;
@@ -66,7 +67,8 @@
                     onclick="document.getElementById('thresholdSlider').value = parseInt(document.getElementById('thresholdSlider').value) - 1;"></i>
 
                 <input class="adjust" id="thresholdSlider" type="range"
-                    min="-95" max="95" step="1" value disabled>
+                    min="-95" max="95" step="1" value
+                    disabled>
 
                 <i class="fa-solid fa-plus fa-xs"
                     style="color: #0052ff; cursor: pointer; margin-left: 10px;"
@@ -108,6 +110,7 @@
     let prev_instance = 1;
     let curr_dB;
     let thresholdSlider = document.getElementById('thresholdSlider');
+    const calibrated_value = parseInt(localStorage.getItem('calibrated_value'));
 
     function playSound(freqs) {
         document.getElementById('cantHear').disabled = false;
@@ -116,8 +119,9 @@
             return;
         }
 
-        console.log("current_freq_index: ", curr_freq_index);
-        calibrated_value = sessionStorage.getItem('calibrated_value');
+        if (curr_freq_index == 0 && calibrated_value != null) {
+            thresholdSlider.max = 95 - calibrated_value;
+        }
         const params = new URLSearchParams(window.location.search);
 
         if (curr_freq_index == 0){
