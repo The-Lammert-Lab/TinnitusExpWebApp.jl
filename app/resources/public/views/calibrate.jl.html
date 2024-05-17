@@ -35,6 +35,6 @@ src="data:audio/wav;base64,$pure_tone_wav" preload="auto"></audio>
     function save() {
         var inputValue = document.querySelector('input').value;
         const params = new URLSearchParams(window.location.search);
-        sessionStorage.setItem('calibrate_value', inputValue);
+        sessionStorage.setItem('calibrated_value', inputValue);
     }
 </script>

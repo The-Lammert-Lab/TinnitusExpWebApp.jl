@@ -1090,19 +1090,23 @@ function playRandomSound() {
   }
 }
 
+/**
+ * Saves the user's rating for the adjusted resynth, standard resynth, and white noise sounds.
+ */
+
 function onSave() {
   flag = 0;
   document.getElementById('saveRating').disabled = true;
 
   if (cnt == 3) played = [];
 
-  let selectedValue = document.querySelector('input[name="l"]:checked').value;
-
-  if (selectedValue === null) {
+  if (document.querySelector('input[name="l"]:checked') == null) {
     alert("Please select a rating before saving.");
     document.getElementById('saveRating').disabled = false;
     return;
   }
+
+  let selectedValue = document.querySelector('input[name="l"]:checked').value;
 
   document.querySelectorAll('input[name="l"]').forEach(input => {
     input.checked = false;

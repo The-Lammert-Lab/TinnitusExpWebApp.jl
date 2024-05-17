@@ -10,6 +10,8 @@ using Base64
 using Genie.Exceptions
 using GenieSession
 using TinnitusReconstructor
+using TinnitusReconstructor: pure_tone, gen_octaves
+using DSP: Windows.tukey
 
 using GenieAuthentication
 
@@ -29,6 +31,8 @@ function lab()
 end
 
 function calibrate()
+    authenticated!()
+
     pure_tone_wav = pure_tone(1000, 1, 44100)
 
     buf = Base.IOBuffer()
@@ -38,6 +42,8 @@ function calibrate()
 
     html(:public, :calibrate; pure_tone_wav)
 end
+
+
 
 admin_status() = return current_user() isa Nothing ? nothing : current_user().is_admin
 
