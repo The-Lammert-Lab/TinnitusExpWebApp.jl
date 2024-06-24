@@ -59,3 +59,4 @@ route("/inOctave", PitchController.get_pure_tone_for_oct_determination; method=P
 route("/saveSoundForOctaveDetermination", PitchController.save_sound_for_octave_determination; method=POST)
 route("/getInOctaveFreqs", PitchController.get_in_octave_freqs; method=POST)
 route("/getOctConfusionFreqs", PitchController.get_oct_confusion_freqs; method=POST)
+route("/setCalibratedValue", PitchController.set_calibrated_value; method=POST)

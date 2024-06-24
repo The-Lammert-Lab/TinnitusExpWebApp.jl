@@ -44,6 +44,11 @@ function pitch_matching()
     html(:Pitch, :pitch; possible_octs, freqL, freqH, min_index, max_index)
 end
 
+function set_calibrated_value()
+    global calibrated_value = parse(Float64, params(:calibrated_value))
+    return json("success")
+end
+
 """
 get_interpolated_oct_gains()
 
@@ -88,8 +93,7 @@ function get_interpolated_oct_gains()
 
     # Interpolate the loudness matching values
     itp = extrapolate(interpolate((loudness_tones,), loudness_dBs, Gridded(Linear())), Line()) # Make interpolation obj
-
-    oct_dBs = itp(possible_octs) .- 10 # Vector from prev code block, subtract the session calibration value
+    oct_dBs = itp(possible_octs) .- calibrated_value # Vector from prev code block, subtract the session calibration value
     oct_gains = 10 .^ (oct_dBs / 20) # convert dBs to gain based on current 
     @. oct_gains[oct_gains>1] = 1 # Make sure nothing will clip
 

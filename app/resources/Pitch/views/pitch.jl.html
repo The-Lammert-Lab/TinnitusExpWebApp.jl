@@ -133,6 +133,20 @@
             return 'Are you sure you want to exit? The ongoing process will not be saved.';
         });
 
+        const params = new URLSearchParams(window.location.search);
+        const url = '/setCalibratedValue?' + params.toString() + '&calibrated_value=' + sessionStorage.getItem('calibrated_value');
+        console.log("calibrated_value: ", sessionStorage.getItem('calibrated_value'));
+
+        fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({calibrated_value: sessionStorage.getItem('calibrated_value')}),
+            })
+            .then(response => response.json())
+            .then(data => {});
+
         let ongoing = 0; // ongoing process of the user in PM: 0: octaveDetermination or 1: inOcatave or 2: octaveConfusion
         let prev_selection = -1;
         let stop = 0;
@@ -203,8 +217,6 @@
 
             });
         }
-
-
 
         // type: minimum or maximum or reverse
         function get_in_octave_freqs(f_center, type) {
