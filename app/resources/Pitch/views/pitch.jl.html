@@ -1,0 +1,430 @@
+<script src="https://kit.fontawesome.com/820a0178a4.js"
+    crossorigin="anonymous">
+</script>
+<style>
+    body {
+        background: #dff0f6;
+        overflow: hidden;
+    }
+
+    .adjust {
+        width: 200px;
+    }
+
+    .adjust-box-buttons {
+        font-size: 18px;
+        font-weight: 400;
+        width: 142px;
+        color: #fff;
+        padding: 14px 22px;
+        border: none;
+        background: #0052ff;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-top: 20px;
+        
+    }
+
+    .adjust-box-buttons:hover {
+        background-color: #265df2;
+    }
+
+    .adjust-box {
+        font-size: 18px;
+        font-weight: 400;
+        position: fixed;
+        width: 370px;
+        left: 50%;
+        top: 50%;
+        padding: 27px 17px;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .adjust-box-buttons:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        
+    }
+
+    .save-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @keyframes dot {
+        0%, 20% {
+            color: rgba(0, 0, 0, 0);
+            text-shadow: .25em 0 0 rgba(0, 0, 0, 0),
+                            .5em 0 0 rgba(0, 0, 0, 0);
+        }
+        40% {
+            color: #009879; /* Custom color for the dots */
+            text-shadow: .25em 0 0 rgba(0, 0, 0, 0),
+                            .5em 0 0 rgba(0, 0, 0, 0);
+        }
+        60% {
+            text-shadow: .25em 0 0 #009879,
+                            .5em 0 0 rgba(0, 0, 0, 0);
+        }
+        80%, 100% {
+            text-shadow: .25em 0 0 #009879,
+                            .5em 0 0 #009879;
+        }
+    }
+
+
+    .dots::after {
+        content: '.';
+        animation: dot 0.95s steps(5, end) infinite;
+    }
+
+    .highlight {
+            color: #017961; /* Light orange color */
+            font-size: xx-large;
+    }
+
+
+</style>
+<body>
+    <h1
+        style="text-align: center; margin-top: 7vw; color: #009879; font-weight: bold;">Pitch
+        Matching</h1>
+    <h3 style="text-align: center; margin-top: 10px;">which
+        sound is closer to
+        your tinnitus?</h3>
+    <div
+        class="container vh-100 d-flex align-items-center justify-content-center"
+        style="padding:20px">
+        <div class="adjust-box">
+            <div id="sound-identifier">
+                <h3 id="sound-identifier-text"
+                    style="text-align: center; display: none; font-size: x-large;">
+                    <span class="dots"></span></h3>
+            </div>
+            <div style="padding-bottom: 15px;">
+                <button class="adjust-box-buttons" id="beginButton"
+                    type="button" onclick="showButtons()" style=>Begin</button>
+            </div>
+
+            <div>
+                <button class="adjust-box-buttons" id="soundA"
+                    type="button" onclick="saveSoundA()"
+                    style="display: none; margin-right: 15px;">Sound A</button>
+                <button class="adjust-box-buttons" id="soundB"
+                    type="button" onclick="saveSoundB()"
+                    style="display: none;">Sound B</button>
+            </div>
+        </div>
+
+    </div>
+
+    <audio id="sound_a"
+        preload="auto"></audio>
+
+    <audio id="sound_b"
+        preload="auto"></audio>
+
+    <script>
+        window.addEventListener('beforeunload', function (e) {
+            e.preventDefault();
+            e.returnValue = 'Are you sure you want to exit? The ongoing process will not be saved.';
+            return 'Are you sure you want to exit? The ongoing process will not be saved.';
+        });
+
+        let ongoing = 0; // ongoing process of the user in PM: 0: octaveDetermination or 1: inOcatave or 2: octaveConfusion
+        let prev_selection = -1;
+        let stop = 0;
+        let start = 1;
+        let freq_index_L = $possible_octs.indexOf($freqL);
+        let freq_index_H = $possible_octs.indexOf($freqH);
+        let in_oct_freqs;
+        let oct_conf_freqs;
+        let max_index_for_in_octave = 6;
+
+        function showButtons() {
+            document.getElementById("beginButton").style.display = "none";
+            document.getElementById("soundA").style.display = "inline";
+            document.getElementById("soundB").style.display = "inline";
+            document.getElementById("sound-identifier-text").style.display = "block";
+
+            // start the octave determination.
+            if (start){
+                console.log("freq_index_L: ", freq_index_L, "freq_index_H: ", freq_index_H);
+                getAndPlaySoundPairForOctaveDetermination();
+                start = 0;
+            }
+        }
+        
+
+        function getAndPlaySoundPairForOctaveDetermination(){
+            document.getElementById("soundA").disabled = true;
+            document.getElementById("soundB").disabled = true;
+            let temp_l = parseInt(freq_index_L) + 1;
+            let temp_h = parseInt(freq_index_H) + 1;
+
+            const params = new URLSearchParams(window.location.search);
+            const url = '/octaveDetermination?' + params.toString() + '&freq_index_L=' + temp_l + '&freq_index_H=' + temp_h + '&on_going=' + ongoing;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({freq_index_L: freq_index_L+1, freq_index_H: freq_index_H+1}),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                document.getElementById('sound_a').src = 'data:audio/wav;base64,' + data[0];
+                document.getElementById('sound_a').play();
+
+                document.getElementById("sound-identifier-text").innerHTML = "Playing <b>Sound <span class='highlight'>A </span></b><span class='dots'></span>";
+
+                document.getElementById('sound_a').addEventListener('ended', function() {
+                    setTimeout(function() {
+
+                        document.getElementById("sound-identifier-text").innerHTML = "Playing <b>Sound <span class='highlight'>B </span></b><span class='dots'></span>";
+                        document.getElementById('sound_b').src = 'data:audio/wav;base64,' + data[1];
+                        document.getElementById('sound_b').play();
+
+                        document.getElementById('sound_b').addEventListener('ended', function() {
+                            setTimeout(function() {
+                                document.getElementById("sound-identifier-text").innerHTML = "Choose the sound";
+                              
+                                document.getElementById("soundA").disabled = false;
+                                document.getElementById("soundB").disabled = false;
+                                
+                            }, 500);
+                        });
+                    }, 500);
+                });
+
+            });
+        }
+
+
+
+        // type: minimum or maximum or reverse
+        function get_in_octave_freqs(f_center, type) {
+            const params = new URLSearchParams(window.location.search);
+            const url = '/getInOctaveFreqs?' + params.toString() + '&f_center=' + f_center + '&type=' + type;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({f_center: f_center, type: type}),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                in_oct_freqs = data;
+            });
+        }
+
+        function get_oct_confusion_freqs(matched_freq) {
+            const params = new URLSearchParams(window.location.search);
+            const url = '/getOctConfusionFreqs?' + params.toString() + '&matched_freq=' + matched_freq;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({matched_freq: matched_freq}),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                oct_conf_freqs = data;
+            });
+        }
+
+        function saveSoundA() {
+            const params = new URLSearchParams(window.location.search);
+            let temp_freqs;
+            let matched_freq = -1;
+            if (ongoing == 0){
+                temp_freqs = $possible_octs;
+            }
+            else if (ongoing == 1){
+                temp_freqs = in_oct_freqs;
+            }
+            else if (ongoing == 2){
+                temp_freqs = oct_conf_freqs;
+                matched_freq = temp_freqs[freq_index_L];
+            }
+            console.log("Inside ongoing: ", ongoing, "freq_index_L: ", freq_index_L, "freq_index_H: ", freq_index_H, "matched_freq: ", matched_freq)
+            const url = '/saveSoundForOctaveDetermination?' + params.toString() + '&freq_l=' + temp_freqs[freq_index_L] + '&freq_h=' + temp_freqs[freq_index_H] + '&closer_sound=' + temp_freqs[freq_index_L] + '&on_going=' + ongoing + '&matched_freq=' + matched_freq;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ closer_sound: temp_freqs[freq_index_L], freq_l: temp_freqs[freq_index_L], freq_h: temp_freqs[freq_index_H], on_going: ongoing, matched_freq: matched_freq}),
+            })
+            .then(response => response.json())
+            
+            if (ongoing == 0){
+                if (prev_selection == -1 || prev_selection == 'soundA'){
+                    freq_index_H = freq_index_H - 1;
+                    freq_index_L = freq_index_L - 1;
+                    if (freq_index_L < $min_index){
+                        ongoing += 1;
+                        if (ongoing == 1) {
+                            in_oct_freqs = get_in_octave_freqs($possible_octs[freq_index_H], 'minimum');
+                            freq_index_L = 0;
+                            freq_index_H = 1;
+                            getAndPlaySoundPairForOctaveDetermination();
+                            prev_selection = -1;
+                            return;
+                        }
+                    }
+                }
+                else{
+                    if (prev_selection == 'soundB'){
+                        ongoing += 1;
+                        if (ongoing == 1) {
+                            in_oct_freqs = get_in_octave_freqs($possible_octs[freq_index_H], 'reverse');
+                            freq_index_L = 0;
+                            freq_index_H = 1;
+                            getAndPlaySoundPairForOctaveDetermination();
+                            prev_selection = -1;
+                            return;
+                        }
+                    }
+                }
+                if (ongoing == 0){
+                    prev_selection = 'soundA';
+                    getAndPlaySoundPairForOctaveDetermination();
+                }
+            }
+            if (ongoing == 1){
+                if (prev_selection == 'soundB' || prev_selection == -1){
+                    ongoing += 1;
+                    if (ongoing == 2) {
+                        oct_conf_freqs = get_oct_confusion_freqs(in_oct_freqs[freq_index_L]);
+                        freq_index_L = 0;
+                        freq_index_H = 1;
+                        getAndPlaySoundPairForOctaveDetermination();
+                        return;
+                    }
+                }
+            }
+            if (ongoing == 2){
+                if (!stop) {
+                    freq_index_L = freq_index_L + 2;
+                    freq_index_H = freq_index_H + 2;
+                    getAndPlaySoundPairForOctaveDetermination();
+                    stop = 1;
+                }
+                else{
+                    alert("done");
+                }
+            }
+        }
+
+        function saveSoundB() {
+            const params = new URLSearchParams(window.location.search);
+            let temp_freqs;
+            let matched_freq = -1;
+            if (ongoing == 0){
+                temp_freqs = $possible_octs;
+            }
+            else if (ongoing == 1){
+                temp_freqs = in_oct_freqs;
+            }
+            else if (ongoing == 2){
+                temp_freqs = oct_conf_freqs;
+                matched_freq = temp_freqs[freq_index_H];
+            }
+            const url = '/saveSoundForOctaveDetermination?' + params.toString() + '&freq_l=' + temp_freqs[freq_index_L] + '&freq_h=' + temp_freqs[freq_index_H] + '&closer_sound=' + temp_freqs[freq_index_H] + '&on_going=' + ongoing + '&matched_freq=' + matched_freq;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ closer_sound: temp_freqs[freq_index_H], freq_l: temp_freqs[freq_index_L], freq_h: temp_freqs[freq_index_H], on_going: ongoing, matched_freq: matched_freq}),
+            })
+            .then(response => response.json())
+
+
+            if (ongoing == 0){
+                if (prev_selection == -1 || prev_selection == 'soundB'){
+                    freq_index_H = freq_index_H + 1;
+                    freq_index_L = freq_index_L + 1;
+                    if (freq_index_H > $max_index){
+                        ongoing += 1;
+                        if (ongoing == 1) {
+                            in_oct_freqs = get_in_octave_freqs($possible_octs[freq_index_L], 'maximum');
+                            freq_index_L = 0;
+                            freq_index_H = 1;
+                            getAndPlaySoundPairForOctaveDetermination();
+                            prev_selection = -1;
+                            return;
+                        }
+                    }
+                }
+                else{
+                    if (prev_selection == 'soundA'){
+                        ongoing += 1;
+                        if (ongoing == 1) {
+                            in_oct_freqs = get_in_octave_freqs($possible_octs[freq_index_L], 'reverse');
+                            freq_index_L = 0;
+                            freq_index_H = 1;
+                            console.log("inside in oct freq_index_L: ", freq_index_L, "freq_index_H: ", freq_index_H)
+
+                            getAndPlaySoundPairForOctaveDetermination();
+                            prev_selection = -1;
+                            return;
+                        }
+                    }
+                }
+                if (ongoing == 0){
+                    prev_selection = 'soundB';
+
+                    getAndPlaySoundPairForOctaveDetermination();
+                }
+            }
+            if (ongoing == 1){
+                if (prev_selection == 'soundB' || prev_selection == -1){
+                    freq_index_H = freq_index_H + 1;
+                    freq_index_L = freq_index_L + 1;
+                    console.log("inside in oct freq_index_L: ", freq_index_L, "freq_index_H: ", freq_index_H)
+                    if (freq_index_H > $max_index){
+                        ongoing += 1;
+                        if (ongoing == 2) {
+                            oct_conf_freqs = get_oct_confusion_freqs(in_oct_freqs[freq_index_L]);
+                            freq_index_L = 0;
+                            freq_index_H = 1;
+                            getAndPlaySoundPairForOctaveDetermination();
+                            return;
+                        }
+                    }
+                }
+                if (ongoing == 1){
+                    prev_selection = 'soundB';
+                    getAndPlaySoundPairForOctaveDetermination();
+                }
+            }
+            if (ongoing == 2){
+                if (!stop) {
+                    freq_index_L = freq_index_L + 2;
+                    freq_index_H = freq_index_H + 2;
+                    getAndPlaySoundPairForOctaveDetermination();
+                    stop = 1;
+                }
+                else{
+                    alert("done");
+                }
+            }
+        }
+
+        
+
+</script>
