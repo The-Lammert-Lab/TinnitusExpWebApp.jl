@@ -19,7 +19,8 @@ using Genie.Exceptions
 using GenieSession
 using TinnitusReconstructor
 using TinnitusReconstructor: binnedrepr2wav, white_noise
-
+using TinnitusReconstructor: pure_tone, gen_octaves
+using DSP: Windows.tukey
 
 """
     ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
@@ -411,6 +412,19 @@ function profile()
         init_limit,
         init_page,
     )
+end
+
+function calibrate()
+    authenticated!()
+
+    pure_tone_wav = pure_tone(1000, 1, 44100)
+
+    buf = Base.IOBuffer()
+    wavwrite(pure_tone_wav, buf; Fs=44100.0)
+    pure_tone_wav = base64encode(take!(buf))
+    close(buf)
+
+    html(:userexperiments, :calibrate; pure_tone_wav)
 end
 
 end
