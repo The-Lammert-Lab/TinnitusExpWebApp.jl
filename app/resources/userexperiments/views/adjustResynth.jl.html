@@ -53,7 +53,14 @@
         font-size: 20px; 
         cursor: pointer;
         transition: background-color 0.2s ease;
+        box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.2);
     }
+
+    #to-listening-task:hover {
+        background-color: #27ab41;
+    }
+
+    
 
 </style>
 
@@ -79,6 +86,7 @@
     </div>
     <button id="to-listening-task" class="btn btn-primary btn-lg"
         type="button"
+        onclick="redirectToLikertQuestions()"
         style="display: none;">
         Next <i class="fas fa-arrow-right"></i>
     </button>

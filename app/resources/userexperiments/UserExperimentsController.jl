@@ -5,6 +5,7 @@ using CharacterizeTinnitus.Trials
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Users
+using CharacterizeTinnitus.Ratings
 using CharacterizeTinnitus.ControllerHelper
 using WAV: wavwrite
 using Base64
@@ -17,8 +18,9 @@ using GenieAuthentication
 using Genie.Exceptions
 using GenieSession
 using TinnitusReconstructor
-using TinnitusReconstructor: binnedrepr2wav
-
+using TinnitusReconstructor: binnedrepr2wav, white_noise
+using TinnitusReconstructor: pure_tone, gen_octaves
+using DSP: Windows.tukey
 
 """
     ue2dict(UE::V) where {V <: Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
@@ -240,6 +242,47 @@ function adjust_resynth()
     html(:userexperiments, :adjustResynth; curr_mult, curr_binrange)
 end
 
+"""
+creates wav audios:
+1) standard resynthesis
+2) adjusted resynthesis
+"""
+function get_standard_and_adjusted_resynth(experiment_name, instance, user_id, mult, binrange)
+    authenticated!()
+
+    e = findone(Experiment; name=experiment_name)
+    stimgen = stimgen_from_json(e.stimgen_settings, e.stimgen_type)
+
+    all_trials = find(Trial; experiment_name=experiment_name, instance=instance, user_id=user_id)
+
+    for (index, stimulus) in enumerate(all_trials)
+        all_trials[index].stimulus = all_trials[index].stimulus[2:end-1]
+    end
+
+    responses = getproperty.(all_trials, :response)
+    stimuli = [parse.(Float64, split(trial.stimulus, ",")) for trial in all_trials]
+
+    recon = TinnitusReconstructor.gs(responses, stack(stimuli)')
+    standard_resynth, = binnedrepr2wav(stimgen, recon)
+    adjusted_resynth, = binnedrepr2wav(stimgen, recon, mult, binrange)
+
+    buf = Base.IOBuffer()
+    wavwrite(adjusted_resynth, buf; Fs=44100.0)
+    adjusted_resynth_wav = base64encode(take!(buf))
+    close(buf)
+
+    buf = Base.IOBuffer()
+    wavwrite(recon, buf; Fs=44100.0)
+    standard_resynth_wav = base64encode(take!(buf))
+    close(buf)
+
+    return adjusted_resynth_wav, standard_resynth_wav
+end
+
+"""
+returns Adjusted wav audio
+this is called through a javascript function to add adjusted_wab_file as the src to the audio tag
+"""
 function play_adjusted_audio()
     authenticated!()
     # Extract the mult and binrange values
@@ -250,30 +293,15 @@ function play_adjusted_audio()
     instance = params(:instance)
     user_id = current_user_id()
 
-    e = findone(Experiment; name=name)
-    stimgen = stimgen_from_json(e.stimgen_settings, e.stimgen_type)
-
-    all_trials = find(Trial; experiment_name=name, instance=instance, user_id=user_id)
-
-    for (index, stimulus) in enumerate(all_trials)
-        all_trials[index].stimulus = all_trials[index].stimulus[2:end-1]
-    end
-
-    responses = getproperty.(all_trials, :response)
-    stimuli = [parse.(Float64, split(trial.stimulus, ",")) for trial in all_trials]
-
-    recon = TinnitusReconstructor.gs(responses, stack(stimuli)')
-
-    adjusted_resynth, = binnedrepr2wav(stimgen, recon, mult, binrange)
-
-    buf = Base.IOBuffer()
-    wavwrite(adjusted_resynth, buf; Fs=44100.0)
-    adjusted_wav_file = base64encode(take!(buf))
-    close(buf)
+    adjusted_wav_file, = get_standard_and_adjusted_resynth(name, instance, user_id, mult, binrange)
 
     return json(adjusted_wav_file)
 end
 
+"""
+Saves the mult and binrange values per user per experiment in UserExperiment table.
+This function is called when the user has pressed the 'Save' button on the adjustResynth.jl.html page.
+"""
 function save_mult_and_binrange()
     # Parse the mult and binrange values from the JSON payload
     mult = parse(Float64, params(:JSON_PAYLOAD)["mult"])
@@ -294,6 +322,48 @@ function save_mult_and_binrange()
     # Save the changes
     save(curr_usr_exp)
 end
+
+"""
+returns wav audio of three sounds required for the likert questions task.
+1) White noise
+2) Adjusted resynthesized audio
+3) Standard resynthesized audio
+"""
+function likert_questions()
+    authenticated!()
+
+    curr_usr_exp = findone(
+        UserExperiment;
+        experiment_name=params(:name),
+        instance=params(:instance),
+        user_id=current_user_id(),
+    )
+
+    # white noise
+    white_noise_wav = white_noise(44100, 0.5)
+
+    # standard resynth and adjustted resynth
+    # matlab code
+    # recon_binrep = rescale(reconstruction, -20, 0);
+    # recon_spectrum = stimgen.binnedrepr2spect(recon_binrep);
+
+    # % Create frequency vector 
+    # freqs = linspace(1, floor(Fs/2), length(recon_spectrum))' - 1; 
+
+    # recon_spectrum(freqs > config.max_freq | freqs < config.min_freq) = stimgen.unfilled_dB;
+    # recon_waveform_standard = stimgen.synthesize_audio(recon_spectrum, stimgen.nfft);
+    adjusted_resynth_wav, standard_resynth_wav = get_standard_and_adjusted_resynth(params(:name), params(:instance), current_user_id(), curr_usr_exp.mult, curr_usr_exp.binrange)
+
+    buf = Base.IOBuffer()
+    wavwrite(white_noise_wav, buf; Fs=44100.0)
+    white_noise_wav = base64encode(take!(buf))
+    close(buf)
+
+    html(:userexperiments, :likertQuestions; white_noise_wav, standard_resynth_wav, adjusted_resynth_wav)
+
+end
+
+
 
 #########################
 
@@ -342,6 +412,19 @@ function profile()
         init_limit,
         init_page,
     )
+end
+
+function calibrate()
+    authenticated!()
+
+    pure_tone_wav = pure_tone(1000, 1, 44100)
+
+    buf = Base.IOBuffer()
+    wavwrite(pure_tone_wav, buf; Fs=44100.0)
+    pure_tone_wav = base64encode(take!(buf))
+    close(buf)
+
+    html(:userexperiments, :calibrate; pure_tone_wav)
 end
 
 end
