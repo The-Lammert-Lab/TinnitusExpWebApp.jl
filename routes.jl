@@ -6,6 +6,9 @@ using CharacterizeTinnitus.UsersController
 using CharacterizeTinnitus.PublicController
 using CharacterizeTinnitus.RatingsController
 using CharacterizeTinnitus.ThresholdController
+using CharacterizeTinnitus.LoudnessController
+using CharacterizeTinnitus.PitchController
+
 
 route("/experiment", TrialsController.experiment)
 route("/rest", TrialsController.rest)
@@ -44,3 +47,16 @@ route("/lab", PublicController.lab)
 route("/thresholdDetermination", ThresholdController.threshold_determination)
 route("/getPureTone", ThresholdController.get_pure_tone; method=POST)
 route("/saveThreshold", ThresholdController.save_threshold; method=POST)
+
+route("/loudnessMatching", LoudnessController.loudness_matching)
+route("/getPureToneLM", LoudnessController.get_pure_tone; method=POST)
+route("/saveLM", LoudnessController.save_lm; method=POST)
+
+route("/pitchMatching", PitchController.pitch_matching)
+route("/octaveDetermination", PitchController.get_pure_tone_for_oct_determination; method=POST)
+route("/inOctave", PitchController.get_pure_tone_for_oct_determination; method=POST)
+
+route("/saveSoundForOctaveDetermination", PitchController.save_sound_for_octave_determination; method=POST)
+route("/getInOctaveFreqs", PitchController.get_in_octave_freqs; method=POST)
+route("/getOctConfusionFreqs", PitchController.get_oct_confusion_freqs; method=POST)
+route("/setCalibratedValue", PitchController.set_calibrated_value; method=POST)

@@ -4,6 +4,7 @@
 <style>
     body {
         background: #dff0f6;
+        overflow: hidden;
     }
 
     .adjust {
@@ -56,23 +57,24 @@
     }
 </style>
 <body>
-    <h1 style="text-align: center; margin-top: 10vw;">Threshold
-        Determination</h1>
+    <h1
+        style="text-align: center; margin-top: 7vw; color: #009879; font-weight: bold;">Loudness
+        Matching</h1>
     <div
         class="container vh-100 d-flex align-items-center justify-content-center">
         <div class="adjust-box">
             <div class="slider-container">
                 <i class="fa-solid fa-minus fa-xs"
                     style="color: #0052ff; cursor: pointer; margin-right: 10px;"
-                    onclick="document.getElementById('thresholdSlider').value = parseInt(document.getElementById('thresholdSlider').value) - 1;"></i>
+                    onclick="document.getElementById('loudnessSlider').value = parseInt(document.getElementById('loudnessSlider').value) - 1;"></i>
 
-                <input class="adjust" id="thresholdSlider" type="range"
+                <input class="adjust" id="loudnessSlider" type="range"
                     min="-95" max="95" step="1" value
                     disabled>
 
                 <i class="fa-solid fa-plus fa-xs"
                     style="color: #0052ff; cursor: pointer; margin-left: 10px;"
-                    onclick="document.getElementById('thresholdSlider').value = parseInt(document.getElementById('thresholdSlider').value) + 1;"></i>
+                    onclick="document.getElementById('loudnessSlider').value = parseInt(document.getElementById('loudnessSlider').value) + 1;"></i>
             </div>
             <br>
             <label>
@@ -85,8 +87,8 @@
                 <button class="adjust-box-buttons" id="playSound"
                     type="button" onclick="playSound($freqs)">Play
                     Sound</button>
-                <button class="adjust-box-buttons" id="saveThreshold"
-                    type="button" onclick="saveThreshold()"
+                <button class="adjust-box-buttons" id="saveLoudness"
+                    type="button" onclick="saveLoudness($freqs)"
                     disabled>Save</button>
             </div>
         </div>
@@ -109,18 +111,17 @@
     // prev_instance is used to check if the user can hear the sound or not
     let prev_instance = 1;
     let curr_dB;
-    let thresholdSlider = document.getElementById('thresholdSlider');
+    let loudnessSlider = document.getElementById('loudnessSlider');
     const calibrated_value = parseInt(localStorage.getItem('calibrated_value'));
+    let start = 1;
 
     function playSound(freqs) {
         document.getElementById('cantHear').disabled = false;
-        if (curr_freq_index > freqs.length) {
-            alert("All frequencies played");
-            return;
-        }
+
 
         if (curr_freq_index == 0 && calibrated_value != null) {
-            thresholdSlider.max = 95 - calibrated_value;
+            loudnessSlider.max = 95 - calibrated_value;
+            loudnessSlider.min = -95 - calibrated_value;
         }
         const params = new URLSearchParams(window.location.search);
 
@@ -132,8 +133,8 @@
                 curr_dB = 60;
                 prev_instance = 1;
             }
-            else if (parseInt(thresholdSlider.value) + 10 <= 95) {
-                curr_dB = parseInt(thresholdSlider.value) + 10;
+            else if (parseInt(loudnessSlider.value) + 10 <= 95) {
+                curr_dB = parseInt(loudnessSlider.value) + 10;
             }
         }
         console.log("current_dB: ", curr_dB);
@@ -142,14 +143,14 @@
             prev_instance = 0;
         }
 
-        const url = '/getPureTone?' + params.toString() + '&curr_freq_index=' + curr_freq_index +'&curr_dB=' + curr_dB + '&calibrated_value=' + calibrated_value;
+        const url = '/getPureToneLM?' + params.toString() + '&curr_freq_index=' + curr_freq_index +'&curr_dB=' + curr_dB + '&calibrated_value=' + calibrated_value + '&start=' + start;
 
         fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({curr_dB: curr_dB, calibrated_value: calibrated_value, curr_freq_index: curr_freq_index}),
+            body: JSON.stringify({curr_dB: curr_dB, calibrated_value: calibrated_value, curr_freq_index: curr_freq_index, start: start}),
         })
         .then(response => response.json())
         .then(data => {
@@ -157,27 +158,28 @@
             document.getElementById('pure_tone').play();
         });
 
-        document.getElementById('saveThreshold').disabled = false;
+        document.getElementById('saveLoudness').disabled = false;
    
 
     }
 
-    function saveThreshold() {
+    function saveLoudness(freqs) {
+        start = 0;
         document.getElementById('cantHear').disabled = true;
 
         if (curr_freq_index == 0) {
-            thresholdSlider.disabled = false;
+            loudnessSlider.disabled = false;
         }
         let cant_hear = document.getElementById('cantHear').checked;
-        document.getElementById('saveThreshold').disabled = true;
-        document.getElementById('thresholdSlider').value = 0;
+        document.getElementById('saveLoudness').disabled = true;
+        document.getElementById('loudnessSlider').value = 0;
         document.getElementById('cantHear').checked = false;
         document.getElementById('playSound').disabled = false;
 
         
         const params = new URLSearchParams(window.location.search);
 
-        const url = '/saveThreshold?' + params.toString() + '&curr_dB=' + curr_dB + '&curr_freq_index=' + curr_freq_index + '&cant_hear=' + cant_hear;
+        const url = '/saveLM?' + params.toString() + '&curr_dB=' + curr_dB + '&curr_freq_index=' + curr_freq_index + '&cant_hear=' + cant_hear;
 
         // Create a POST request to the URL
         fetch(url, {
@@ -204,5 +206,11 @@
 
         
         curr_freq_index += 1;
+
+        if (curr_freq_index > freqs.length) {
+            alert("All frequencies played");
+            
+            return;
+        }
     }
 </script>
