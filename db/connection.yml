@@ -4,14 +4,14 @@ dev:
   adapter: SQLite
   database: db/dev.sqlite3
 
-# dev:
-#   adapter: PostgreSQL
-#   database: tinnitus_dev
-#   host: localhost
-#   username:
-#   password:
-#   port: 5432
-#   config:
+dev:
+  adapter: PostgreSQL
+  database: tinnitus_dev
+  host: localhost
+  username:
+  password:
+  port: 5432
+  config:
 
 prod:
   adapter:
