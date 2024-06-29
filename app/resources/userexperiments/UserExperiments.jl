@@ -17,9 +17,6 @@ export UserExperiment
     trials_complete::Integer = 0
     mult::Float64 = 0.01
     binrange::Int = 60
-    white_noise::String = ""
-    standard_resynth::String = ""
-    adjusted_resynth::String = ""
 end
 
 SearchLight.Validation.validator(::Type{UserExperiment}) = ModelValidator([
