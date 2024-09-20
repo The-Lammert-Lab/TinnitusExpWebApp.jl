@@ -1,25 +1,21 @@
 env: ENV["GENIE_ENV"]
 
 dev:
-  adapter: SQLite
-  database: db/dev.sqlite3
-
-dev:
   adapter: PostgreSQL
-  database: tinnitus_dev
-  host: localhost
-  username:
-  password:
+  database: tinnitus
+  host: db
+  username: postgres
+  password: password
   port: 5432
   config:
 
 prod:
-  adapter:
-  database:
-  host:
-  username:
-  password:
-  port:
+  adapter: PostgreSQL
+  database: tinnitus
+  host: db
+  username: postgres
+  password: password
+  port: 5432
   config:
 
 test:

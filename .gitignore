@@ -38,3 +38,6 @@ Manifest.toml
 .DS_Store
 .vscode/
 db/dev.sqlite3
+
+# When using the docker compose file if building here/mounting
+pgdata/*

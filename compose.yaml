@@ -1,0 +1,38 @@
+services:
+  web:
+    container_name: tinnitus_web
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - GENIE_ENV=dev
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=tinnitus
+      - POSTGRES_USER=postgres
+      - GENIE_SECRET_TOKEN=c307ba65e559d77eac4bdfc10a3e84c4d80d7f880c29e8256b431c3e4d44784e
+      # TODO Genie.Secrets.secret_token!
+
+    depends_on:
+      db:
+        condition: service_healthy
+  
+  # https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/
+  db:
+    container_name: tinnitus_postgres
+    image: postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=tinnitus
+      - POSTGRES_USER=postgres
+      - PGUSER=postgres # needed for health check/let it use default user # https://stackoverflow.com/questions/60193781/postgres-with-docker-compose-gives-fatal-role-root-does-not-exist-error/60194261#60194261
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
