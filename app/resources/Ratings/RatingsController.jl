@@ -18,9 +18,16 @@ function save_likert_rating()
     rating = parse(Int, params(:rating))
     audio = params(:audio_type)
 
-    query_str = "SELECT max(id) as max_id FROM ratings WHERE experiment_name = \"$(params(:name))\" and instance = $(instance) and user_id = $(current_user_id())"
+    query_str = "SELECT max(id) as max_id FROM ratings WHERE experiment_name = \'$(params(:name))\' and instance = $(instance) and user_id = $(current_user_id())"
 
     max_id = SearchLight.query(query_str)[1, 1]
+
+    println(typeof(max_id))
+    println(max_id)
+
+    if ismissing(max_id)
+        max_id = 0
+    end
 
     curr_ratings_instance = findone(
         Rating;
@@ -30,7 +37,7 @@ function save_likert_rating()
         user_id=current_user_id(),
     )
 
-    if isnothing(curr_ratings_instance)
+    if isnothing(curr_ratings_instance) || ismissing(curr_ratings_instance)
         curr_ratings_instance = Rating(
             user_id=current_user_id(),
             experiment_name=params(:name),
