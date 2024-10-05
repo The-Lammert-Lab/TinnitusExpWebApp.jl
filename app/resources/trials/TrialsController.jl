@@ -221,10 +221,11 @@ function experiment()
     end
 
     GenieSession.set!(:n_trials, experiment.n_trials)
-    if params(:from) == "rest"
-        from_rest = true
-        html(:trials, :experiment; from_rest)
-    else
+    #if params(:from) == "rest"
+    #    from_rest = true
+    #    html(:trials, :experiment; from_rest)
+    #else
+    if true # MUST FIX. The rest logic is broken. To allow the test to continue we will ignore it for now so we can start colecting our data.
         from_rest = false
         stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
 

@@ -37,6 +37,17 @@ end
 
 SearchLight.Configuration.load(context = @__MODULE__)
 
+#SearchLight.config.db_config_settings["adapter"] = "PostgreSQL"
+#SearchLight.config.db_config_settings["host"] = get(ENV, "POSTGRES_HOST", "db")
+#SearchLight.config.db_config_settings["port"] = parse(Int, get(ENV, "POSTGRES_PORT", "5432"))
+#SearchLight.config.db_config_settings["database"] = ENV["POSTGRES_DB"]
+#SearchLight.config.db_config_settings["username"] = ENV["POSTGRES_USER"]
+#SearchLight.config.db_config_settings["password"] =ENV["POSTGRES_PASSWORD"]
+
+#Base.eval(@__MODULE__, Meta.parse("using SearchLight$(SearchLight.config.db_config_settings["adapter"]) = 'PostgreSQL'"))
+#Base.eval(@__MODULE__, Meta.parse("using SearchLight$(SearchLight.config.db_config_settings["host"]) = get(ENV, 'POSTGRES_HOST', 'db')"))
+
+
 # TODO figure out how to use env vars for this/ we have the dict now how to have SearchLight use it
 selConnection = get(config, ENV["GENIE_ENV"], config["dev"]) # so we want t
 
