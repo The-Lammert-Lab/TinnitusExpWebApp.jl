@@ -32,8 +32,6 @@ end
 #SearchLight.Configuration.load(context = @__MODULE__)
 
 
-# TODO figure out how to use env vars for this/ we have the dict now how to have SearchLight use it
-
 SearchLight.connect(config)
 
 # Function to check if the schema_migrations table exists

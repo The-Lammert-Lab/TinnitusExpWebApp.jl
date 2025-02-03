@@ -261,6 +261,15 @@ function save_response()
         )
     end
 
+    if isempty(curr_block)
+        return Router.error(
+            INTERNAL_ERROR,
+            "Current block is empty.",
+            MIME"application/json";
+            error_info="No trials available to save.",
+        )
+    end
+
     curr_trial = popfirst!(curr_block)
 
     curr_usr_exp = findone(

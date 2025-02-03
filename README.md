@@ -8,9 +8,11 @@ creation of unique protocols, assignment of protocols to subjects, and more.
 To set up and host the website locally, follow these steps in the Julia REPL:
 
 ```Julia
->pkg add Genie
+using Pkg
+Pkg.activate(".")
+Pkg.instantiate()
 using Genie
-Genie.lodapp()
+Genie.loadapp()
 ```
 The following must be set in your environment. I recommend putting a .env in the base of this directory.
 
@@ -18,6 +20,9 @@ POSTGRES_PASSWORD=<password>
 POSTGRES_DB=postgres
 POSTGRES_USER=postgres
 GENIE_SECRET_TOKEN=<random string, suggested 64 chars>
+
+You will need a postgres db for the server to start. To run just postgres and pgadmin in docker "docker compose -f local_compose.yaml up"
+If you are using a .env file, run "source load_env.sh", you can look at it but it's just a minor time saver combining 3 command into one.
 
 Finally, to locally host the website, simply run `up()`.
 
@@ -29,7 +34,7 @@ create .env file here
 POSTGRES_PASSWORD=<password>
 POSTGRES_DB=postgres
 POSTGRES_USER=postgres
-GENIE_SECRET_TOKEN=<random string, suggested 64 chars>
+GENIE_SECRET_TOKEN= <random base64 string> #Get from Genie.Secrets.secret()
 PGADMIN_DEFAULT_EMAIL=bbclab@holycross.edu
 PGADMIN_DEFAULT_PASSWORD=<password>
 ```
@@ -44,6 +49,12 @@ It will have the container built and started at localhost:8000, a postgres datab
 
 Note: while the database scheme is generated on first start, not default admin user is created (yet). For now you can access the user table in pgadmin and create a row for that user. Give it a name, the password can be anything hashed with sha256 (future work could be making this webapp use a better password hash...) and check is_admin. More users can be created from the admin page of the webapp once this user exists.
 
+For development:
+```
+docker compose -f local_compose.yaml up
+```
+this docker file will mount the local files so that any changes will affect the running sever
+
 # Post image to Docker Hub
 
 Let's make a cross platform builder with buildx
@@ -54,5 +65,5 @@ We only deploy to amd64 ATM but arm servers may be worth exploring in the future
 
 User the builder and push to Docker Hub. make sure you run docker login first.
 ```
-docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v8 --push -t bbclab/tinnitusexpwebapp -t bbclab/tinnitusexpwebapp:0.0.1 .
+docker buildx build --platform linux/amd64,linux/arm64 --push -t bbclab/tinnitusexpwebapp -t bbclab/tinnitusexpwebapp:0.0.1 .
 ```
