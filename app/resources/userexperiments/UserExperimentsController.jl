@@ -263,20 +263,24 @@ function get_standard_and_adjusted_resynth(experiment_name, instance, user_id, m
     stimuli = [parse.(Float64, split(trial.stimulus, ",")) for trial in all_trials]
 
     recon = TinnitusReconstructor.gs(responses, stack(stimuli)')
-    standard_resynth, = binnedrepr2wav(stimgen, recon)
-    adjusted_resynth, = binnedrepr2wav(stimgen, recon, mult, binrange)
+    print(stimgen)
+    print(recon)
+    standard_resynth_wav = binnedrepr2wav(stimgen, recon, min_db=-15) .* 10 
+    adjusted_resynth_wav, adjusted_resynth_spect = binnedrepr2wav(stimgen, recon, mult, binrange)
+    
+    # print(adjusted_resynth_wav)
 
     buf = Base.IOBuffer()
-    wavwrite(adjusted_resynth, buf; Fs=44100.0)
-    adjusted_resynth_wav = base64encode(take!(buf))
+    wavwrite(adjusted_resynth_wav, buf; Fs=44100.0)
+    adjusted_resynth_wav_base = base64encode(take!(buf))
     close(buf)
 
     buf = Base.IOBuffer()
-    wavwrite(recon, buf; Fs=44100.0)
-    standard_resynth_wav = base64encode(take!(buf))
+    wavwrite(standard_resynth_wav, buf; Fs=44100.0)
+    standard_resynth_wav_base = base64encode(take!(buf))
     close(buf)
 
-    return adjusted_resynth_wav, standard_resynth_wav
+    return adjusted_resynth_wav_base, standard_resynth_wav_base
 end
 
 """

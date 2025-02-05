@@ -68,12 +68,12 @@
     class="container vh-100 d-flex align-items-center justify-content-center">
     <div class="adjust-box">
 
-        <span>Mult: <span id="multValue">$curr_mult</span></span>
+        <span>Ringiness</span>
 
         <input class="adjust" id="multSlider" type="range" min="0"
-            max="1" step="0.001" value="$curr_mult">
+            max="1" step="0.001">
         <br>
-        <span>Binrange: <span id="binrangeValue">$curr_binrange</span></span>
+        <span>Resolution</span>
         <input class="adjust" id="binrangeSlider" type="range" min="0"
             max="100" value="$curr_binrange">
 
@@ -99,7 +99,8 @@
     const multSlider = document.getElementById('multSlider'),
         binrangeSlider = document.getElementById('binrangeSlider');
 
-    // Get the elements to display the slider values
+        // We really have no reason to display to the users the values.
+/*     // Get the elements to display the slider values
     const multValueElement = document.getElementById('multValue'),
         binrangeValueElement = document.getElementById('binrangeValue');
 
@@ -111,7 +112,7 @@
     binrangeSlider.addEventListener('input', function() {
         binrangeValueElement.textContent = this.value;
     });
-
+ */
     let playButton = document.getElementById('playSound');
     let SaveButton = document.getElementById('saveMultAndBinrange');
 
@@ -132,7 +133,7 @@
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data)
+            // console.log(data)
             document.getElementById('adjusted_audio').src = 'data:audio/wav;base64,' + data;
             document.getElementById('adjusted_audio').play();
         });

@@ -1080,6 +1080,7 @@ function playRandomSound() {
       randomID = ids[Math.floor(Math.random() * ids.length)];
     } while (played.includes(randomID));
 
+    console.log(`Selected sound: ${randomID}, Prior played are: ${played}`)
     document.getElementById(randomID).play();
     played.push(randomID);
 
@@ -1097,8 +1098,9 @@ function playRandomSound() {
 function onSave() {
   flag = 0;
   document.getElementById('saveRating').disabled = true;
+  console.log(`Saving ${cnt}`)
 
-  if (cnt == 3) played = [];
+  if (cnt == 3) played = []; // Ask the ratings twice...
 
   if (document.querySelector('input[name="l"]:checked') == null) {
     alert("Please select a rating before saving.");
@@ -1148,6 +1150,10 @@ function onSave() {
       console.error('Error occurred while saving data:', error);
     });
 
-  if (cnt == 6) { alert("You have rated all the sounds. Thank you for your participation."); return; }
+  if (cnt == 6) { 
+    alert("You have rated all the sounds. Thank you for your participation."); 
+    window.location.replace("./")
+    return;
+  }
 
 }
