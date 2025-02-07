@@ -221,11 +221,16 @@ function experiment()
     end
 
     GenieSession.set!(:n_trials, experiment.n_trials)
-    #if params(:from) == "rest"
-    #    from_rest = true
-    #    html(:trials, :experiment; from_rest)
-    #else
-    if true # MUST FIX. The rest logic is broken. To allow the test to continue we will ignore it for now so we can start colecting our data.
+    if params(:from) == "rest"
+        from_rest = true
+        stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
+        target_sound_path = experiment.target_sound == "" ? "" : TARGET_SOUND_MAP[experiment.target_sound]
+        if isempty(stimuli)
+            throw(ExceptionalResponse(redirect("/profile")))
+        else
+            html(:trials, :experiment; stimuli, curr_block, remaining_blocks, from_rest, target_sound_path)
+        end
+    else
         from_rest = false
         stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
 

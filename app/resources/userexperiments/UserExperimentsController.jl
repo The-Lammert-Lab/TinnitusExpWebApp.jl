@@ -378,7 +378,7 @@ end
 function profile()
     authenticated!()
 
-    init_limit = 2
+    init_limit = 5
     init_page = 1
     max_btn_display = 4
 

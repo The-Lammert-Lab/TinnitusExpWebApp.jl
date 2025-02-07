@@ -39,7 +39,7 @@ SearchLight.connect(config)
 # One way would be to use information_schema.tables but that
 # Doesn't exist with sqlite and instead I would need to use sqlite_master
 # As far as I know SearchLight does not have an abstracted
-# Function that can do this logic however there documentaion is limited.
+# Function that can do this logic however there documentation is limited.
 function table_exists(table_name::String)::Bool
     try
         # Attempt a query that will only succeed if the table exists
