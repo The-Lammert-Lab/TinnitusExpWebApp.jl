@@ -34,7 +34,10 @@ src="data:audio/wav;base64,$pure_tone_wav" preload="auto"></audio>
     }
 
     function save() {
-        var inputValue = document.querySelector('input').value;
+        // 35 is set as the minimum as any input below is almost certainly user error as that is roughly
+        // the loudness of a quite room. If too low of a value is present we could play unexpectedly
+        // loud sounds.
+        var inputValue = Math.max(document.querySelector('input').value, 35);
         const params = new URLSearchParams(window.location.search);
         localStorage.setItem('calibrated_value', inputValue);
         window.location.href = "/profile";

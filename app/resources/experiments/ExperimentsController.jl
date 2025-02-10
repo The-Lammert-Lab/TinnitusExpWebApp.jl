@@ -36,6 +36,7 @@ const EXPERIMENT_FIELDS = Dict{Symbol,String}(
     :n_trials => "Number of trials",
     :name => "Experiment name",
     :target_sound => "Target sound",
+    :threshold_determination_mode => "Threshold Determination",
     :n_bins_filled_mean => "Mean of Gaussian for filled bins",
     :n_bins_filled_var => "Variance of Gaussian for filled bins",
     :bin_prob => "Probability of a bin being filles",
@@ -212,6 +213,7 @@ function get_exp_fields()
         :distribution,
         :distribution_filepath,
         :target_sound,
+        :threshold_determination_mode,
     ]
 
     exp_inds = findall(!in(exclude), fnames)
@@ -250,6 +252,7 @@ function get_exp_fields(ex::E) where {E<:Experiment}
         :distribution,
         :distribution_filepath,
         :target_sound,
+        :threshold_determination_mode,
     ]
 
     exp_inds = findall(!in(exclude), fnames)

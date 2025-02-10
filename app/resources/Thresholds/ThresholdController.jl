@@ -40,7 +40,7 @@ function get_pure_tone()
     win = tukey(length(curr_tone), 0.08)
     window_stim = win .* curr_tone
 
-    scaled_pure_tone = gain * window_stim
+    scaled_pure_tone = gain .* window_stim
 
     buf = Base.IOBuffer()
     wavwrite(scaled_pure_tone, buf; Fs=44100.0)

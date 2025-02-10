@@ -750,7 +750,17 @@ function updateUserAETable() {
         }
 
         let form = document.createElement("form");
-        form.setAttribute("action", "/experiment");
+        if (!(response.data[element].status == "started") && response.data[element].threshold_determination_mode != 0) {
+          form.setAttribute("action", "/thresholdDetermination");
+          let pre_input = document.createElement("input");
+          pre_input.setAttribute("type", "hidden");
+          pre_input.setAttribute("name", "threshold_determination_mode");
+          pre_input.setAttribute("value", response.data[element].threshold_determination_mode);
+          form.appendChild(pre_input);
+  
+        } else {
+          form.setAttribute("action", "/experiment");
+        }
         form.setAttribute("style", "float:left;");
 
         let input1 = document.createElement("input");

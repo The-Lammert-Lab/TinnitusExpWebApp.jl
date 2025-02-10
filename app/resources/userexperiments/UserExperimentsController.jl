@@ -36,6 +36,7 @@ function ue2dict(
     ae_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
     for (ind, ae) in enumerate(UE)
         n_trials = findone(Experiment; name=ae.experiment_name).n_trials
+        threshold_determination_mode = findone(Experiment; name=ae.experiment_name).threshold_determination_mode
 
         status = if ae.trials_complete >= n_trials
             "completed"
@@ -51,6 +52,7 @@ function ue2dict(
             :instance => ae.instance,
             :percent_complete => round(100 * ae.trials_complete / n_trials; digits=2),
             :status => status,
+            :threshold_determination_mode => threshold_determination_mode,
         )
     end
     return ae_data
@@ -381,13 +383,13 @@ function profile()
     init_limit = 5
     init_page = 1
     max_btn_display = 4
-
     added_experiments = get_paginated_amount(
         UserExperiment,
         init_limit,
         init_page;
         user_id=current_user_id(),
     )
+
     num_aes =
         count(UserExperiment; user_id=current_user_id()) > 0 ?
         count(UserExperiment; user_id=current_user_id()) : 1
@@ -404,6 +406,10 @@ function profile()
     user = current_user()
     is_admin = user.is_admin
     username = user.username
+    print("Added Exp")
+
+    print(ae_data)
+
     html(
         :userexperiments,
         :profile;

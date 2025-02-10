@@ -13,6 +13,7 @@ function up()
                 :n_trials => :int,
                 :name => :string,
                 :target_sound => :string,
+                :threshold_determination_mode => :int,
                 :settings_hash => :string,
             ])
         ]

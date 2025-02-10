@@ -54,6 +54,25 @@
     .slider-container i {
         margin-left: 10px;
     }
+
+    #to-skip {
+        display: none;
+        background-color: #1bcc3f;
+        color: #ffffff; 
+        margin-bottom: 18px; 
+        margin-right: 18px; 
+        border: None;
+        padding: 10px 20px 10px 20px;
+        font-size: 17px; 
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        box-shadow: -2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    #to-skip:hover {
+        background-color: #27ab41;
+    }
+
 </style>
 <body>
     <h1 style="text-align: center; margin-top: 10vw;">Threshold
@@ -61,6 +80,7 @@
     <div
         class="container vh-100 d-flex align-items-center justify-content-center">
         <div class="adjust-box">
+            <p style="text-align: center;">When you click “Play Sound”, various pitches will be played. Some may or may not be audible. Adjust the slider to make the sound quite as possible while still being audible.</p>
             <div class="slider-container">
                 <i class="fa-solid fa-minus fa-xs"
                     style="color: #0052ff; cursor: pointer; margin-right: 10px;"
@@ -86,16 +106,27 @@
                     type="button" onclick="playSound($freqs)">Play
                     Sound</button>
                 <button class="adjust-box-buttons" id="saveThreshold"
-                    type="button" onclick="saveThreshold()"
+                    type="button" onclick="saveThreshold($freqs)"
                     disabled>Save</button>
             </div>
         </div>
+        <button class="btn btn-primary position-fixed bottom-0 end-0 m-3" id="to-skip" onclick="skip()">Skip</button>
     </div>
 
     <audio id="pure_tone"
         preload="auto"></audio>
 
     <script>
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('threshold_determination_mode') === '2') {
+        // Show the element if the parameter is present
+        document.getElementById('to-skip').style.display = 'block';
+    }
+
+    function skip() {
+        window.location.href = '/experiment' + window.location.search;
+    }
 
     function togglePlaySound(checked) {
         if (checked) {
@@ -111,31 +142,25 @@
     let curr_dB;
     let thresholdSlider = document.getElementById('thresholdSlider');
     const calibrated_value = parseInt(localStorage.getItem('calibrated_value'));
+    console.log("Calibrated value: " + calibrated_value);
 
     function playSound(freqs) {
         document.getElementById('cantHear').disabled = false;
-        if (curr_freq_index > freqs.length) {
-            alert("All frequencies played");
-            return;
-        }
 
         if (curr_freq_index == 0 && calibrated_value != null) {
             thresholdSlider.max = 95 - calibrated_value;
         }
         const params = new URLSearchParams(window.location.search);
 
-        if (curr_freq_index == 0){
+
+        if (prev_instance == 0) {
             curr_dB = 60;
+            prev_instance = 1;
         }
-        else{
-            if (prev_instance == 0) {
-                curr_dB = 60;
-                prev_instance = 1;
-            }
-            else if (parseInt(thresholdSlider.value) + 10 <= 95) {
-                curr_dB = parseInt(thresholdSlider.value) + 10;
-            }
+        else if (parseInt(thresholdSlider.value) + 10 <= 95) {
+            curr_dB = parseInt(thresholdSlider.value) + 10;
         }
+        
         console.log("current_dB: ", curr_dB);
 
         if(document.getElementById('cantHear').checked){
@@ -158,21 +183,23 @@
         });
 
         document.getElementById('saveThreshold').disabled = false;
+        thresholdSlider.disabled = false;
    
 
     }
 
-    function saveThreshold() {
+    function saveThreshold(freqs) {
         document.getElementById('cantHear').disabled = true;
 
-        if (curr_freq_index == 0) {
+/*         if (curr_freq_index == 0) {
             thresholdSlider.disabled = false;
-        }
+        } */
         let cant_hear = document.getElementById('cantHear').checked;
         document.getElementById('saveThreshold').disabled = true;
         document.getElementById('thresholdSlider').value = 0;
         document.getElementById('cantHear').checked = false;
         document.getElementById('playSound').disabled = false;
+        thresholdSlider.disabled = true;
 
         
         const params = new URLSearchParams(window.location.search);
@@ -201,8 +228,17 @@
             // network errors
             console.error('Error occurred while saving data:', error);
         });
-
-        
         curr_freq_index += 1;
+
+        if (curr_freq_index >= freqs.length) {
+            if (new URLSearchParams(window.location.search).get('name') === 'Thresh' && new URLSearchParams(window.location.search).get('instance') === '1' && new URLSearchParams(window.location.search).get('from') === 'start') {
+                window.location.href = '/experiment' + window.location.search;
+                return
+            }
+            alert("Your test is done, however no test exists to follow");
+            window.location.href = "/"
+            return;
+        }
+
     }
 </script>
