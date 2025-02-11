@@ -1,0 +1,41 @@
+# Almost the same however we do not copy the files as we mount the local files
+
+# Pull latest Julia image
+FROM julia:latest
+
+# Create a dedicated user
+RUN useradd --create-home --shell /bin/bash genie
+
+# Set up the app directory (still necessary for the app environment)
+RUN mkdir /home/genie/app
+#COPY Project.toml /home/genie/app/
+WORKDIR /home/genie/app
+
+# Configure permissions
+RUN chown -R genie:genie /home/
+
+# Ensure binaries are executable
+#RUN chmod +x bin/repl
+#RUN chmod +x bin/server
+#RUN chmod +x bin/runtask
+
+# Switch to the genie user
+USER genie
+
+# Instantiate Julia packages
+#RUN julia -e "using Pkg; Pkg.activate(\".\"); Pkg.instantiate(); Pkg.precompile();"
+
+# Expose necessary ports
+EXPOSE 8000
+EXPOSE 80
+
+# Set up app environment variables
+ENV JULIA_DEPOT_PATH="/home/genie/.julia"
+ENV GENIE_ENV="dev"
+ENV GENIE_HOST="0.0.0.0"
+ENV PORT="8000"
+ENV WSPORT="8000"
+ENV EARLYBIND="true"
+
+# Run the server by default
+CMD ["bin/server"]

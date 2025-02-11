@@ -750,7 +750,17 @@ function updateUserAETable() {
         }
 
         let form = document.createElement("form");
-        form.setAttribute("action", "/experiment");
+        if (!(response.data[element].status == "started") && response.data[element].threshold_determination_mode != 0) {
+          form.setAttribute("action", "/thresholdDetermination");
+          let pre_input = document.createElement("input");
+          pre_input.setAttribute("type", "hidden");
+          pre_input.setAttribute("name", "threshold_determination_mode");
+          pre_input.setAttribute("value", response.data[element].threshold_determination_mode);
+          form.appendChild(pre_input);
+  
+        } else {
+          form.setAttribute("action", "/experiment");
+        }
         form.setAttribute("style", "float:left;");
 
         let input1 = document.createElement("input");
@@ -1080,6 +1090,7 @@ function playRandomSound() {
       randomID = ids[Math.floor(Math.random() * ids.length)];
     } while (played.includes(randomID));
 
+    console.log(`Selected sound: ${randomID}, Prior played are: ${played}`)
     document.getElementById(randomID).play();
     played.push(randomID);
 
@@ -1097,8 +1108,9 @@ function playRandomSound() {
 function onSave() {
   flag = 0;
   document.getElementById('saveRating').disabled = true;
+  console.log(`Saving ${cnt}`)
 
-  if (cnt == 3) played = [];
+  if (cnt == 3) played = []; // Ask the ratings twice...
 
   if (document.querySelector('input[name="l"]:checked') == null) {
     alert("Please select a rating before saving.");
@@ -1148,6 +1160,10 @@ function onSave() {
       console.error('Error occurred while saving data:', error);
     });
 
-  if (cnt == 6) { alert("You have rated all the sounds. Thank you for your participation."); return; }
+  if (cnt == 6) { 
+    alert("You have rated all the sounds. Thank you for your participation."); 
+    window.location.replace("./")
+    return;
+  }
 
 }

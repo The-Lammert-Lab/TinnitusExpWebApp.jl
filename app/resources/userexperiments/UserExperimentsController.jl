@@ -36,6 +36,7 @@ function ue2dict(
     ae_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
     for (ind, ae) in enumerate(UE)
         n_trials = findone(Experiment; name=ae.experiment_name).n_trials
+        threshold_determination_mode = findone(Experiment; name=ae.experiment_name).threshold_determination_mode
 
         status = if ae.trials_complete >= n_trials
             "completed"
@@ -51,6 +52,7 @@ function ue2dict(
             :instance => ae.instance,
             :percent_complete => round(100 * ae.trials_complete / n_trials; digits=2),
             :status => status,
+            :threshold_determination_mode => threshold_determination_mode,
         )
     end
     return ae_data
@@ -263,20 +265,24 @@ function get_standard_and_adjusted_resynth(experiment_name, instance, user_id, m
     stimuli = [parse.(Float64, split(trial.stimulus, ",")) for trial in all_trials]
 
     recon = TinnitusReconstructor.gs(responses, stack(stimuli)')
-    standard_resynth, = binnedrepr2wav(stimgen, recon)
-    adjusted_resynth, = binnedrepr2wav(stimgen, recon, mult, binrange)
+    print(stimgen)
+    print(recon)
+    standard_resynth_wav = binnedrepr2wav(stimgen, recon, min_db=-15) .* 10 
+    adjusted_resynth_wav, adjusted_resynth_spect = binnedrepr2wav(stimgen, recon, mult, binrange)
+    
+    # print(adjusted_resynth_wav)
 
     buf = Base.IOBuffer()
-    wavwrite(adjusted_resynth, buf; Fs=44100.0)
-    adjusted_resynth_wav = base64encode(take!(buf))
+    wavwrite(adjusted_resynth_wav, buf; Fs=44100.0)
+    adjusted_resynth_wav_base = base64encode(take!(buf))
     close(buf)
 
     buf = Base.IOBuffer()
-    wavwrite(recon, buf; Fs=44100.0)
-    standard_resynth_wav = base64encode(take!(buf))
+    wavwrite(standard_resynth_wav, buf; Fs=44100.0)
+    standard_resynth_wav_base = base64encode(take!(buf))
     close(buf)
 
-    return adjusted_resynth_wav, standard_resynth_wav
+    return adjusted_resynth_wav_base, standard_resynth_wav_base
 end
 
 """
@@ -374,16 +380,16 @@ end
 function profile()
     authenticated!()
 
-    init_limit = 2
+    init_limit = 5
     init_page = 1
     max_btn_display = 4
-
     added_experiments = get_paginated_amount(
         UserExperiment,
         init_limit,
         init_page;
         user_id=current_user_id(),
     )
+
     num_aes =
         count(UserExperiment; user_id=current_user_id()) > 0 ?
         count(UserExperiment; user_id=current_user_id()) : 1
@@ -400,6 +406,10 @@ function profile()
     user = current_user()
     is_admin = user.is_admin
     username = user.username
+    print("Added Exp")
+
+    print(ae_data)
+
     html(
         :userexperiments,
         :profile;

@@ -39,8 +39,8 @@ end
                     <!-- <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option> -->
-                    <option value="1">1</option>
-                    <option value="2">2</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
                     <option value="50">50</option>
                 </select>
             </div>
@@ -69,6 +69,16 @@ end
                                         <input type="hidden" name="instance" value="$(e[:instance])">
                                         <input type="hidden" name="from" value="continue">
                                         <input type="submit" value="Continue"></input>
+                                    </form>
+                                </td>
+                        <%  elseif e[:threshold_determination_mode] != 0  %>
+                                <td>
+                                    <form style="float:left;" action="/thresholdDetermination">
+                                        <input type="hidden" name="threshold_determination_mode" value="$(e[:threshold_determination_mode])">
+                                        <input type="hidden" name="name" value="$(e[:name])">
+                                        <input type="hidden" name="instance" value="$(e[:instance])">
+                                        <input type="hidden" name="from" value="start">
+                                        <input type="submit" value="Start"></input>
                                     </form>
                                 </td>
                         <%  else  %>

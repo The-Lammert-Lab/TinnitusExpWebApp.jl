@@ -223,7 +223,13 @@ function experiment()
     GenieSession.set!(:n_trials, experiment.n_trials)
     if params(:from) == "rest"
         from_rest = true
-        html(:trials, :experiment; from_rest)
+        stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
+        target_sound_path = experiment.target_sound == "" ? "" : TARGET_SOUND_MAP[experiment.target_sound]
+        if isempty(stimuli)
+            throw(ExceptionalResponse(redirect("/profile")))
+        else
+            html(:trials, :experiment; stimuli, curr_block, remaining_blocks, from_rest, target_sound_path)
+        end
     else
         from_rest = false
         stimuli, curr_block, remaining_blocks = gen_stim_and_block(params())
@@ -257,6 +263,15 @@ function save_response()
             "Could not save response.",
             MIME"application/json";
             error_info="Current block in session returned nothing.",
+        )
+    end
+
+    if isempty(curr_block)
+        return Router.error(
+            INTERNAL_ERROR,
+            "Current block is empty.",
+            MIME"application/json";
+            error_info="No trials available to save.",
         )
     end
 

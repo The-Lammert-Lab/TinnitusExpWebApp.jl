@@ -13,7 +13,7 @@
                     <option value="$(s)" selected>$(s)</option>
                     <% else %>
                         <option value="$(s)">$(s)</option>
-                        <% end end %>
+                    <% end end %>
             </select>
             <button class="btn btn-primary my-1" id="exptype-submit" type="submit" disabled>Choose</button>
         </form>
@@ -65,6 +65,18 @@
                                         </select>
                                     </td>
                                 </tr>
+                                <tr id="target-sound-row">
+                                    <td>Threshold Determination</td>
+                                    <td>
+                                        <select name="experiment.threshold_determination_mode">
+                                            <option value="0">Off</option>
+                                            <option value="1">Required</option>
+                                            <option value="2">Skippable</option>
+                                        </select>
+                                    </td>
+                                </tr>
+
+
                     </tbody>
                     <tbody id="stimgen-settings">
                         <% if stimgen_fields !==nothing for_each(stimgen_fields) do s %>
