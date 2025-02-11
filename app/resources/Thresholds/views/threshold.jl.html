@@ -80,7 +80,7 @@
     <div
         class="container vh-100 d-flex align-items-center justify-content-center">
         <div class="adjust-box">
-            <p style="text-align: center;">When you click “Play Sound”, various pitches will be played. Some may or may not be audible. Adjust the slider to make the sound quite as possible while still being audible.</p>
+            <p style="text-align: center;">When you click “Play Sound”, a tone will be played. The tone may or may not be audible. Adjust the slider to make the sound as quiet as possible while still being audible.</p>
             <div class="slider-container">
                 <i class="fa-solid fa-minus fa-xs"
                     style="color: #0052ff; cursor: pointer; margin-right: 10px;"
@@ -231,7 +231,7 @@
         curr_freq_index += 1;
 
         if (curr_freq_index >= freqs.length) {
-            if (new URLSearchParams(window.location.search).get('name') === 'Thresh' && new URLSearchParams(window.location.search).get('instance') === '1' && new URLSearchParams(window.location.search).get('from') === 'start') {
+            if (new URLSearchParams(window.location.search).get('from') === 'start') {
                 window.location.href = '/experiment' + window.location.search;
                 return
             }
