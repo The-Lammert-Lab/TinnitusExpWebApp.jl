@@ -89,15 +89,13 @@
 </style>
 <body>
     <h1
-        style="text-align: center; margin-top: 7vw; color: #009879; font-weight: bold;">Pitch
+        style="text-align: center; margin-top: 7vw; font-weight: bold;">Pitch
         Matching</h1>
-    <h3 style="text-align: center; margin-top: 10px;">which
-        sound is closer to
-        your tinnitus?</h3>
     <div
         class="container vh-100 d-flex align-items-center justify-content-center"
         style="padding:20px">
         <div class="adjust-box">
+            <p style="text-align: center;"> You will played pairs of pitches. Select the pitch closer to the tone of your tinnitus.</p>
             <div id="sound-identifier">
                 <h3 id="sound-identifier-text"
                     style="text-align: center; display: none; font-size: x-large;">
@@ -127,17 +125,19 @@
         preload="auto"></audio>
 
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+
         window.addEventListener('beforeunload', function (e) {
             e.preventDefault();
             e.returnValue = 'Are you sure you want to exit? The ongoing process will not be saved.';
             return 'Are you sure you want to exit? The ongoing process will not be saved.';
         });
-
-        const params = new URLSearchParams(window.location.search);
-        const url = '/setCalibratedValue?' + params.toString() + '&calibrated_value=' + sessionStorage.getItem('calibrated_value');
-        console.log("calibrated_value: ", sessionStorage.getItem('calibrated_value'));
-
-        fetch(url, {
+        
+        let calibrated_value = sessionStorage.getItem('calibrated_value')
+        if (calibrated_value != null) {
+            const url = '/setCalibratedValue?' + urlParams.toString() + '&calibrated_value=' + calibrated_value;
+            console.log("calibrated_value: ", sessionStorage.getItem('calibrated_value'));
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -146,6 +146,9 @@
             })
             .then(response => response.json())
             .then(data => {});
+        } else { 
+            console.log("No calibrated value available")
+        }
 
         let ongoing = 0; // ongoing process of the user in PM: 0: octaveDetermination or 1: inOcatave or 2: octaveConfusion
         let prev_selection = -1;
@@ -156,6 +159,16 @@
         let in_oct_freqs;
         let oct_conf_freqs;
         let max_index_for_in_octave = 6;
+
+        if (urlParams.get("pitch_matching") == '0') nextStep();
+
+        function nextStep() {
+            if (urlParams.get('from') === 'start') window.location.href = '/experiment' + window.location.search;
+            else {            
+                alert("Your test is done, however no test exists to follow");
+                window.location.href = "/"
+            }
+        }
 
         function showButtons() {
             document.getElementById("beginButton").style.display = "none";
@@ -335,7 +348,7 @@
                     stop = 1;
                 }
                 else{
-                    alert("done");
+                    nextStep();
                 }
             }
         }
@@ -432,7 +445,7 @@
                     stop = 1;
                 }
                 else{
-                    alert("done");
+                    nextStep()
                 }
             }
         }

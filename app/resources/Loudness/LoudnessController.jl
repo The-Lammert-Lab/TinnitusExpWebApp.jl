@@ -83,7 +83,7 @@ function save_lm()
     lm = params(:cant_hear) == "true" ? nothing : parse(Float64, params(:curr_dB))
     user_id = current_user_id()
 
-    save(Loudness(user_id=user_id, freq=freqs[curr_freq_index], LM=lm))
+    save(Loudness(user_id=user_id, freq=freqs[curr_freq_index], lm=lm))
     return json("success")
 end
 end

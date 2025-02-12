@@ -1,0 +1,79 @@
+<style>
+    .center {
+      margin: auto;
+      width: 100%;
+      padding: 20px;
+    }
+</style>
+<div class="center">
+    <div class="container">
+    <div class="card p-2 mb-2 bg-secondary text-white">
+        <div class="card-header fw-bold">Study Instructions</div>
+        <div class="card-body">
+        <p>This study consists of <strong id="study_count"></strong> separate experiments. A shortened version of these instructions will be present during each experiment</p>
+
+        <p>Importantly, if you would like to stop at any time for any reason, you are welcome to. Progress will be saved as you continue, however for the first few steps of the experiment you may have to restart them if you close the window. Once you have started part <span id="study_count_2"></span> you may close the tab and when you resume your progress will be kept. If you have any questions please email <a style="color: white;" href="mailto:bbclab@holycross.edu">bbclab@holycross.edu</a> and we will respond as soon as possible.</p>
+        <ol>
+            <li id="ex1" style="display:none">This experiment is designed to find your hearing threshold. That is the lowest volume you can hear at a given frequency. To do this, you will alternate between pressing a button to play the sound and adjusting a volume slider. Once the volume is at a level such that you can just hear the sound, click the "save choice" button. This process will repeat until you have answered twice for all sounds. If at some point you cannot hear the sound and the volume slider is as loud as possible, click the "can't hear" checkbox and choose "save choice".</p>
+            
+            <li id="ex2" style="display:none">This experiment is intended to match the volume of the same tones you just heard to the loudness of your tinnitus. The interface will look exactly the same as the first experiment, but instead of moving the slider to where you can just barely hear the sound, you will move it to where the loudness of the tone and your tinnitus are approximately equal. Again, once the volume is at a level matching your tinnitus, click the "save choice" button and if you cannot hear the sound with the volume slider as loud as possible, click the "can't hear" checkbox and choose "save choice". This process will also be repeated twice for each tone.</p>
+            
+            <li id="ex3" style="display:none">This experiment seeks to identify the pitch of your tinnitus. Two sounds will play back to back and you will be asked to choose which one was closer to the sound of your tinnitus. This process will continue until the experimental protocol identifies a match. This is a much shorter process than the previous two, so it will be repeated three times.</p>
+            
+            <li id="ex4" >This is the main part of this study. You will hear a series of noisy sounds, about half of which contain a hidden tinnitus sound. We would like you to answer "yes" to those. Otherwise, answer "no". This section is a lot longer than the previous ones, but you will be presented with a break screen at regular intervals.</p>
+        </ol>
+        <p>Lastly, to finish up you will see a screen with two sliders, a button to play a sound, and a button to save your choice. Similar to the first two experiments, you will alternate between playing the sound and adjusting the sliders until the sound that is played is as close to your tinnitus as you can make it. Once you are satisfied, click "save choice". Finally, you will be asked a few questions to answer on a numerical scale.</p>
+
+        <p><strong>Again we'd like to thank you for participating!</strong></p>
+        <div class="text-center">
+                <a onclick="nextStep()" class="btn btn-primary">Begin</a>
+        </div>
+        </div>
+    </div>
+    </div>
+</div>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const td = urlParams?.get('threshold_determination_mode') ?? '0'
+    const lm = urlParams?.get('loudness_matching') ?? '0'
+    const pm = urlParams?.get('pitch_matching') ?? '0'
+    const count = page_init();
+
+    
+
+    function nextStep() {
+        if (td != '0') window.location.href = '/thresholdDetermination' + window.location.search;
+        else if (lm != '0') window.location.href = '/loudnessMatching' + window.location.search;
+        else if (pm != '0') window.location.href = '/pitchMatching' + window.location.search;
+        else if (urlParams.get('from') === 'start') window.location.href = '/experiment' + window.location.search;
+        else {            
+            alert("An error has occurred. Try going to the home page and starting again. If not email this page's URL to bbclab@holycross.edu");
+            window.location.href = "/"
+        }
+    }
+
+    // returns count of experiments we are running while showing the parts we running
+    function page_init() {
+        let count = 1
+        if (td != '0') {
+            document.getElementById('ex1').style = ""
+            count++
+        }
+        if (lm != '0') {
+            document.getElementById('ex2').style = ""
+            count++
+        }
+        if (pm != '0') {
+            document.getElementById('ex3').style = ""
+            count++
+        }
+        document.getElementById('study_count').textContent = count
+        document.getElementById('study_count_2').textContent = count
+        return count
+    }
+
+    function change_vis() {
+        // Idea is we only show the relevant steps to that person.
+        pass
+    }
+</script>

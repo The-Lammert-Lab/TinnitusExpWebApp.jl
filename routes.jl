@@ -37,6 +37,8 @@ route("/restart", UserExperimentsController.restart_exp; method=POST)
 route("/remove", UserExperimentsController.remove_exp; method=POST)
 route("/getpartialdata", UserExperimentsController.get_partial_data; method=POST)
 route("/calibrate", UserExperimentsController.calibrate)
+route("/instructions", UserExperimentsController.instructions)
+
 
 route("/saveLikertRating", RatingsController.save_likert_rating; method=POST)
 
