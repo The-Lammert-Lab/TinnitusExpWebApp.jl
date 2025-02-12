@@ -750,13 +750,30 @@ function updateUserAETable() {
         }
 
         let form = document.createElement("form");
-        if (!(response.data[element].status == "started") && response.data[element].threshold_determination_mode != 0) {
-          form.setAttribute("action", "/thresholdDetermination");
-          let pre_input = document.createElement("input");
-          pre_input.setAttribute("type", "hidden");
-          pre_input.setAttribute("name", "threshold_determination_mode");
-          pre_input.setAttribute("value", response.data[element].threshold_determination_mode);
-          form.appendChild(pre_input);
+        if ((response.data[element].status == "unstarted")){
+          let td = response.data[element]?.threshold_determination_mode ?? 0
+          let lm = response.data[element]?.loudness_matching ?? 0
+          let pm = response.data[element]?.pitch_matching ?? 0
+
+          let td_input = document.createElement("input");
+          td_input.setAttribute("type", "hidden");
+          td_input.setAttribute("name", "threshold_determination_mode");
+          td_input.setAttribute("value", td);
+          form.appendChild(td_input);
+
+          let lm_input = document.createElement("input");
+          lm_input.setAttribute("type", "hidden");
+          lm_input.setAttribute("name", "loudness_matching");
+          lm_input.setAttribute("value", lm);
+          form.appendChild(lm_input);
+
+          let pm_input = document.createElement("input");
+          pm_input.setAttribute("type", "hidden");
+          pm_input.setAttribute("name", "pitch_matching");
+          pm_input.setAttribute("value", pm);
+          form.appendChild(pm_input);
+
+          form.setAttribute("action", "/instructions")
   
         } else {
           form.setAttribute("action", "/experiment");

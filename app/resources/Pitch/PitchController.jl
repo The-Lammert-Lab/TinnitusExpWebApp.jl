@@ -70,6 +70,8 @@ function get_interpolated_oct_gains()
 
     LM = SearchLight.query(get_loudness_tones)
     loudness_tones = LM[:, 1]
+    loudness_tones = coalesce.(loudness_tones, 60) # make sure type is of float, not that union missing
+    print(loudness_tones)
 
     if isempty(loudness_tones)
         return fill(60, length(possible_octs))
@@ -77,7 +79,7 @@ function get_interpolated_oct_gains()
 
     get_lm_dBs = """
     SELECT
-        LM
+        lm
     FROM 
         loudness
     where user_id = $(current_user_id())
@@ -90,6 +92,8 @@ function get_interpolated_oct_gains()
     loudness_dBs = coalesce.(loudness_dBs, 0)
 
     loudness_dBs .+= 5
+
+    print(loudness_dBs)
 
     # Interpolate the loudness matching values
     itp = extrapolate(interpolate((loudness_tones,), loudness_dBs, Gridded(Linear())), Line()) # Make interpolation obj

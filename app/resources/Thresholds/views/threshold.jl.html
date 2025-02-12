@@ -75,10 +75,9 @@
 
 </style>
 <body>
-    <h1 style="text-align: center; margin-top: 10vw;">Threshold
-        Determination</h1>
+    <h1 style="text-align: center; margin-top: 7vw; font-weight: bold;">Threshold Determination</h1>
     <div
-        class="container vh-100 d-flex align-items-center justify-content-center">
+        class="container d-flex align-items-center justify-content-center">
         <div class="adjust-box">
             <p style="text-align: center;">When you click “Play Sound”, a tone will be played. The tone may or may not be audible. Adjust the slider to make the sound as quiet as possible while still being audible.</p>
             <div class="slider-container">
@@ -143,6 +142,8 @@
     let thresholdSlider = document.getElementById('thresholdSlider');
     const calibrated_value = parseInt(localStorage.getItem('calibrated_value'));
     console.log("Calibrated value: " + calibrated_value);
+    
+    if (urlParams.get("threshold_determination_mode") == '0') nextStep()
 
     function playSound(freqs) {
         document.getElementById('cantHear').disabled = false;
@@ -185,6 +186,21 @@
         document.getElementById('saveThreshold').disabled = false;
         thresholdSlider.disabled = false;
    
+
+    }
+
+    function nextStep() {
+
+        lm = urlParams.get('loudness_matching')
+        pm = urlParams.get('pitch_matching')
+
+        if (lm != '0' && lm != null) window.location.href = '/loudnessMatching' + window.location.search;
+        else if (pm != '0' && pm != null) window.location.href = '/pitchMatching' + window.location.search;
+        else if (urlParams.get('from') === 'start') window.location.href = '/experiment' + window.location.search;
+        else {            
+            alert("Your test is done, however no test exists to follow");
+            window.location.href = "/"
+        }
 
     }
 
@@ -231,13 +247,8 @@
         curr_freq_index += 1;
 
         if (curr_freq_index >= freqs.length) {
-            if (new URLSearchParams(window.location.search).get('from') === 'start') {
-                window.location.href = '/experiment' + window.location.search;
-                return
-            }
-            alert("Your test is done, however no test exists to follow");
-            window.location.href = "/"
-            return;
+            curr_freq_index = 0
+            nextStep();
         }
 
     }

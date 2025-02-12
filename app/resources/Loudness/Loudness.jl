@@ -12,7 +12,7 @@ export Loudness
     id::DbId = DbId()
     user_id::DbId = DbId()
     freq::Float64 = 0
-    LM::Union{Float64,Nothing} = nothing
+    lm::Union{Float64,Nothing} = nothing
 end
 
 # TODO: add validation rules

@@ -71,25 +71,18 @@ end
                                         <input type="submit" value="Continue"></input>
                                     </form>
                                 </td>
-                        <%  elseif e[:threshold_determination_mode] != 0  %>
-                                <td>
-                                    <form style="float:left;" action="/thresholdDetermination">
-                                        <input type="hidden" name="threshold_determination_mode" value="$(e[:threshold_determination_mode])">
-                                        <input type="hidden" name="name" value="$(e[:name])">
-                                        <input type="hidden" name="instance" value="$(e[:instance])">
-                                        <input type="hidden" name="from" value="start">
-                                        <input type="submit" value="Start"></input>
-                                    </form>
-                                </td>
                         <%  else  %>
-                                <td>
-                                    <form style="float:left;" action="/experiment">
-                                        <input type="hidden" name="name" value="$(e[:name])">
-                                        <input type="hidden" name="instance" value="$(e[:instance])">
-                                        <input type="hidden" name="from" value="start">
-                                        <input type="submit" value="Start"></input>
-                                    </form>
-                                </td>
+                        <td>
+                            <form style="float:left;" action="/instructions">
+                                <input type="hidden" name="threshold_determination_mode" value="$(e[:threshold_determination_mode])">
+                                <input type="hidden" name="loudness_matching" value="$(e[:loudness_matching])">
+                                <input type="hidden" name="pitch_matching" value="$(e[:pitch_matching])">
+                                <input type="hidden" name="name" value="$(e[:name])">
+                                <input type="hidden" name="instance" value="$(e[:instance])">
+                                <input type="hidden" name="from" value="start">
+                                <input type="submit" value="Start"></input>
+                            </form>
+                        </td>
                         <%  end  %>
                     </tr>
                 <% end %>

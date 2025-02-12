@@ -14,6 +14,8 @@ function up()
                 :name => :string,
                 :target_sound => :string,
                 :threshold_determination_mode => :int,
+                :loudness_matching => :int,
+                :pitch_matching => :int,
                 :settings_hash => :string,
             ])
         ]

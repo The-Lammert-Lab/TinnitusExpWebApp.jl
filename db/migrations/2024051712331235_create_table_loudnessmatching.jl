@@ -10,7 +10,7 @@ function up()
             columns([
                 :user_id => :int,
                 :freq => :float,
-                :LM => :float,
+                :lm => :float,
             ])
         ]
     end
