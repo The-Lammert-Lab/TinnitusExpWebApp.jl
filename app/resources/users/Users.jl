@@ -12,6 +12,7 @@ Base.@kwdef mutable struct User <: AbstractModel
     username::String = ""
     password::String = ""
     is_admin::Bool = false
+    calibrated_value::Float64 = 60
 end
 
 Validation.validator(u::Type{User}) = ModelValidator([

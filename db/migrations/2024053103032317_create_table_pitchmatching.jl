@@ -9,9 +9,11 @@ function up()
             pk()
             columns([
                 :user_id => :int,
+                :name => :string,
+                :instance => :int,
                 :sound_a => :float,
                 :sound_b => :float,
-                :PM => :float,
+                :pm => :float,
             ])
         ]
     end

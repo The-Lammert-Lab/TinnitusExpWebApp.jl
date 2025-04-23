@@ -4,6 +4,8 @@ using CharacterizeTinnitus
 using CharacterizeTinnitus.PitchMatching
 using CharacterizeTinnitus.OctaveDetermination
 using CharacterizeTinnitus.InOctave
+using CharacterizeTinnitus.LoudnessMatching
+using CharacterizeTinnitus.Users
 using SearchLight
 using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
@@ -45,39 +47,56 @@ function pitch_matching()
 end
 
 function set_calibrated_value()
-    global calibrated_value = parse(Float64, params(:calibrated_value))
-    return json("success")
+    cur_user = SearchLight.findone(User; id=current_user_id())
+    SearchLight.updatewith!(cur_user, Dict("calibrated_value" => parse(Float64, params(:calibrated_value))))
+    #global calibrated_value = parse(Float64, params(:calibrated_value))
+    return save(cur_user) ? json("success") : json("error")
 end
 
+function get_calibrated_value()
+    cur_user = SearchLight.findone(User; id=current_user_id())
+    return cur_user.calibrated_value
+end
 """
 get_interpolated_oct_gains()
 
 This function retrieves the dB values for the loudness matching (LM) procedure. The function first retrieves the loudness tones and dB values from the database. If the user has not yet completed the LM procedure, the function returns a vector of 60 dB values. If the user has completed the LM procedure, the function interpolates the loudness values to the possible octaves and returns the gain values for each octave.
 """
-function get_interpolated_oct_gains()
+function get_interpolated_oct_gains(exp_name, instance)
     global oct_gains
     if !isempty(oct_gains)
         return oct_gains
     end
 
-    get_loudness_tones = """
+#=     get_loudness_tones = """
         SELECT
             freq
         FROM 
             loudness
-        where user_id = $(current_user_id())
+        where user_id = $(current_user_id()) AND name = '$(exp_name)'
     """
-
-    LM = SearchLight.query(get_loudness_tones)
+    LM = SearchLight.query(get_loudness_tones) 
     loudness_tones = LM[:, 1]
-    loudness_tones = coalesce.(loudness_tones, 60) # make sure type is of float, not that union missing
-    print(loudness_tones)
+    loudness_tones = coalesce.(loudness_tones, 60)
+    =#
+
+    loudness =  SearchLight.find(Loudness; user_id=current_user_id(), name=exp_name, instance=instance)
+    loudness_tones = map(d -> d.freq != NaN ? d.freq : 60, loudness) # akin to the coalesce function, but since we as using NaN
+
+    
+    
+    #print(loudness_tones)
 
     if isempty(loudness_tones)
         return fill(60, length(possible_octs))
     end
 
-    get_lm_dBs = """
+
+    query = find(Loudness; user_id=current_user_id(), name=exp_name, instance=instance)
+    loudness_dBs = map(d -> d.freq != NaN ? d.freq : 0, query)
+    print(query)
+
+#=     get_lm_dBs = """
     SELECT
         lm
     FROM 
@@ -87,17 +106,26 @@ function get_interpolated_oct_gains()
 
     loudness_dBs = SearchLight.query(get_lm_dBs)
     loudness_dBs = loudness_dBs[:, 1]
-
-    # Replace missing elements with 0
+     # Replace missing elements with 0
     loudness_dBs = coalesce.(loudness_dBs, 0)
+
+    =#
 
     loudness_dBs .+= 5
 
+    loudness_dBs = loudness_dBs[1:5]
+    loudness_tones = loudness_tones[1:5]
+
+
     print(loudness_dBs)
+    print(loudness_tones)
+
 
     # Interpolate the loudness matching values
+    #oct_dBs = interp1(loudness_tones,loudness_dBs,possible_octs,'linear','extrap')-cal_dB;
+
     itp = extrapolate(interpolate((loudness_tones,), loudness_dBs, Gridded(Linear())), Line()) # Make interpolation obj
-    oct_dBs = itp(possible_octs) .- calibrated_value # Vector from prev code block, subtract the session calibration value
+    oct_dBs = itp(possible_octs) .- get_calibrated_value() # Vector from prev code block, subtract the session calibration value
     oct_gains = 10 .^ (oct_dBs / 20) # convert dBs to gain based on current 
     @. oct_gains[oct_gains>1] = 1 # Make sure nothing will clip
 
@@ -105,33 +133,44 @@ function get_interpolated_oct_gains()
 
 end
 
-function find_lm_dB(freq)
-    get_lm_dB = """
+function find_lm_dB(freq, exp_name, instance)
+#=     get_lm_dB = """
     SELECT
         lm
     FROM 
         loudness
     where user_id = $(current_user_id()) and freq = $(freq)
     """
-    df = SearchLight.query(get_lm_dB)
+
+    df = SearchLight.query(get_lm_dB) =#
+
+    df = SearchLight.find(Loudness; user_id=current_user_id(), freq=freq, instance=instance, name=exp_name)
     if isempty(df)
         return -1
     else
-        return df[1, 1]
+        return df[1, 1].freq
     end
 end
 
 function get_pure_tone_for_oct_determination()
-    freq_index_L = parse(Int, params(:freq_index_L))
-    freq_index_H = parse(Int, params(:freq_index_H))
+    authenticated!()
 
-    #  ongoing process of the user in PM: 0: octaveDetermination or 1: inOcatave or 2: 
-    on_going = parse(Int, params(:on_going))
+    payload = jsonpayload()
 
-    lm_dB_low = find_lm_dB(possible_octs[freq_index_L])
-    lm_dB_high = find_lm_dB(possible_octs[freq_index_H])
 
-    oct_gains = get_interpolated_oct_gains()
+    freq_index_L = payload["freq_index_L"]
+    freq_index_H = payload["freq_index_H"]
+
+    #  ongoing process of the user in pm: 0: octaveDetermination or 1: inOcatave or 2: 
+    on_going = payload["ongoing"]
+
+    exp_name = payload["name"]
+    instance = payload["instance"]
+
+    lm_dB_low = find_lm_dB(possible_octs[freq_index_L], exp_name, instance)
+    lm_dB_high = find_lm_dB(possible_octs[freq_index_H], exp_name, instance)
+
+    oct_gains = get_interpolated_oct_gains(exp_name, instance)
 
     if lm_dB_low == -1
         lm_dB_low = oct_gains[freq_index_L]
@@ -183,6 +222,8 @@ function save_sound_for_octave_determination()
     freq_l = parse(Float64, params(:freq_l))
     freq_h = parse(Float64, params(:freq_h))
     closer_sound = parse(Float64, params(:closer_sound))
+    name =  params(:name)
+    instance = parse(Int, params(:instance))
 
 
     if on_going == 0
@@ -206,7 +247,9 @@ function save_sound_for_octave_determination()
             user_id=current_user_id(),
             sound_a=freq_l,
             sound_b=freq_h,
-            PM=closer_sound
+            pm=closer_sound,
+            name=name,
+            instance=instance
         )
         save(matched_pitch)
     end

@@ -83,6 +83,7 @@ function manage()
         table_pages_btns,
         init_limit,
         init_page,
+        user_id,
     )
 end
 

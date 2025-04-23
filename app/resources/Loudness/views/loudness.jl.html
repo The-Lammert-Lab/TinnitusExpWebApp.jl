@@ -194,10 +194,10 @@
         document.getElementById('cantHear').checked = false;
         document.getElementById('playSound').disabled = false;
 
-        
-        const params = new URLSearchParams(window.location.search);
+        test_name = urlParams.get('name')
+        instance = parseInt(urlParams.get('instance'))
 
-        const url = '/saveLM?' + params.toString() + '&curr_dB=' + curr_dB + '&curr_freq_index=' + curr_freq_index + '&cant_hear=' + cant_hear;
+        const url = '/saveLM'
 
         // Create a POST request to the URL
         fetch(url, {
@@ -205,7 +205,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ curr_dB: curr_dB, curr_freq_index: curr_freq_index, cant_hear: cant_hear})
+            body: JSON.stringify({ curr_dB: curr_dB, curr_freq_index: curr_freq_index, cant_hear: cant_hear, instance: instance, test_name: test_name })
         })
         .then(response => {
             // Handle response

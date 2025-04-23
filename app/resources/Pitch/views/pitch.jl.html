@@ -150,7 +150,7 @@
             console.log("No calibrated value available")
         }
 
-        let ongoing = 0; // ongoing process of the user in PM: 0: octaveDetermination or 1: inOcatave or 2: octaveConfusion
+        let ongoing = 0; // ongoing process of the user in pm: 0: octaveDetermination or 1: inOcatave or 2: octaveConfusion
         let prev_selection = -1;
         let stop = 0;
         let start = 1;
@@ -190,16 +190,18 @@
             document.getElementById("soundB").disabled = true;
             let temp_l = parseInt(freq_index_L) + 1;
             let temp_h = parseInt(freq_index_H) + 1;
+            let exp_name = urlParams.get("name")
+            let instance = parseInt(urlParams.get("instance"))
 
             const params = new URLSearchParams(window.location.search);
-            const url = '/octaveDetermination?' + params.toString() + '&freq_index_L=' + temp_l + '&freq_index_H=' + temp_h + '&on_going=' + ongoing;
+            const url = '/octaveDetermination'
 
             fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({freq_index_L: freq_index_L+1, freq_index_H: freq_index_H+1}),
+                body: JSON.stringify({freq_index_L: temp_l, freq_index_H: temp_h, name: exp_name, instance: instance, ongoing: ongoing }),
             })
             .then(response => response.json())
             .then(data => {

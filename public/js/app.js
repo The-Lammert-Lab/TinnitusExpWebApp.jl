@@ -843,12 +843,20 @@ function updateManageUserAETable() {
           response.data[element].percent_complete + "%"
         );
 
+        
+
+
         cell1.appendChild(name);
         cell2.appendChild(instance);
         cell3.appendChild(perc_complete);
 
         if (response.data[element].status == "completed") {
-          cell4.appendChild(document.createTextNode("None"));
+          let completedButton = document.createElement("button");
+          completedButton.textContent = "Download Data"; // Change this text as needed
+          completedButton.onclick = function() {            
+            download_data(response.data[element].name, parseInt(response.data[element].instance), parseInt(user_id), params.get("username"));
+          };
+          cell4.appendChild(completedButton);
           continue;
         } else {
           let input1 = document.createElement("input");
@@ -1183,4 +1191,55 @@ function onSave() {
     return;
   }
 
+}
+
+// Thank you stackoverflow:)
+async function fetchAndDownloadJson(url, jsonPayload, download_name) {
+  try {
+      // Perform the POST request with the JSON payload
+      const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(jsonPayload) // Send the JSON payload in the body
+      });
+
+      // Check if the response is ok (status in the range 200-299)
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Parse the JSON response
+      const data = await response.json();
+
+      // Create a Blob from the JSON data
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
+      // Create a link element
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = download_name + '.json'; // Specify the file name
+
+      // Append the link to the body (required for Firefox)
+      document.body.appendChild(link);
+
+      // Programmatically click the link to trigger the download
+      link.click();
+
+      // Clean up and remove the link
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+  } catch (error) {
+      console.error('Error fetching and downloading JSON:', error);
+  }
+}
+
+function download_data(exp_name, instance, user_id, user_name) {
+  jsonPayload = {
+    user_id: user_id,
+    experiment: exp_name,
+    instance: instance,
+  }
+  fetchAndDownloadJson("/export_data", jsonPayload, `${user_name}-${exp_name}-INST${instance}`)
 }

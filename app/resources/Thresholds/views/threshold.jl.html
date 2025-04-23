@@ -207,9 +207,6 @@
     function saveThreshold(freqs) {
         document.getElementById('cantHear').disabled = true;
 
-/*         if (curr_freq_index == 0) {
-            thresholdSlider.disabled = false;
-        } */
         let cant_hear = document.getElementById('cantHear').checked;
         document.getElementById('saveThreshold').disabled = true;
         document.getElementById('thresholdSlider').value = 0;
@@ -217,10 +214,13 @@
         document.getElementById('playSound').disabled = false;
         thresholdSlider.disabled = true;
 
+        test_name = urlParams.get('name')
+        instance = parseInt(urlParams.get('instance'))
+
         
         const params = new URLSearchParams(window.location.search);
 
-        const url = '/saveThreshold?' + params.toString() + '&curr_dB=' + curr_dB + '&curr_freq_index=' + curr_freq_index + '&cant_hear=' + cant_hear;
+        const url = '/saveThreshold'
 
         // Create a POST request to the URL
         fetch(url, {
@@ -228,7 +228,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ curr_dB: curr_dB, curr_freq_index: curr_freq_index, cant_hear: cant_hear})
+            body: JSON.stringify({ curr_dB: curr_dB, curr_freq_index: curr_freq_index, cant_hear: cant_hear, instance: instance, test_name: test_name })
         })
         .then(response => {
             // Handle response
