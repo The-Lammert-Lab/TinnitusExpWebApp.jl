@@ -750,13 +750,30 @@ function updateUserAETable() {
         }
 
         let form = document.createElement("form");
-        if (!(response.data[element].status == "started") && response.data[element].threshold_determination_mode != 0) {
-          form.setAttribute("action", "/thresholdDetermination");
-          let pre_input = document.createElement("input");
-          pre_input.setAttribute("type", "hidden");
-          pre_input.setAttribute("name", "threshold_determination_mode");
-          pre_input.setAttribute("value", response.data[element].threshold_determination_mode);
-          form.appendChild(pre_input);
+        if ((response.data[element].status == "unstarted")){
+          let td = response.data[element]?.threshold_determination_mode ?? 0
+          let lm = response.data[element]?.loudness_matching ?? 0
+          let pm = response.data[element]?.pitch_matching ?? 0
+
+          let td_input = document.createElement("input");
+          td_input.setAttribute("type", "hidden");
+          td_input.setAttribute("name", "threshold_determination_mode");
+          td_input.setAttribute("value", td);
+          form.appendChild(td_input);
+
+          let lm_input = document.createElement("input");
+          lm_input.setAttribute("type", "hidden");
+          lm_input.setAttribute("name", "loudness_matching");
+          lm_input.setAttribute("value", lm);
+          form.appendChild(lm_input);
+
+          let pm_input = document.createElement("input");
+          pm_input.setAttribute("type", "hidden");
+          pm_input.setAttribute("name", "pitch_matching");
+          pm_input.setAttribute("value", pm);
+          form.appendChild(pm_input);
+
+          form.setAttribute("action", "/instructions")
   
         } else {
           form.setAttribute("action", "/experiment");
@@ -826,12 +843,20 @@ function updateManageUserAETable() {
           response.data[element].percent_complete + "%"
         );
 
+        
+
+
         cell1.appendChild(name);
         cell2.appendChild(instance);
         cell3.appendChild(perc_complete);
 
         if (response.data[element].status == "completed") {
-          cell4.appendChild(document.createTextNode("None"));
+          let completedButton = document.createElement("button");
+          completedButton.textContent = "Download Data"; // Change this text as needed
+          completedButton.onclick = function() {            
+            download_data(response.data[element].name, parseInt(response.data[element].instance), parseInt(user_id), params.get("username"));
+          };
+          cell4.appendChild(completedButton);
           continue;
         } else {
           let input1 = document.createElement("input");
@@ -1166,4 +1191,55 @@ function onSave() {
     return;
   }
 
+}
+
+// Thank you stackoverflow:)
+async function fetchAndDownloadJson(url, jsonPayload, download_name) {
+  try {
+      // Perform the POST request with the JSON payload
+      const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(jsonPayload) // Send the JSON payload in the body
+      });
+
+      // Check if the response is ok (status in the range 200-299)
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Parse the JSON response
+      const data = await response.json();
+
+      // Create a Blob from the JSON data
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
+      // Create a link element
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = download_name + '.json'; // Specify the file name
+
+      // Append the link to the body (required for Firefox)
+      document.body.appendChild(link);
+
+      // Programmatically click the link to trigger the download
+      link.click();
+
+      // Clean up and remove the link
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+  } catch (error) {
+      console.error('Error fetching and downloading JSON:', error);
+  }
+}
+
+function download_data(exp_name, instance, user_id, user_name) {
+  jsonPayload = {
+    user_id: user_id,
+    experiment: exp_name,
+    instance: instance,
+  }
+  fetchAndDownloadJson("/export_data", jsonPayload, `${user_name}-${exp_name}-INST${instance}`)
 }

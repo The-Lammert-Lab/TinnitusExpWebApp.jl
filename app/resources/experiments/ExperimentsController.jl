@@ -7,6 +7,10 @@ using CharacterizeTinnitus.Users
 using CharacterizeTinnitus.UserExperiments
 using CharacterizeTinnitus.Experiments
 using CharacterizeTinnitus.ControllerHelper
+using CharacterizeTinnitus.Trials
+using CharacterizeTinnitus.Thresholds
+using CharacterizeTinnitus.LoudnessMatching
+using CharacterizeTinnitus.PitchMatching
 using Genie.Renderers, Genie.Renderers.Html
 using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
@@ -37,6 +41,8 @@ const EXPERIMENT_FIELDS = Dict{Symbol,String}(
     :name => "Experiment name",
     :target_sound => "Target sound",
     :threshold_determination_mode => "Threshold Determination",
+    :loudness_matching => "Loudness Matching",
+    :pitch_matching => "Pitch Matching",
     :n_bins_filled_mean => "Mean of Gaussian for filled bins",
     :n_bins_filled_var => "Variance of Gaussian for filled bins",
     :bin_prob => "Probability of a bin being filles",
@@ -214,6 +220,8 @@ function get_exp_fields()
         :distribution_filepath,
         :target_sound,
         :threshold_determination_mode,
+        :loudness_matching,
+        :pitch_matching,
     ]
 
     exp_inds = findall(!in(exclude), fnames)
@@ -253,6 +261,8 @@ function get_exp_fields(ex::E) where {E<:Experiment}
         :distribution_filepath,
         :target_sound,
         :threshold_determination_mode,
+        :loudness_matching,
+        :pitch_matching,
     ]
 
     exp_inds = findall(!in(exclude), fnames)
@@ -519,6 +529,54 @@ function delete_exp()
 
     SearchLight.delete(ex)
     json("""Experiment "$(name)" deleted.""")
+end
+
+function export_data()
+    authenticated!()
+    current_user().is_admin || throw(ExceptionalResponse(redirect("/profile")))
+
+    payload = jsonpayload()
+    if(isnothing(payload))
+        return(json(("error" => "No JSON payload provided")))
+    end
+
+    try
+        user_id = payload["user_id"]
+        exp_name = payload["experiment"]
+        instance = payload["instance"]
+
+        # exp_info = find(UserExperiment; experiment_name=exp_name)
+        ex = findone(Experiment; name=exp_name)
+        trials = find(Trial; experiment_name=exp_name, instance=instance, user_id=user_id)
+        thresholds = find(Threshold; name=exp_name, instance=instance, user_id=user_id)
+        loudness = find(Loudness; name=exp_name, instance=instance, user_id=user_id)
+        pitch = find(Pitch; user_id=user_id)
+
+        print(thresholds)
+
+        response_data = (
+            "exp_setting" => ex,
+            "trials" => trials,
+            "thresholds" => thresholds,
+            "loudness_matching" => loudness,
+            "pitch_matching" => pitch
+        )
+
+        return(json(response_data))
+
+    catch e
+        if isa(e, KeyError)
+            return json(("error" => "Malformed JSON, missing expected key"))
+        else
+            rethrow(e)
+        end
+    end
+    
+
+     # This code should be refactored to not early return and maybe no catch/try
+     return(json("error" => "unknown error"))
+
+
 end
 
 end

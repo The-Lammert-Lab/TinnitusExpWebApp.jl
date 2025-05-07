@@ -40,6 +40,10 @@ src="data:audio/wav;base64,$pure_tone_wav" preload="auto"></audio>
         var inputValue = Math.max(document.querySelector('input').value, 35);
         const params = new URLSearchParams(window.location.search);
         localStorage.setItem('calibrated_value', inputValue);
-        window.location.href = "/profile";
+        const url = '/setCalibratedValue?calibrated_value=' + inputValue;
+        fetch(url, {
+            method: 'GET'
+        })
+        .then(Response => window.location.href = "/profile")
     }
 </script>

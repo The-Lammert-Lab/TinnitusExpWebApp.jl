@@ -69,7 +69,9 @@
                         <td>$(e[:instance])</td>
                         <td>$(e[:percent_complete])&percnt;</td>
                         <%  if e[:status] == "completed" %>
-                                <td>None</td>
+                            <td> 
+                                <button onclick="download_data('$(e[:name])','$(e[:instance])', '$(user_id)', '$(username)')">Download Data</button>
+                            </td>
                         <%  elseif e[:status] == "started"  %>
                             <td> 
                                 <form style="float:left;" name="restart-form">
@@ -126,6 +128,7 @@
 </div>
 
 <script>
+    var user_id = "$(user_id)"
     ready(showToast);
     ready(() => {
         sessionStorage.setItem('manage-user-ae-page', $(init_page));

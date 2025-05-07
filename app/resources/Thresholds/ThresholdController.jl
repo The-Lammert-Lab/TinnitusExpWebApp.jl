@@ -3,7 +3,7 @@ module ThresholdController
 using CharacterizeTinnitus
 using CharacterizeTinnitus.Thresholds
 using SearchLight
-using Genie.Renderers, Genie.Renderers.Html
+using Genie.Renderers, Genie.Renderers.Html, Genie.Renderer.Json
 using Genie.Router, Genie.Requests
 using Genie.Renderers.Json
 using GenieAuthentication
@@ -54,11 +54,12 @@ end
 function save_threshold()
     authenticated!()
 
-    curr_freq_index = parse(Int, params(:curr_freq_index)) + 1
-    threshold = params(:cant_hear) == "true" ? nothing : parse(Float64, params(:curr_dB))
+    payload = jsonpayload()
+
+    curr_freq_index = payload["curr_freq_index"] + 1
+    threshold = payload["cant_hear"] ? NaN : payload["curr_dB"]
     user_id = current_user_id()
 
-    save(Threshold(user_id=user_id, freq=freqs[curr_freq_index], threshold=threshold))
-    return json("success")
+    return save(Threshold(user_id=user_id, name=payload["test_name"], instance=payload["instance"], freq=freqs[curr_freq_index], threshold=threshold)) ? json("success") : json("save call failed.")
 end
 end

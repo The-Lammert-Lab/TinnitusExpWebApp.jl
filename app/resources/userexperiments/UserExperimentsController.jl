@@ -35,8 +35,11 @@ function ue2dict(
 ) where {V<:Vector{CharacterizeTinnitus.UserExperiments.UserExperiment}}
     ae_data = Vector{Dict{Symbol,Any}}(undef, length(UE))
     for (ind, ae) in enumerate(UE)
-        n_trials = findone(Experiment; name=ae.experiment_name).n_trials
-        threshold_determination_mode = findone(Experiment; name=ae.experiment_name).threshold_determination_mode
+        exp = findone(Experiment; name=ae.experiment_name)
+        n_trials = exp.n_trials
+        threshold_determination_mode = exp.threshold_determination_mode
+        loudness_matching = exp.loudness_matching
+        pitch_matching = exp.pitch_matching
 
         status = if ae.trials_complete >= n_trials
             "completed"
@@ -53,7 +56,9 @@ function ue2dict(
             :percent_complete => round(100 * ae.trials_complete / n_trials; digits=2),
             :status => status,
             :threshold_determination_mode => threshold_determination_mode,
-        )
+            :loudness_matching => loudness_matching,
+            :pitch_matching => pitch_matching,
+            )
     end
     return ae_data
 end
@@ -408,8 +413,6 @@ function profile()
     username = user.username
     print("Added Exp")
 
-    print(ae_data)
-
     html(
         :userexperiments,
         :profile;
@@ -435,6 +438,13 @@ function calibrate()
     close(buf)
 
     html(:userexperiments, :calibrate; pure_tone_wav)
+end
+
+function instructions()
+    authenticated!()
+    html(
+        :userexperiments, :instructions;
+    )
 end
 
 end

@@ -23,6 +23,7 @@ route("/create", ExperimentsController.create)
 route("/create/get", ExperimentsController.get_stimgen)
 route("/create/save", ExperimentsController.save_exp; method=POST)
 route("/delete", ExperimentsController.delete_exp; method=POST)
+route("/export_data", ExperimentsController.export_data; method=POST)
 
 route("/manage/delete", UsersController.delete_user; method=POST)
 route("/manage", UsersController.manage)
@@ -37,6 +38,8 @@ route("/restart", UserExperimentsController.restart_exp; method=POST)
 route("/remove", UserExperimentsController.remove_exp; method=POST)
 route("/getpartialdata", UserExperimentsController.get_partial_data; method=POST)
 route("/calibrate", UserExperimentsController.calibrate)
+route("/instructions", UserExperimentsController.instructions)
+
 
 route("/saveLikertRating", RatingsController.save_likert_rating; method=POST)
 
@@ -59,4 +62,4 @@ route("/inOctave", PitchController.get_pure_tone_for_oct_determination; method=P
 route("/saveSoundForOctaveDetermination", PitchController.save_sound_for_octave_determination; method=POST)
 route("/getInOctaveFreqs", PitchController.get_in_octave_freqs; method=POST)
 route("/getOctConfusionFreqs", PitchController.get_oct_confusion_freqs; method=POST)
-route("/setCalibratedValue", PitchController.set_calibrated_value; method=POST)
+route("/setCalibratedValue", PitchController.set_calibrated_value)
